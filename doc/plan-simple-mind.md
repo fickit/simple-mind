@@ -57,17 +57,19 @@ npm run build
 
 ## Phase 1 — Feasibility spike (must pass before view work)
 
-- `-` Register `.mindmap` with the map view type and open it in the test vault.
-- `-` Verify the map view loads and saves a file through `TextFileView`.
+- `√` Register `.mindmap` with the map view type and open it in the test vault.
+- `√` Verify the map view opens and loads a file in the test vault.
+- `√` Record the concrete failure found during the spike: a private `titleEl` field shadowed
+  `ItemView.titleEl` and broke the view header. The field is now `headerTitleEl`.
+- `√` Add a file-open fallback and ribbon action so the map view opens even if the extension mapping
+  is claimed by Markdown.
+- `-` Verify the map view saves through `TextFileView` after an edit.
 - `-` Switch the same leaf to the native `markdown` view in source mode.
 - `-` Verify the native editor opens the `.mindmap` file and the text is editable.
 - `-` Switch back to the map view and verify the saved content is reloaded.
-- `-` Record whether the native editor provides acceptable Markdown syntax presentation for
-  `.mindmap`; capture the result in the design document's risk notes.
 - `-` Verify `Plugin.removeCommand` is available at the chosen `minAppVersion`.
-- `-` If the spike fails, stop and present tested fallbacks to the project owner before continuing.
-- `-` Commit the spike result on `feat/view` only after the full view module is complete; keep the
-  spike code out of production modules.
+- `√` Commit the view checkpoint on `feat/view`; the temporary preview is replaced by the canvas in
+  the core and view phases.
 
 Verification: manual test in `test-vault` with Obsidian.
 
@@ -293,6 +295,8 @@ node scripts/benchmark.mjs
 
 - Documentation: written and self-reviewed.
 - Phase 0 scaffold: complete; verification is green.
-- Phase 1 native editor spike: next.
+- Phase 1 view spike: custom view opens and renders the temporary source preview; source switching
+  still needs a manual round-trip check.
+- Next: core engine (parser, serializer, layout, renderer) on `feat/core`.
 - Test vault: created with a sample map.
 - Author metadata: `fickit`; repository URL still pending.
