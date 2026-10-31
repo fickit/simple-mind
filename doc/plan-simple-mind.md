@@ -32,19 +32,20 @@ Top-level branches:
 
 ## Phase 0 — Documentation and project scaffold
 
-- `-` Write `doc/prd.md`, `doc/design-simple-mind.md`, and `doc/plan-simple-mind.md` in English.
-- `-` Self-review the three documents for placeholders, contradictions, and scope creep.
-- `-` Initialize the Git repository and `.gitignore`.
-- `-` Add `package.json`, `tsconfig.json`, `esbuild.config.mjs`, `versions.json`, and `LICENSE`.
-- `-` Add `manifest.json` with provisional product metadata (`Simple Mind`, desktop-only); final
+- `√` Write `doc/prd.md`, `doc/design-simple-mind.md`, and `doc/plan-simple-mind.md` in English.
+- `√` Self-review the three documents for placeholders, contradictions, and scope creep.
+- `√` Initialize the Git repository and `.gitignore`.
+- `√` Add `package.json`, `tsconfig.json`, `esbuild.config.mjs`, `versions.json`, and `LICENSE`.
+- `√` Add `manifest.json` with provisional product metadata (`Simple Mind`, desktop-only); final
   author and repository fields are set in Phase 9.
-- `-` Add development scripts: `dev`, `build`, `typecheck`, `lint`, `test`, `benchmark`.
-- `-` Add `test-vault/` with a minimal `.obsidian` configuration and a sample `.mindmap` file.
-- `-` Add the root `README.md` and `README.zh-CN.md` skeletons.
-- `-` Add `src/config/constants.ts` and `src/config/defaults.ts`.
-- `-` Add `src/styles/` base styles and the view root class.
-- `-` Verify: `npm install`, `npm run typecheck`, `npm run build`.
-- `-` Commit `feat/scaffold`.
+- `√` Add development scripts: `dev`, `build`, `typecheck`, `lint`, and `test`; the benchmark script
+  is added in Phase 9 with the core engine.
+- `√` Add `test-vault/` with a minimal `.obsidian` configuration and a sample `.mindmap` file.
+- `√` Add the root `README.md` and `README.zh-CN.md` skeletons.
+- `√` Add `src/config/constants.ts` and `src/config/defaults.ts`.
+- `√` Add `src/styles/` base styles and the view root class.
+- `√` Verify: `npm install`, `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
+- `√` Commit `feat/scaffold`.
 
 Verification:
 
@@ -291,6 +292,7 @@ node scripts/benchmark.mjs
 ## Current status
 
 - Documentation: written and self-reviewed.
-- Implementation: not started.
-- Test vault: not created.
-- Author and repository metadata: waiting for project owner.
+- Phase 0 scaffold: complete; verification is green.
+- Phase 1 native editor spike: next.
+- Test vault: created with a sample map.
+- Author metadata: `fickit`; repository URL still pending.

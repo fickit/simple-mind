@@ -1,0 +1,14 @@
+.simple-mind-view {
+  --simple-mind-font: var(--font-text);
+  --simple-mind-text: var(--text-normal);
+  --simple-mind-muted: var(--text-muted);
+  --simple-mind-background: var(--background-primary);
+  --simple-mind-border: var(--background-modifier-border);
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: var(--simple-mind-text);
+  background: var(--simple-mind-background);
+  font-family: var(--simple-mind-font);
+}

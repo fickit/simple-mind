@@ -1,0 +1,14 @@
+node_modules/
+main.js
+main.js.map
+styles.css
+*.log
+.DS_Store
+.vscode/
+
+test-vault/.obsidian/plugins/simple-mind/
+test-vault/.obsidian/workspace*.json
+test-vault/.obsidian/cache/
+test-vault/.obsidian/plugins/*/data.json
+
+nul
