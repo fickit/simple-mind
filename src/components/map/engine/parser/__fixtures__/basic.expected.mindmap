@@ -1,0 +1,23 @@
+---
+aliases:
+  - Plan
+
+mindmap:
+  version: 1
+  theme: obsidian
+  layout: tree
+  direction: left
+  spacingX: 72
+  spacingY: 20
+  align: start
+  compact: true
+  maxWidth: 300
+  customKey: keep-me
+---
+
+# Root
+- Alpha
+  - Alpha one
+  - Alpha two
+- Beta
+  - Beta one

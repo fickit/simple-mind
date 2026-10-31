@@ -14,6 +14,7 @@ from TypeScript and grouped by responsibility. The build step bridges the two re
 
 - `index.css`: entry point for CSS bundling.
 - `base.css`: view root class and base CSS variables.
+- `map.css`: toolbar, canvas, node, connector, measurement, and error banner styles.
 
 ## Call flow
 

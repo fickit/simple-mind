@@ -33,6 +33,8 @@ export interface SourceText {
   frontmatterRaw: string | null;
   frontmatter: Record<string, unknown> | null;
   body: string;
+  otherFrontmatterLines: string[];
+  mindmapExtraLines: string[];
 }
 
 /** A parsed map document plus the source it came from. */
@@ -48,8 +50,15 @@ export interface ParseError {
   message: string;
 }
 
+/** A non-blocking source issue, such as an invalid frontmatter value. */
+export interface ParseWarning {
+  line: number;
+  message: string;
+}
+
 /** Parser output. A partial document may be returned alongside errors. */
 export interface ParseResult {
   document: MindMapDocument | null;
   errors: ParseError[];
+  warnings: ParseWarning[];
 }

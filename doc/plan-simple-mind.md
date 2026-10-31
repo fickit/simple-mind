@@ -75,49 +75,50 @@ Verification: manual test in `test-vault` with Obsidian.
 
 ## Phase 2 — Document: parser, serializer, model, history
 
-Branch: `feat/document`
+Branch: `feat/core`
 
-- `-` Define `MindNode`, `MindMapMeta`, `MindMapDocument`, `SourceText`, `ParseResult`, and
-  `ParseError` in `src/types/`.
-- `-` Implement frontmatter extraction and parseYaml integration.
-- `-` Implement the outline parser with the grammar defined in the design document.
-- `-` Implement line-numbered parse errors for unsupported lines, multiple H1s, ordered lists, and
+- `√` Define `MindNode`, `MindMapMeta`, `MindMapDocument`, `SourceText`, `ParseResult`, `ParseError`,
+  and `ParseWarning` in `src/types/`.
+- `√` Implement a dependency-free frontmatter splitter and `mindmap` block reader that clamps values
+  and preserves unknown lines.
+- `√` Implement the outline parser with the grammar defined in the design document.
+- `√` Implement line-numbered parse errors for unsupported lines, multiple H1s, ordered lists, and
   invalid indentation.
-- `-` Implement canonical serialization with two-space indentation and `-` markers.
-- `-` Implement frontmatter merge that preserves unknown keys and updates only the `mindmap` block.
-- `-` Implement document validation: non-empty labels, single root, enum values, numeric clamps.
-- `-` Implement tree utilities: find by id, parent lookup, depth, clone, walk, sibling lookup.
-- `-` Implement the command controller: add child, add sibling, edit label, delete, move, collapse,
-  paste subtree.
-- `-` Implement bounded source-snapshot history with undo, redo, and text-edit coalescing.
-- `-` Add `README.md` for the document/parser module.
-- `-` Unit tests: parser, serializer, roundtrip, frontmatter, errors, commands, history.
-- `-` Verify: `npm run typecheck && npm run test`.
-- `-` Commit `feat/document`.
+- `√` Implement canonical serialization with two-space indentation and `-` markers.
+- `√` Implement frontmatter merge that preserves unknown keys and updates only the `mindmap` block.
+- `√` Implement document validation: non-empty labels, single root, enum values, numeric clamps.
+- `√` Implement the tree lookup used by the renderer.
+- `√` Implement bounded source-snapshot history with undo and redo.
+- `-` Implement the full command controller (add, delete, move, edit, paste); deferred to the
+  interaction phase.
+- `√` Add `README.md` for the parser, history, and model modules.
+- `√` Unit tests: parser, serializer, roundtrip, frontmatter, errors, history.
+- `√` Verify: `npm run typecheck && npm run test`.
+- `√` Commit the core checkpoint after the renderer is wired.
 
 Verification:
 
 ```bash
 npm run typecheck
-npm run test -- document
+npm run test -- parser
 ```
 
 ## Phase 3 — Layout
 
-Branch: `feat/layout`
+Branch: `feat/core`
 
-- `-` Define the measurement interface and a DOM-based measurer with a cache.
-- `-` Implement collapse-aware tree preparation.
-- `-` Implement horizontal block layout for `tree` and `mindmap`.
-- `-` Implement the mind-map side split with height balancing while preserving order.
-- `-` Implement vertical block layout for `org`.
-- `-` Implement alignment (`center`, `start`) and compact spacing.
-- `-` Implement connector anchors and three path generators: `curve`, `orthogonal`, `straight`.
-- `-` Implement bounds calculation over nodes and connectors.
-- `-` Add `README.md` for the layout module.
-- `-` Unit tests with injected measurements for all modes, collapse, spacing, alignment, and bounds.
-- `-` Verify: `npm run typecheck && npm run test -- layout`.
-- `-` Commit `feat/layout`.
+- `√` Define the measurement interface and a DOM-based measurer with a cache.
+- `√` Implement collapse-aware tree preparation.
+- `√` Implement horizontal block layout for `tree` and `mindmap`.
+- `√` Implement the mind-map side split with height balancing while preserving order.
+- `√` Implement vertical block layout for `org`.
+- `√` Implement alignment (`center`, `start`) and compact spacing.
+- `√` Implement connector anchors and three path generators: `curve`, `orthogonal`, `straight`.
+- `√` Implement bounds calculation over nodes.
+- `√` Add `README.md` for the layout module.
+- `√` Unit tests with injected measurements for all modes, collapse, spacing, alignment, and bounds.
+- `√` Verify: `npm run typecheck && npm run test -- layout`.
+- `√` Commit the core checkpoint after the renderer is wired.
 
 Verification:
 
@@ -128,21 +129,23 @@ npm run test -- layout
 
 ## Phase 4 — Renderer
 
-Branch: `feat/render`
+Branch: `feat/core`
 
-- `-` Implement the DOM structure: view root, toolbar slot, canvas, world, SVG edge layer, node layer,
+- `√` Implement the DOM structure: view root, toolbar slot, canvas, world, SVG edge layer, node layer,
   inline editor slot, and error banner.
-- `-` Implement keyed node views and edge views.
-- `-` Implement inline Markdown rendering with DOM APIs and URL validation.
-- `-` Implement the measurement cache integration and invalidation on theme/font changes.
-- `-` Implement `requestAnimationFrame` batching for layout and render.
-- `-` Implement the world transform, pan, wheel, zoom, zoom controls, and fit.
-- `-` Implement the optional viewport-culling hook above a threshold.
-- `-` Implement selection classes and accessibility roles.
-- `-` Add `README.md` for the renderer module.
-- `-` DOM tests: node diff, edge diff, no duplicates, inline Markdown safety, pan/zoom math, culling.
-- `-` Verify: `npm run typecheck && npm run test -- render`.
-- `-` Commit `feat/render`.
+- `√` Implement keyed node views and edge views.
+- `√` Implement inline Markdown rendering with DOM APIs and URL validation.
+- `√` Implement the measurement cache integration and invalidation on theme/font changes.
+- `-` Implement `requestAnimationFrame` batching for layout and render; deferred to the performance
+  phase.
+- `√` Implement the world transform, pan, wheel, zoom, zoom controls, and fit.
+- `-` Implement viewport culling above a threshold; the engine keeps a hook for the performance phase.
+- `√` Implement selection classes and accessibility roles.
+- `√` Add `README.md` for the renderer module.
+- `√` DOM tests: node diff, edge diff, no duplicates, inline Markdown safety, pan/zoom math, culling.
+- `√` Visual self-check in a standalone browser demo in light and dark mode.
+- `√` Verify: `npm run typecheck && npm run test -- render`.
+- `√` Commit the core checkpoint.
 
 Verification:
 
@@ -295,8 +298,11 @@ node scripts/benchmark.mjs
 
 - Documentation: written and self-reviewed.
 - Phase 0 scaffold: complete; verification is green.
-- Phase 1 view spike: custom view opens and renders the temporary source preview; source switching
-  still needs a manual round-trip check.
-- Next: core engine (parser, serializer, layout, renderer) on `feat/core`.
+- Phase 1 view spike: custom view opens; source switching still needs a manual round-trip check.
+- Phase 2 core document: parser, serializer, and history complete; command controller is next.
+- Phase 3 layout: complete for mindmap, tree, and org.
+- Phase 4 renderer: canvas, themes, pan/zoom, collapse, and inline Markdown complete; visual demo
+  passed in light and dark mode. rAF batching and culling remain performance tasks.
+- Next: interaction (inline editing, add/delete, drag, undo wiring) on `feat/core`.
 - Test vault: created with a sample map.
 - Author metadata: `fickit`; repository URL still pending.

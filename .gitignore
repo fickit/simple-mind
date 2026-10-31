@@ -9,6 +9,9 @@ styles.css
 test-vault/.obsidian/plugins/simple-mind/
 test-vault/.obsidian/workspace*.json
 test-vault/.obsidian/cache/
+test-vault/.obsidian/appearance.json
+test-vault/.obsidian/core-plugins.json
 test-vault/.obsidian/plugins/*/data.json
+.tmp-demo/
 
 nul

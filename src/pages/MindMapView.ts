@@ -1,18 +1,11 @@
-import { TextFileView, type TFile, type WorkspaceLeaf } from "obsidian";
+import { TextFileView, type WorkspaceLeaf } from "obsidian";
+import { MapCanvas } from "../components/map/MapCanvas";
 import { switchToSource } from "../components/source/SourceSwitch";
 import { VIEW_TYPE_MAP } from "../config/constants";
 
-/**
- * Temporary feasibility view for the native editor spike.
- *
- * It loads and saves the `.mindmap` file through Obsidian's TextFileView and
- * renders the raw source, so the Map/Source round trip can be tested before the
- * real canvas lands.
- */
+/** Obsidian view that renders a `.mindmap` file as an interactive canvas. */
 export class MindMapView extends TextFileView {
-  // Do not name these `titleEl`: ItemView already owns that field for the tab header.
-  private headerTitleEl: HTMLElement | null = null;
-  private rawPreviewEl: HTMLElement | null = null;
+  private canvas: MapCanvas | null = null;
 
   /**
    * @param leaf Workspace leaf that owns this view.
@@ -36,38 +29,30 @@ export class MindMapView extends TextFileView {
     return "network";
   }
 
-  /** Builds the temporary source preview and Source action. */
+  /** Builds the map canvas and theme-change listener. */
   async onOpen(): Promise<void> {
     this.contentEl.empty();
     this.contentEl.addClass("simple-mind-view");
-
-    const header = this.contentEl.createDiv({ cls: "simple-mind-spike-header" });
-    this.headerTitleEl = header.createEl("h2", { cls: "simple-mind-spike-title" });
-    const sourceButton = header.createEl("button", {
-      cls: "simple-mind-spike-source-button",
-      text: "Source",
+    this.canvas = new MapCanvas(this.contentEl, {
+      onSource: () => {
+        void this.openSource();
+      },
     });
-    sourceButton.setAttribute("type", "button");
-    sourceButton.addEventListener("click", () => {
-      void this.openSource();
-    });
-
-    this.rawPreviewEl = this.contentEl.createEl("pre", {
-      cls: "simple-mind-spike-source",
-    });
-    this.updateHeader();
-    this.updatePreview();
+    if (this.data) {
+      this.canvas.setSource(this.data);
+    }
+    this.registerEvent(this.app.workspace.on("css-change", () => this.canvas?.refreshTheme()));
   }
 
-  /** Clears view references when the leaf closes. */
+  /** Releases the renderer and DOM. */
   async onClose(): Promise<void> {
-    this.headerTitleEl = null;
-    this.rawPreviewEl = null;
+    this.canvas?.destroy();
+    this.canvas = null;
     this.contentEl.empty();
   }
 
   /**
-   * Stores file content and refreshes the temporary preview.
+   * Loads file content into the canvas.
    *
    * @param data Current file content.
    * @param clear Whether a different file is being loaded.
@@ -75,40 +60,18 @@ export class MindMapView extends TextFileView {
   setViewData(data: string, clear: boolean): void {
     this.data = data;
     if (clear) this.contentEl.scrollTop = 0;
-    this.updateHeader();
-    this.updatePreview();
+    this.canvas?.setSource(data);
   }
 
-  /** Returns the file content for saving. */
+  /** Returns the source text to save. */
   getViewData(): string {
-    return this.data;
+    return this.canvas?.getSource() ?? this.data ?? "";
   }
 
-  /** Resets view data when the file is cleared. */
+  /** Resets the view for an empty file. */
   clear(): void {
     this.data = "";
-    this.updatePreview();
-  }
-
-  /**
-   * Refreshes the header after Obsidian binds a file to the view.
-   *
-   * @param file File being loaded.
-   */
-  async onLoadFile(file: TFile): Promise<void> {
-    await super.onLoadFile(file);
-    this.updateHeader();
-    this.updatePreview();
-  }
-
-  /** Updates the displayed file name. */
-  private updateHeader(): void {
-    this.headerTitleEl?.setText(this.file?.basename ?? "Mind map");
-  }
-
-  /** Shows the current raw source in the temporary preview. */
-  private updatePreview(): void {
-    this.rawPreviewEl?.setText(this.data ?? "");
+    this.canvas?.setSource("");
   }
 
   /** Switches the same leaf to Obsidian's native Markdown editor. */

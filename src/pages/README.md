@@ -12,11 +12,11 @@ Obsidian view lifecycle and file loading are separate concerns from the map engi
 
 ## Files
 
-- `MindMapView.ts`: `TextFileView` for `.mindmap` files. The current implementation is the native
-  editor feasibility spike; it is replaced by the map canvas in the view phase.
+- `MindMapView.ts`: `TextFileView` for `.mindmap` files; it mounts `MapCanvas`, passes parsed source
+  into it, and switches the same leaf to the native editor.
 
 ## Call flow
 
 Obsidian creates `MindMapView` through `plugin.registerView`. The view loads data through
-`TextFileView`, exposes `getViewData` for saving, and delegates source switching to
+`TextFileView`, mounts `MapCanvas`, exposes `getViewData` for saving, and delegates source switching to
 `components/source/SourceSwitch`.

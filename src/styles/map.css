@@ -1,0 +1,229 @@
+.simple-mind-map {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.simple-mind-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+}
+
+.simple-mind-toolbar-spacer {
+  flex: 1;
+}
+
+.simple-mind-toolbar-button {
+  min-width: 28px;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: var(--font-ui-smaller);
+  cursor: pointer;
+}
+
+.simple-mind-toolbar-button:hover {
+  background: var(--background-modifier-hover);
+}
+
+.simple-mind-banner {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-modifier-error);
+  color: var(--text-error);
+  font-size: var(--font-ui-smaller);
+}
+
+.simple-mind-banner[hidden] {
+  display: none;
+}
+
+.simple-mind-canvas-host {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.simple-mind-canvas {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--sm-canvas-bg, var(--background-primary));
+  cursor: grab;
+  outline: none;
+}
+
+.simple-mind-canvas.is-panning {
+  cursor: grabbing;
+}
+
+.simple-mind-world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.simple-mind-edges {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.simple-mind-nodes {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.simple-mind-node {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sm-node-padding-y) var(--sm-node-padding-x);
+  border: var(--sm-node-border-width) solid var(--sm-node-border);
+  border-radius: var(--sm-node-radius);
+  background: var(--sm-node-bg);
+  color: var(--sm-node-text);
+  box-shadow: var(--sm-node-shadow);
+  font-family: var(--sm-font);
+  font-size: var(--sm-font-size);
+  font-weight: var(--sm-font-weight);
+  line-height: var(--sm-line-height);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  contain: layout style;
+}
+
+.simple-mind-node.is-root {
+  border-width: var(--sm-root-border-width);
+  border-color: var(--sm-root-border);
+  border-radius: var(--sm-root-radius);
+  background: var(--sm-root-bg);
+  color: var(--sm-root-text);
+  box-shadow: var(--sm-root-shadow);
+  font-weight: 600;
+}
+
+.simple-mind-node.is-selected {
+  outline: 2px solid var(--sm-selection-outline);
+  outline-offset: 2px;
+}
+
+.simple-mind-node.shape-pill {
+  border-radius: 999px;
+}
+
+.simple-mind-node.shape-underline {
+  border: none;
+  border-bottom: 2px solid var(--sm-branch-color);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.simple-mind-node.shape-plain {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.simple-mind-node-label {
+  min-width: 0;
+  text-align: center;
+}
+
+.simple-mind-node-label a {
+  color: var(--text-accent);
+  text-decoration: underline;
+}
+
+.simple-mind-node-label code {
+  padding: 0 3px;
+  border-radius: 3px;
+  background: var(--background-modifier-border);
+  font-family: var(--font-monospace);
+  font-size: 0.9em;
+}
+
+.simple-mind-node-label strong {
+  font-weight: 600;
+}
+
+.simple-mind-collapse {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--sm-node-border);
+  border-radius: 50%;
+  background: var(--sm-collapse-bg);
+  color: var(--sm-collapse-text);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.simple-mind-collapse[hidden] {
+  display: none;
+}
+
+.simple-mind-collapse:hover {
+  background: var(--background-modifier-hover);
+}
+
+.simple-mind-node.side-right > .simple-mind-collapse,
+.simple-mind-node.side-center > .simple-mind-collapse {
+  top: 50%;
+  right: -9px;
+  transform: translateY(-50%);
+}
+
+.simple-mind-node.side-left > .simple-mind-collapse {
+  top: 50%;
+  left: -9px;
+  transform: translateY(-50%);
+}
+
+.simple-mind-node.side-down > .simple-mind-collapse {
+  bottom: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.simple-mind-measure {
+  position: absolute;
+  top: 0;
+  left: -100000px;
+  visibility: hidden;
+  pointer-events: none;
+  contain: layout style;
+}
+
+.simple-mind-measure-inner {
+  display: inline-block;
+  box-sizing: border-box;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
