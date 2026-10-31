@@ -156,22 +156,21 @@ npm run test -- render
 
 ## Phase 5 — Interaction and editing
 
-Branch: `feat/interaction`
+Branch: `feat/core`
 
-- `-` Implement selection, canvas focus, and spatial arrow-key navigation.
-- `-` Implement the inline textarea editor with auto-size, Enter/Escape/blur behavior, and IME
-  composition handling.
-- `-` Implement Tab/Shift+Tab/Enter/Delete/F2/Space shortcuts.
+- `√` Implement selection, canvas focus, and spatial arrow-key navigation.
+- `√` Implement the inline input editor with Enter/Escape/blur behavior and IME composition handling.
+- `√` Implement Tab/Shift+Tab/Enter/Delete/F2/Space shortcuts.
 - `-` Implement drag start threshold, reparent, reorder, drop indicators, and hover-to-expand.
-- `-` Implement internal clipboard, cut, copy, and paste, plus plain-text fallback.
-- `-` Wire every mutation through the command controller and history.
-- `-` Implement root protection for delete and drag.
-- `-` Implement read-only mode when parse errors exist.
-- `-` Add `README.md` for the interaction module.
-- `-` DOM tests: editing lifecycle, shortcuts, drag state, clipboard, read-only mode, IME guard.
-- `-` Verify: `npm run typecheck && npm run test -- interaction`.
+- `-` Implement internal clipboard, cut, copy, and paste.
+- `√` Wire add, rename, delete, move, collapse, undo, and redo through `MapController` and history.
+- `√` Implement root protection for delete.
+- `√` Implement read-only mode when parse errors exist.
+- `√` Add `README.md` for the interaction module.
+- `√` DOM tests: editing lifecycle, shortcuts, add/delete, undo, read-only mode, IME guard.
+- `√` Verify: `npm run typecheck && npm run test -- interaction`.
 - `-` Manual test in the test vault: edit, add, delete, collapse, drag, copy/paste, undo/redo.
-- `-` Commit `feat/interaction`.
+- `√` Commit the interaction checkpoint after the view save path is wired.
 
 Verification:
 
@@ -303,6 +302,8 @@ node scripts/benchmark.mjs
 - Phase 3 layout: complete for mindmap, tree, and org.
 - Phase 4 renderer: canvas, themes, pan/zoom, collapse, and inline Markdown complete; visual demo
   passed in light and dark mode. rAF batching and culling remain performance tasks.
-- Next: interaction (inline editing, add/delete, drag, undo wiring) on `feat/core`.
+- Phase 5 interaction: selection, inline editing, add/delete, undo/redo, and source serialization are
+  implemented and tested; drag and clipboard are next.
+- Next: manual editing verification, then drag/clipboard and commands on `feat/core`.
 - Test vault: created with a sample map.
 - Author metadata: `fickit`; repository URL still pending.

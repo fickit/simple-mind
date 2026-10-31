@@ -16,6 +16,8 @@ const SVG_PADDING = 80;
 /** Optional callbacks supplied by the canvas component. */
 export interface MapRendererOptions {
   onToggleCollapse?: (nodeId: string) => void;
+  onEditRequest?: (nodeId: string) => void;
+  onSelectionChange?: (nodeId: string | null) => void;
 }
 
 /** Renders a document as HTML nodes and SVG connectors. */
@@ -31,6 +33,8 @@ export class MapRenderer {
   private readonly disposers: Array<() => void> = [];
   private readonly resizeObserver: ResizeObserver;
   private readonly onToggleCollapse?: (nodeId: string) => void;
+  private readonly onEditRequest?: (nodeId: string) => void;
+  private readonly onSelectionChange?: (nodeId: string | null) => void;
   private measurer: DomNodeMeasurer;
   private theme: ThemeDefinition;
   private dark: boolean;
@@ -59,6 +63,8 @@ export class MapRenderer {
     this.theme = theme;
     this.dark = dark;
     this.onToggleCollapse = options.onToggleCollapse;
+    this.onEditRequest = options.onEditRequest;
+    this.onSelectionChange = options.onSelectionChange;
 
     this.canvas.classList.add("simple-mind-canvas");
     this.canvas.tabIndex = 0;
@@ -200,8 +206,34 @@ export class MapRenderer {
     this.renderedText.clear();
   }
 
+  /** Returns the selected node id. */
+  getSelectedId(): string | null {
+    return this.selectedId;
+  }
+
+  /** Returns the current positioned nodes. */
+  getLayoutNodes(): PositionedNode[] {
+    return this.layout?.nodes ?? [];
+  }
+
+  /** Returns one node's layout position. */
+  getNodePosition(nodeId: string): PositionedNode | null {
+    return this.layout?.nodes.find((node) => node.node.id === nodeId) ?? null;
+  }
+
+  /** Returns the transformed world layer. */
+  getWorldElement(): HTMLElement {
+    return this.world;
+  }
+
+  /** Focuses the canvas for keyboard interaction. */
+  focus(): void {
+    this.canvas.focus();
+  }
+
   /** Selects one node or clears the selection. */
-  private selectNode(nodeId: string | null): void {
+  selectNode(nodeId: string | null): void {
+    if (this.selectedId === nodeId) return;
     if (this.selectedId) {
       this.nodeEls.get(this.selectedId)?.classList.remove("is-selected");
       this.nodeEls.get(this.selectedId)?.setAttribute("aria-selected", "false");
@@ -211,6 +243,7 @@ export class MapRenderer {
       this.nodeEls.get(nodeId)?.classList.add("is-selected");
       this.nodeEls.get(nodeId)?.setAttribute("aria-selected", "true");
     }
+    this.onSelectionChange?.(nodeId);
   }
 
   /** Applies the world transform. */
@@ -258,6 +291,7 @@ export class MapRenderer {
 
     if (this.selectedId && !seen.has(this.selectedId)) {
       this.selectedId = null;
+      this.onSelectionChange?.(null);
     }
   }
 
@@ -315,7 +349,15 @@ export class MapRenderer {
     element.addEventListener("click", (event) => {
       const target = event.target as HTMLElement;
       if (target.closest("a")) return;
+      this.canvas.focus();
       this.selectNode(nodeId);
+    });
+
+    element.addEventListener("dblclick", (event) => {
+      event.stopPropagation();
+      this.canvas.focus();
+      this.selectNode(nodeId);
+      this.onEditRequest?.(nodeId);
     });
 
     this.nodesLayer.appendChild(element);
@@ -432,7 +474,7 @@ export class MapRenderer {
     const onPointerDown = (event: PointerEvent): void => {
       if (event.button !== 0) return;
       const target = event.target as HTMLElement;
-      if (target.closest(".simple-mind-node")) return;
+      if (target.closest(".simple-mind-node, .simple-mind-inline-editor")) return;
       panning = true;
       pointerId = event.pointerId;
       startX = event.clientX;
@@ -462,7 +504,9 @@ export class MapRenderer {
 
     const onClick = (event: MouseEvent): void => {
       const target = event.target as HTMLElement;
-      if (!target.closest(".simple-mind-node")) this.selectNode(null);
+      if (!target.closest(".simple-mind-node, .simple-mind-inline-editor")) {
+        this.selectNode(null);
+      }
     };
 
     this.canvas.addEventListener("wheel", onWheel, { passive: false });

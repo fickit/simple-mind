@@ -1,4 +1,4 @@
-import { TextFileView, type WorkspaceLeaf } from "obsidian";
+import { Notice, TextFileView, type WorkspaceLeaf } from "obsidian";
 import { MapCanvas } from "../components/map/MapCanvas";
 import { switchToSource } from "../components/source/SourceSwitch";
 import { VIEW_TYPE_MAP } from "../config/constants";
@@ -37,6 +37,13 @@ export class MindMapView extends TextFileView {
       onSource: () => {
         void this.openSource();
       },
+      onChange: (source) => {
+        this.data = source;
+        this.requestSave();
+      },
+      onNotice: (message) => {
+        new Notice(`Simple Mind: ${message}`);
+      },
     });
     if (this.data) {
       this.canvas.setSource(this.data);
@@ -60,6 +67,7 @@ export class MindMapView extends TextFileView {
   setViewData(data: string, clear: boolean): void {
     this.data = data;
     if (clear) this.contentEl.scrollTop = 0;
+    if (!clear && data === this.canvas?.getSource()) return;
     this.canvas?.setSource(data);
   }
 

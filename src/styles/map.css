@@ -7,11 +7,19 @@
 
 .simple-mind-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
   border-bottom: 1px solid var(--background-modifier-border);
   background: var(--background-secondary);
+}
+
+.simple-mind-toolbar-divider {
+  width: 1px;
+  height: 18px;
+  margin: 0 2px;
+  background: var(--background-modifier-border);
 }
 
 .simple-mind-toolbar-spacer {
@@ -32,6 +40,13 @@
 
 .simple-mind-toolbar-button:hover {
   background: var(--background-modifier-hover);
+}
+
+.simple-mind-toolbar-button:disabled,
+.simple-mind-toolbar-button:disabled:hover {
+  opacity: 0.45;
+  background: var(--background-primary);
+  cursor: default;
 }
 
 .simple-mind-banner {
@@ -64,6 +79,30 @@
 
 .simple-mind-canvas.is-panning {
   cursor: grabbing;
+}
+
+.simple-mind-canvas:focus-visible {
+  box-shadow: inset 0 0 0 1px var(--sm-selection-outline);
+}
+
+.simple-mind-inline-editor {
+  position: absolute;
+  z-index: 10;
+  box-sizing: border-box;
+  padding: var(--sm-node-padding-y) var(--sm-node-padding-x);
+  border: 1px solid var(--sm-selection-outline);
+  border-radius: var(--sm-node-radius);
+  background: var(--sm-node-bg);
+  color: var(--sm-node-text);
+  font-family: var(--sm-font);
+  font-size: var(--sm-font-size);
+  font-weight: var(--sm-font-weight);
+  line-height: var(--sm-line-height);
+  outline: none;
+}
+
+.simple-mind-inline-editor::placeholder {
+  color: var(--text-faint);
 }
 
 .simple-mind-world {
