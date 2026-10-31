@@ -1,0 +1,296 @@
+# Simple Mind — Implementation Plan
+
+- Status: Draft
+- Version: 0.1
+- Date: 2026-11-01
+- Related: `doc/prd.md`, `doc/design-simple-mind.md`
+
+Legend: `√` done, `x` rejected, `-` not done.
+
+## Branch and commit policy
+
+- Each top-level module gets its own branch.
+- All tasks under a module share that branch.
+- Merge the branch once every task in the module is complete and verified.
+- One commit per module, only after the module's verification commands pass.
+- Commit messages state only what was done in one sentence. No file lists, implementation notes, or
+  technical details.
+- Run `git status` before every commit and exclude test-vault workspace state, build output, and
+  secrets.
+
+Top-level branches:
+
+1. `feat/scaffold`
+2. `feat/document`
+3. `feat/layout`
+4. `feat/render`
+5. `feat/interaction`
+6. `feat/themes`
+7. `feat/view`
+8. `feat/settings`
+9. `feat/release`
+
+## Phase 0 — Documentation and project scaffold
+
+- `-` Write `doc/prd.md`, `doc/design-simple-mind.md`, and `doc/plan-simple-mind.md` in English.
+- `-` Self-review the three documents for placeholders, contradictions, and scope creep.
+- `-` Initialize the Git repository and `.gitignore`.
+- `-` Add `package.json`, `tsconfig.json`, `esbuild.config.mjs`, `versions.json`, and `LICENSE`.
+- `-` Add `manifest.json` with provisional product metadata (`Simple Mind`, desktop-only); final
+  author and repository fields are set in Phase 9.
+- `-` Add development scripts: `dev`, `build`, `typecheck`, `lint`, `test`, `benchmark`.
+- `-` Add `test-vault/` with a minimal `.obsidian` configuration and a sample `.mindmap` file.
+- `-` Add the root `README.md` and `README.zh-CN.md` skeletons.
+- `-` Add `src/config/constants.ts` and `src/config/defaults.ts`.
+- `-` Add `src/styles/` base styles and the view root class.
+- `-` Verify: `npm install`, `npm run typecheck`, `npm run build`.
+- `-` Commit `feat/scaffold`.
+
+Verification:
+
+```bash
+npm install
+npm run typecheck
+npm run build
+```
+
+## Phase 1 — Feasibility spike (must pass before view work)
+
+- `-` Register `.mindmap` with the map view type and open it in the test vault.
+- `-` Verify the map view loads and saves a file through `TextFileView`.
+- `-` Switch the same leaf to the native `markdown` view in source mode.
+- `-` Verify the native editor opens the `.mindmap` file and the text is editable.
+- `-` Switch back to the map view and verify the saved content is reloaded.
+- `-` Record whether the native editor provides acceptable Markdown syntax presentation for
+  `.mindmap`; capture the result in the design document's risk notes.
+- `-` Verify `Plugin.removeCommand` is available at the chosen `minAppVersion`.
+- `-` If the spike fails, stop and present tested fallbacks to the project owner before continuing.
+- `-` Commit the spike result on `feat/view` only after the full view module is complete; keep the
+  spike code out of production modules.
+
+Verification: manual test in `test-vault` with Obsidian.
+
+## Phase 2 — Document: parser, serializer, model, history
+
+Branch: `feat/document`
+
+- `-` Define `MindNode`, `MindMapMeta`, `MindMapDocument`, `SourceText`, `ParseResult`, and
+  `ParseError` in `src/types/`.
+- `-` Implement frontmatter extraction and parseYaml integration.
+- `-` Implement the outline parser with the grammar defined in the design document.
+- `-` Implement line-numbered parse errors for unsupported lines, multiple H1s, ordered lists, and
+  invalid indentation.
+- `-` Implement canonical serialization with two-space indentation and `-` markers.
+- `-` Implement frontmatter merge that preserves unknown keys and updates only the `mindmap` block.
+- `-` Implement document validation: non-empty labels, single root, enum values, numeric clamps.
+- `-` Implement tree utilities: find by id, parent lookup, depth, clone, walk, sibling lookup.
+- `-` Implement the command controller: add child, add sibling, edit label, delete, move, collapse,
+  paste subtree.
+- `-` Implement bounded source-snapshot history with undo, redo, and text-edit coalescing.
+- `-` Add `README.md` for the document/parser module.
+- `-` Unit tests: parser, serializer, roundtrip, frontmatter, errors, commands, history.
+- `-` Verify: `npm run typecheck && npm run test`.
+- `-` Commit `feat/document`.
+
+Verification:
+
+```bash
+npm run typecheck
+npm run test -- document
+```
+
+## Phase 3 — Layout
+
+Branch: `feat/layout`
+
+- `-` Define the measurement interface and a DOM-based measurer with a cache.
+- `-` Implement collapse-aware tree preparation.
+- `-` Implement horizontal block layout for `tree` and `mindmap`.
+- `-` Implement the mind-map side split with height balancing while preserving order.
+- `-` Implement vertical block layout for `org`.
+- `-` Implement alignment (`center`, `start`) and compact spacing.
+- `-` Implement connector anchors and three path generators: `curve`, `orthogonal`, `straight`.
+- `-` Implement bounds calculation over nodes and connectors.
+- `-` Add `README.md` for the layout module.
+- `-` Unit tests with injected measurements for all modes, collapse, spacing, alignment, and bounds.
+- `-` Verify: `npm run typecheck && npm run test -- layout`.
+- `-` Commit `feat/layout`.
+
+Verification:
+
+```bash
+npm run typecheck
+npm run test -- layout
+```
+
+## Phase 4 — Renderer
+
+Branch: `feat/render`
+
+- `-` Implement the DOM structure: view root, toolbar slot, canvas, world, SVG edge layer, node layer,
+  inline editor slot, and error banner.
+- `-` Implement keyed node views and edge views.
+- `-` Implement inline Markdown rendering with DOM APIs and URL validation.
+- `-` Implement the measurement cache integration and invalidation on theme/font changes.
+- `-` Implement `requestAnimationFrame` batching for layout and render.
+- `-` Implement the world transform, pan, wheel, zoom, zoom controls, and fit.
+- `-` Implement the optional viewport-culling hook above a threshold.
+- `-` Implement selection classes and accessibility roles.
+- `-` Add `README.md` for the renderer module.
+- `-` DOM tests: node diff, edge diff, no duplicates, inline Markdown safety, pan/zoom math, culling.
+- `-` Verify: `npm run typecheck && npm run test -- render`.
+- `-` Commit `feat/render`.
+
+Verification:
+
+```bash
+npm run typecheck
+npm run test -- render
+```
+
+## Phase 5 — Interaction and editing
+
+Branch: `feat/interaction`
+
+- `-` Implement selection, canvas focus, and spatial arrow-key navigation.
+- `-` Implement the inline textarea editor with auto-size, Enter/Escape/blur behavior, and IME
+  composition handling.
+- `-` Implement Tab/Shift+Tab/Enter/Delete/F2/Space shortcuts.
+- `-` Implement drag start threshold, reparent, reorder, drop indicators, and hover-to-expand.
+- `-` Implement internal clipboard, cut, copy, and paste, plus plain-text fallback.
+- `-` Wire every mutation through the command controller and history.
+- `-` Implement root protection for delete and drag.
+- `-` Implement read-only mode when parse errors exist.
+- `-` Add `README.md` for the interaction module.
+- `-` DOM tests: editing lifecycle, shortcuts, drag state, clipboard, read-only mode, IME guard.
+- `-` Verify: `npm run typecheck && npm run test -- interaction`.
+- `-` Manual test in the test vault: edit, add, delete, collapse, drag, copy/paste, undo/redo.
+- `-` Commit `feat/interaction`.
+
+Verification:
+
+```bash
+npm run typecheck
+npm run test -- interaction
+```
+
+Manual: open a sample map in Obsidian and exercise every shortcut.
+
+## Phase 6 — Themes
+
+Branch: `feat/themes`
+
+- `-` Define `ThemeTokens`, `ThemeDefinition`, `NodeShape`, and `ConnectorStyle`.
+- `-` Implement the eight built-in themes with light and dark variants.
+- `-` Implement theme resolution: built-in, custom, default fallback, and unknown-id notice.
+- `-` Implement CSS variable compilation scoped to the view root.
+- `-` Implement automatic light/dark switching on `workspace.on('css-change')`.
+- `-` Implement custom theme validation, clone, rename, delete, import, and export.
+- `-` Implement the theme editor modal with light/dark tabs and a live preview.
+- `-` Add `README.md` for the theme module.
+- `-` Unit tests: token resolution, light/dark selection, import validation, fallback behavior.
+- `-` Verify: `npm run typecheck && npm run test -- theme`.
+- `-` Manual test: all eight themes, custom theme reload, import/export.
+- `-` Commit `feat/themes`.
+
+Verification:
+
+```bash
+npm run typecheck
+npm run test -- theme
+```
+
+## Phase 7 — View integration
+
+Branch: `feat/view`
+
+- `-` Implement `MindMapView extends TextFileView` with `getViewData`, `setViewData`, `clear`, and
+  `requestSave` integration.
+- `-` Implement parse-error handling and read-only rendering.
+- `-` Implement the Source action: save, store cursor/scroll, switch the same leaf to `markdown`
+  source mode.
+- `-` Implement the status-bar action and toggle command to return to the map.
+- `-` Implement commands: new mind map, toggle, add child, add sibling, delete, edit, collapse, undo,
+  redo, fit.
+- `-` Implement the new-file modal with name validation.
+- `-` Restore map pan/zoom/selection per file where practical.
+- `-` Add the module `README.md` and update the root README architecture section.
+- `-` Verify: `npm run typecheck && npm run build`.
+- `-` Manual test in `test-vault`: default map, source switch, save/reload, commands, status bar.
+- `-` Commit `feat/view`.
+
+Verification:
+
+```bash
+npm run typecheck
+npm run build
+```
+
+Manual: complete the source/map switching checklist.
+
+## Phase 8 — Settings and internationalization
+
+Branch: `feat/settings`
+
+- `-` Implement the settings schema and persistence.
+- `-` Implement the settings tab: general defaults, layout defaults, theme management, language.
+- `-` Implement English and Chinese dictionaries and `t()`.
+- `-` Re-register commands on language change without changing command ids.
+- `-` Translate all view, toolbar, notice, and settings strings.
+- `-` Implement reset-to-defaults.
+- `-` Add `README.md` for the settings module.
+- `-` Verify: `npm run typecheck && npm run test`.
+- `-` Manual test: switch languages, change defaults, create a new file, verify frontmatter.
+- `-` Commit `feat/settings`.
+
+Verification:
+
+```bash
+npm run typecheck
+npm run test
+```
+
+## Phase 9 — Verification, performance, and release
+
+Branch: `feat/release`
+
+- `-` Add `scripts/benchmark.mjs` to generate 100, 500, and 1,000 node maps and time parse, layout,
+  first render, and incremental edit.
+- `-` Record benchmark output in `doc/benchmark-simple-mind.md`.
+- `-` Complete the manual checklist in `test-vault`.
+- `-` Verify parse-error, invalid-frontmatter, unknown-theme, save-failure, and root-protection paths.
+- `-` Run the full verification suite.
+
+```bash
+npm run typecheck
+npm run lint
+npm run test
+npm run build
+node scripts/benchmark.mjs
+```
+
+- `-` Update root `README.md`, `README.zh-CN.md`, and `CHANGELOG.md`.
+- `-` Set `manifest.json` author name, author URL, repository URL, and funding URL from project owner
+  information.
+- `-` Set `version: 0.1.0` and update `versions.json`.
+- `-` Confirm the release bundle contains only `main.js`, `manifest.json`, and `styles.css`.
+- `-` Add the GitHub release workflow if the project owner wants automated releases.
+- `-` Commit `feat/release`.
+
+## Phase 10 — Deferred beyond v1 (excluded from this plan)
+
+- `x` Mobile touch layout.
+- `x` Multi-selection and batch operations.
+- `x` Node summaries and arbitrary cross-node links.
+- `x` Per-node styling.
+- `x` Export PNG/SVG/HTML.
+- `x` `.md` note mode and embedded code-block mode.
+- `x` Collapse-state persistence.
+- `x` Obsidian backlink integration for `.mindmap`.
+
+## Current status
+
+- Documentation: written and self-reviewed.
+- Implementation: not started.
+- Test vault: not created.
+- Author and repository metadata: waiting for project owner.
