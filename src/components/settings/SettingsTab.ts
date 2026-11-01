@@ -6,7 +6,12 @@ import type { LayoutKind, NodeAlignment, TreeDirection } from "../../types/mindm
 import type { Language, SimpleMindSettingsHost } from "../../types/settings";
 import type { ThemeDefinition } from "../../types/theme";
 import { BUILT_IN_THEMES, createObsidianCustomTheme } from "../map/themes/presets";
-import { cloneTheme, createCustomThemeId, themeFromJson } from "../map/themes/theme-utils";
+import {
+  cloneTheme,
+  createCustomThemeId,
+  themeFromJson,
+  toHexColor,
+} from "../map/themes/theme-utils";
 import { ThemeEditorModal } from "./ThemeEditorModal";
 
 /** Settings tab for defaults, language, and themes. */
@@ -81,6 +86,40 @@ export class SettingsTab extends PluginSettingTab {
           this.schedulePersist();
         });
       });
+
+    new Setting(containerEl)
+      .setName(t("settings.connectorColor"))
+      .setDesc(t("settings.connectorColorDesc"))
+      .addColorPicker((picker) => {
+        picker.setValue(settings.defaultConnectorColor || toHexColor("var(--interactive-accent)"));
+        picker.onChange((value) => {
+          settings.defaultConnectorColor = value;
+          this.schedulePersist();
+        });
+      })
+      .addExtraButton((button) => {
+        button.setIcon("rotate-ccw");
+        button.setTooltip(t("settings.useThemeColors"));
+        button.onClick(async () => {
+          settings.defaultConnectorColor = "";
+          await this.persist();
+          this.display();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName(t("settings.lineWidth"))
+      .setDesc(t("settings.lineWidthDesc"))
+      .addSlider((slider) =>
+        slider
+          .setLimits(LIMITS.lineWidth.min, LIMITS.lineWidth.max, 1)
+          .setValue(settings.defaultLineWidth)
+          .setDynamicTooltip()
+          .onChange((value) => {
+            settings.defaultLineWidth = value;
+            this.schedulePersist();
+          }),
+      );
 
     new Setting(containerEl)
       .setName(t("settings.defaultLayout"))
@@ -181,6 +220,8 @@ export class SettingsTab extends PluginSettingTab {
         button.setButtonText(t("settings.resetButton")).onClick(async () => {
           this.host.settings.defaultTheme = DEFAULT_SETTINGS.defaultTheme;
           this.host.settings.defaultFontFamily = DEFAULT_SETTINGS.defaultFontFamily;
+          this.host.settings.defaultConnectorColor = DEFAULT_SETTINGS.defaultConnectorColor;
+          this.host.settings.defaultLineWidth = DEFAULT_SETTINGS.defaultLineWidth;
           this.host.settings.defaultLayout = DEFAULT_SETTINGS.defaultLayout;
           this.host.settings.defaultDirection = DEFAULT_SETTINGS.defaultDirection;
           this.host.settings.defaultSpacingX = DEFAULT_SETTINGS.defaultSpacingX;

@@ -20,13 +20,15 @@ export interface MindMapMeta {
   align: NodeAlignment;
   compact: boolean;
   maxWidth: number;
-  nodeShape?: NodeShape;
-  nodeFillColor?: string;
-  nodeBorderColor?: string;
-  nodeBorderWidth?: number;
   connectorStyle?: ConnectorStyle;
-  connectorColor?: string;
-  lineWidth?: number;
+}
+
+/** Per-node style overrides stored in an inline comment on the node's line. */
+export interface NodeStyle {
+  shape?: NodeShape;
+  fill?: string;
+  borderColor?: string;
+  borderWidth?: number;
   fontFamily?: string;
   fontSize?: number;
   textColor?: string;
@@ -43,6 +45,7 @@ export interface MindNode {
   text: string;
   children: MindNode[];
   collapsed: boolean;
+  style?: NodeStyle;
 }
 
 /** Raw source parts preserved for round-trip serialization. */

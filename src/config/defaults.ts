@@ -26,6 +26,8 @@ export const DEFAULT_SETTINGS: SimpleMindSettings = {
   defaultCompact: DEFAULT_MINDMAP_META.compact,
   defaultMaxWidth: DEFAULT_MINDMAP_META.maxWidth,
   defaultFontFamily: "",
+  defaultConnectorColor: "",
+  defaultLineWidth: 0,
   customThemes: [],
   restoreSourceCursor: true,
 };
@@ -36,7 +38,7 @@ export const DEFAULT_SETTINGS: SimpleMindSettings = {
  * @param settings Current plugin settings.
  */
 export function metaFromSettings(settings: SimpleMindSettings): MindMapMeta {
-  const meta: MindMapMeta = {
+  return {
     version: 1,
     theme: settings.defaultTheme,
     layout: settings.defaultLayout,
@@ -47,7 +49,4 @@ export function metaFromSettings(settings: SimpleMindSettings): MindMapMeta {
     compact: settings.defaultCompact,
     maxWidth: settings.defaultMaxWidth,
   };
-  const fontFamily = settings.defaultFontFamily.trim();
-  if (fontFamily) meta.fontFamily = fontFamily;
-  return meta;
 }

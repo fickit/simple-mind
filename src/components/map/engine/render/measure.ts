@@ -1,13 +1,13 @@
 import type { MindMapMeta, MindNode } from "../../../../types/mindmap";
 import type { NodeShape, ThemeTokens } from "../../../../types/theme";
+import { nodeVisual } from "../../themes/nodeVisual";
 import type { NodeMeasurer, NodeSize } from "../layout/types";
 import { renderInlineMarkdown } from "./inlineMarkdown";
 
 /** Returns the border width that participates in measurement. */
 function measurementBorderWidth(shape: NodeShape, borderWidth: number): number {
-  if (shape === "rounded" || shape === "pill") return borderWidth;
-  if (shape === "underline") return 2;
-  return 0;
+  if (shape === "plain") return 0;
+  return borderWidth;
 }
 
 /** Measures rendered node labels with a hidden DOM element and caches the result. */
@@ -59,10 +59,6 @@ export class DomNodeMeasurer {
     this.cache.clear();
     this.inner.style.maxWidth = `${meta.maxWidth}px`;
     this.inner.style.padding = `${tokens.node.paddingY}px ${tokens.node.paddingX}px`;
-    this.inner.style.fontFamily = tokens.typography.family;
-    this.inner.style.fontSize = `${tokens.typography.size}px`;
-    this.inner.style.fontStyle = tokens.typography.fontStyle ?? "normal";
-    this.inner.style.lineHeight = String(tokens.typography.lineHeight);
   }
 
   /**
@@ -72,19 +68,23 @@ export class DomNodeMeasurer {
    * @param isRoot Whether the node uses root tokens.
    */
   measure(node: MindNode, isRoot: boolean): NodeSize {
-    const key = `${isRoot ? "root" : "node"}\u0000${node.text}`;
+    const key = `${isRoot ? "root" : "node"}\u0000${JSON.stringify(node.style ?? null)}\u0000${node.text}`;
     const cached = this.cache.get(key);
     if (cached) return cached;
 
-    const shape = isRoot ? this.tokens.root.shape : this.tokens.node.shape;
-    const borderWidth = measurementBorderWidth(
-      shape,
-      isRoot ? this.tokens.root.borderWidth : this.tokens.node.borderWidth,
-    );
-    this.inner.style.fontWeight = isRoot ? "600" : String(this.tokens.typography.weight);
+    const visual = nodeVisual(this.tokens, node.style, isRoot);
+    const borderWidth =
+      visual.shape === "underline"
+        ? (node.style?.borderWidth ?? 2)
+        : measurementBorderWidth(visual.shape, visual.borderWidth);
+    this.inner.style.fontFamily = visual.fontFamily;
+    this.inner.style.fontSize = `${visual.fontSize}px`;
+    this.inner.style.fontStyle = visual.fontStyle;
+    this.inner.style.fontWeight = String(visual.fontWeight);
+    this.inner.style.lineHeight = String(visual.lineHeight);
     this.inner.style.border = borderWidth > 0 ? `${borderWidth}px solid transparent` : "none";
     this.inner.style.borderBottom =
-      shape === "underline" ? `${borderWidth}px solid transparent` : "";
+      visual.shape === "underline" ? `${borderWidth}px solid transparent` : "";
     this.inner.replaceChildren(renderInlineMarkdown(node.text, this.inner.ownerDocument));
 
     const width = this.inner.offsetWidth;

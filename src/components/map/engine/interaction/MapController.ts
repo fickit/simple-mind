@@ -1,6 +1,7 @@
-import type { MindMapDocument, MindMapMeta, MindNode } from "../../../../types/mindmap";
+import type { MindMapDocument, MindMapMeta, MindNode, NodeStyle } from "../../../../types/mindmap";
 import { SourceHistory } from "../history/SourceHistory";
 import { containsNode, findNodeById, findParentById, type ParentMatch } from "../model/tree";
+import { cloneNodeStyle } from "../parser/nodeStyle";
 import { parseSource } from "../parser/parser";
 import { serializeDocument } from "../parser/serializer";
 
@@ -14,6 +15,7 @@ export type MovePosition = "child" | "before" | "after";
 export interface CopiedNode {
   text: string;
   children: CopiedNode[];
+  style?: NodeStyle;
 }
 
 /** State captured while a new node is being edited. */
@@ -118,6 +120,29 @@ export class MapController {
         meta[key] = value;
       }
     }
+    return this.serializeAndCommit(previousSource);
+  }
+
+  /**
+   * Updates per-node style overrides and writes them to the node's source line.
+   *
+   * @param nodeId Node to style.
+   * @param patch Style fields to replace; undefined removes a field.
+   */
+  updateNodeStyle(nodeId: string, patch: Partial<NodeStyle>): boolean {
+    const node = this.findNode(nodeId);
+    if (!node) return false;
+
+    const previousSource = this.source;
+    const style: NodeStyle = { ...node.style };
+    const record = style as unknown as Record<string, unknown>;
+    for (const [key, value] of Object.entries(patch)) {
+      if (value === undefined) delete record[key];
+      else record[key] = value;
+    }
+
+    if (Object.keys(style).length === 0) delete node.style;
+    else node.style = style;
     return this.serializeAndCommit(previousSource);
   }
 
@@ -330,6 +355,7 @@ export class MapController {
   private copyNode(node: MindNode): CopiedNode {
     return {
       text: node.text,
+      style: cloneNodeStyle(node.style),
       children: node.children.map((child) => this.copyNode(child)),
     };
   }
@@ -337,6 +363,7 @@ export class MapController {
   /** Clones clipboard data into live nodes with new ids. */
   private cloneCopiedNode(source: CopiedNode): MindNode {
     const node = createNode(source.text);
+    node.style = cloneNodeStyle(source.style);
     node.children = source.children.map((child) => this.cloneCopiedNode(child));
     return node;
   }

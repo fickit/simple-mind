@@ -11,8 +11,8 @@ should not live in the map engine or the view lifecycle.
 
 ## Files
 
-- `SettingsTab.ts`: general defaults (including the global default font), language, built-in/custom
-  theme management, import/export, and deletion confirmation.
+- `SettingsTab.ts`: general defaults (including global font and connector color/thickness), language,
+  built-in/custom theme management, import/export, and deletion confirmation.
 - `ThemeEditorModal.ts`: light/dark token editing with a live node and connector preview.
 
 ## Call flow

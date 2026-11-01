@@ -190,4 +190,34 @@ describe("MapController", () => {
     expect(controller.getSource()).toContain("theme: nord");
     expect(onChange).toHaveBeenCalledOnce();
   });
+
+  it("updates per-node styles and removes empty markers", () => {
+    const { controller, document } = setup();
+    const a = document.root.children[0];
+
+    expect(controller.updateNodeStyle(a.id, { fill: "#aabbcc", bold: true })).toBe(true);
+    expect(controller.getSource()).toContain('- A <!-- sm:{"fill":"#aabbcc","bold":true} -->');
+
+    expect(controller.updateNodeStyle(a.id, { bold: undefined })).toBe(true);
+    expect(controller.getSource()).toContain('- A <!-- sm:{"fill":"#aabbcc"} -->');
+
+    expect(controller.updateNodeStyle(a.id, { fill: undefined })).toBe(true);
+    expect(controller.getSource()).not.toContain("<!-- sm:");
+    expect(a.style).toBeUndefined();
+
+    expect(controller.undo()).toBe(true);
+    expect(controller.getSource()).toContain("- A <!-- sm:");
+  });
+
+  it("keeps node styles when copying and pasting a subtree", () => {
+    const source = '# Root\n- A <!-- sm:{"fill":"#aabbcc"} -->\n  - A1\n- B\n';
+    const { controller, document } = setup(source);
+    const a = document.root.children[0];
+    const b = document.root.children[1];
+
+    const copied = controller.copySubtree(a.id)!;
+    expect(copied.style).toEqual({ fill: "#aabbcc" });
+    expect(controller.pasteSubtree(b.id, [copied])).toHaveLength(1);
+    expect(controller.getSource()).toContain('- B\n  - A <!-- sm:{"fill":"#aabbcc"} -->');
+  });
 });

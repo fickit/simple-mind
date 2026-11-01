@@ -77,26 +77,41 @@ mindmap:
 - `align`: `center` or `start`; controls parent alignment relative to its child block.
 - `compact`: boolean; reduces gaps.
 - `maxWidth`: maximum node width; clamped to 120-600.
-- Optional per-file style overrides, applied on top of the selected theme:
-  - Node: `nodeShape` (`rounded`, `pill`, `underline`, `plain`), `nodeFillColor`, `nodeBorderColor`,
-    `nodeBorderWidth` (0-8).
-  - Connector: `connectorStyle` (`curve`, `orthogonal`, `straight`), `connectorColor`,
-    `lineWidth` (1-6).
-  - Text: `fontFamily`, `fontSize` (8-32), `textColor`, `bold`, `italic`, `underline`,
-    `textAlign` (`left`, `center`, `right`), `lineHeight` (1-3).
+- Optional `connectorStyle` (`curve`, `orthogonal`, `straight`) for the whole map.
 
-  An override is deleted from the file when the control is reset, so the theme value applies again.
-  Themes own complete style designs (colors, fonts, shapes, and connectors); per-file overrides only
-  replace the fields the user changes.
+Themes own complete style designs: colors, typography, node shape and border, and connector geometry
+and width. Node and text styles are not stored in frontmatter; they are per-node overrides written
+next to the node (see 3.3). Global defaults for font, connector color, and connector thickness live
+in plugin settings.
 
 Missing values fall back to plugin defaults. Invalid values fall back to the default, produce a
 non-blocking notice, and are not written back until the user changes the corresponding setting.
 
 Unknown keys inside `mindmap` and unknown top-level frontmatter keys are preserved when the plugin
-updates the `mindmap` block. YAML comments inside the `mindmap` block may be normalized when that block
-is rewritten.
+updates the `mindmap` block. File-level node/text style keys written by earlier versions are ignored
+and dropped with a warning.
 
-### 3.3 Outline grammar
+YAML comments inside the `mindmap` block may be normalized when that block is rewritten.
+
+### 3.3 Per-node style markers
+
+A node's style is stored in a trailing HTML comment on its own line:
+
+```markdown
+# Root <!-- sm:{"fill":"#4c6ef5"} -->
+- Child <!-- sm:{"shape":"pill","bold":true} -->
+```
+
+- The parser strips the marker from the label, so the map and Markdown preview show only the label.
+- Supported keys: `shape`, `fill`, `borderColor`, `borderWidth` (0-8), `fontFamily`, `fontSize`
+  (8-32), `textColor`, `bold`, `italic`, `underline`, `textAlign` (`left`, `center`, `right`), and
+  `lineHeight` (1-3).
+- Invalid fields are dropped or clamped with a warning. Malformed JSON drops the marker.
+- Styles travel with the line under rename, reorder, and copy/paste. Deleting the line deletes the
+  style; resetting every field removes the marker.
+- The marker is valid Markdown and renders as an invisible comment in Obsidian.
+
+### 3.4 Outline grammar
 
 - The parser accepts `-`, `*`, and `+` as unordered list markers. The serializer emits `-`.
 - The canonical indentation is two spaces per level. Tabs are treated as two spaces for parsing.
@@ -120,7 +135,7 @@ Example:
   - Grandchild
 ```
 
-### 3.4 Parse result and failure behavior
+### 3.5 Parse result and failure behavior
 
 ```ts
 interface ParseError {
@@ -171,13 +186,14 @@ interface MindMapMeta {
   align: NodeAlignment;
   compact: boolean;
   maxWidth: number;
-  nodeShape?: NodeShape;
-  nodeFillColor?: string;
-  nodeBorderColor?: string;
-  nodeBorderWidth?: number;
   connectorStyle?: ConnectorStyle;
-  connectorColor?: string;
-  lineWidth?: number;
+}
+
+interface NodeStyle {
+  shape?: NodeShape;
+  fill?: string;
+  borderColor?: string;
+  borderWidth?: number;
   fontFamily?: string;
   fontSize?: number;
   textColor?: string;
@@ -193,6 +209,7 @@ interface MindNode {
   text: string;
   children: MindNode[];
   collapsed: boolean;
+  style?: NodeStyle;
 }
 
 interface MindMapDocument {
@@ -594,22 +611,29 @@ Each theme provides both light and dark tokens. The active variant is selected b
 
 The map view includes a right-side style panel with two tabs:
 
-- **Style**: theme, layout type, tree direction, parent alignment, compact mode; node shape, fill,
-  border color, and border width; connector style, color, and thickness.
+- **Style**: theme, layout type, tree direction, parent alignment, compact mode, and connector
+  shape for the file; node shape, fill, border color, and border width for the selected node.
 - **Text**: font family and size; text color, bold, italic, underline, text alignment, and line
-  height.
+  height for the selected node.
 
-The panel only exposes settings that belong to one map. Horizontal gap, vertical gap, and maximum
-node width live in the plugin settings as defaults. The global default font lives in settings as
-well; a font set in the Text tab overrides it for that file.
+Node and text controls are disabled with a hint until a node is selected. Every edit is applied to
+that node only, written into its inline style marker, and reprocessed immediately. Color controls
+fall back to the node's effective theme color and expose a reset action that removes the override.
+The root is a node too, so the H1 line can carry its own style.
 
-Every change is written to the file's `mindmap` frontmatter and reprocessed immediately, so existing
-maps update without being recreated. Color controls fall back to the effective theme color and expose
-a reset action that removes the override. A "Manage themes" action opens the settings tab for custom
-theme creation and color editing.
+Connector color and thickness are not per-map settings. They live in the plugin settings as global
+defaults; the sidebar keeps only the connector shape, which is stored in the file's frontmatter.
+A "Manage themes" action opens the settings tab for custom theme creation and color editing.
 
 Command names use the i18n dictionary. On language change, commands are removed and re-registered
 using the same ids. This requires `minAppVersion: 1.7.2`.
+
+### 11.2.2 Global style defaults
+
+Plugin settings provide a default font, a connector color, and a connector thickness. The font is
+used by nodes without a font override. The connector color is empty by default and then follows each
+branch's theme color. A thickness of `0` keeps each theme's own line width. These defaults apply
+beneath per-node overrides and per-file connector shape.
 
 ### 11.3 Status bar
 

@@ -304,20 +304,19 @@ describe("MapCanvas", () => {
     host.remove();
   });
 
-  it("writes per-file layout and node-shape overrides from the sidebar", () => {
+  it("writes per-file layout and connector-shape overrides from the sidebar", () => {
     const { host, canvas, onChange } = createCanvas("# Root\n- A\n");
     const layout = host.querySelector<HTMLSelectElement>(".simple-mind-sidebar-layout")!;
-    const shape = host.querySelector<HTMLSelectElement>(".simple-mind-sidebar-node-shape")!;
+    const connector = host.querySelector<HTMLSelectElement>(".simple-mind-sidebar-connector")!;
 
     layout.value = "org";
     layout.dispatchEvent(new Event("change", { bubbles: true }));
-    shape.value = "pill";
-    shape.dispatchEvent(new Event("change", { bubbles: true }));
+    connector.value = "orthogonal";
+    connector.dispatchEvent(new Event("change", { bubbles: true }));
 
     expect(onChange).toHaveBeenCalledTimes(2);
     expect(canvas.getSource()).toContain("layout: org");
-    expect(canvas.getSource()).toContain("nodeShape: pill");
-    expect(host.querySelector(".simple-mind-node.shape-pill")).not.toBeNull();
+    expect(canvas.getSource()).toContain("connectorStyle: orthogonal");
 
     canvas.destroy();
     host.remove();
@@ -342,7 +341,7 @@ describe("MapCanvas", () => {
     host.remove();
   });
 
-  it("keeps gap and node width out of the sidebar", () => {
+  it("keeps gap, node width, and connector color out of the sidebar", () => {
     const { host, canvas } = createCanvas("# Root\n- A\n");
     const labels = Array.from(host.querySelectorAll(".simple-mind-sidebar-row > span")).map(
       (label) => label.textContent,
@@ -350,25 +349,48 @@ describe("MapCanvas", () => {
 
     expect(labels).not.toContain("Horizontal gap");
     expect(labels).not.toContain("Maximum node width");
-    expect(labels).toContain("Thickness");
+    expect(labels).not.toContain("Color");
+    expect(labels).not.toContain("Thickness");
+    expect(labels).toContain("Shape");
 
     canvas.destroy();
     host.remove();
   });
 
-  it("writes node, connector, and text overrides from the sidebar", () => {
+  it("requires a selection before editing node and text styles", () => {
     const { host, canvas } = createCanvas("# Root\n- A\n");
+    const shape = host.querySelector<HTMLSelectElement>(".simple-mind-sidebar-node-shape")!;
+    const fill = host.querySelector<HTMLInputElement>(".simple-mind-sidebar-node-fill")!;
+    const hint = host.querySelector<HTMLElement>(".simple-mind-sidebar-hint")!;
+
+    expect(shape.disabled).toBe(true);
+    expect(fill.disabled).toBe(true);
+    expect(hint.hidden).toBe(false);
+
+    selectNode(host, "n2");
+    expect(shape.disabled).toBe(false);
+    expect(fill.disabled).toBe(false);
+    expect(hint.hidden).toBe(true);
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("writes node and text overrides to the selected node", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n- B\n");
+    selectNode(host, "n2");
     const change = (selector: string, value: string): void => {
       const input = host.querySelector<HTMLInputElement>(selector)!;
       input.value = value;
       input.dispatchEvent(new Event("change", { bubbles: true }));
     };
 
+    const shape = host.querySelector<HTMLSelectElement>(".simple-mind-sidebar-node-shape")!;
+    shape.value = "pill";
+    shape.dispatchEvent(new Event("change", { bubbles: true }));
     change(".simple-mind-sidebar-node-fill", "#112233");
     change(".simple-mind-sidebar-node-border", "#223344");
     change(".simple-mind-sidebar-node-border-width", "3");
-    change(".simple-mind-sidebar-connector-color", "#445566");
-    change(".simple-mind-sidebar-line-width", "4");
 
     clickButton(host, "Text");
     change(".simple-mind-sidebar-font-family", "Georgia");
@@ -387,36 +409,47 @@ describe("MapCanvas", () => {
     change(".simple-mind-sidebar-line-height", "1.8");
 
     const source = canvas.getSource();
-    expect(source).toContain('nodeFillColor: "#112233"');
-    expect(source).toContain('nodeBorderColor: "#223344"');
-    expect(source).toContain("nodeBorderWidth: 3");
-    expect(source).toContain('connectorColor: "#445566"');
-    expect(source).toContain("lineWidth: 4");
-    expect(source).toContain("fontFamily: Georgia");
-    expect(source).toContain("fontSize: 16");
-    expect(source).toContain('textColor: "#778899"');
-    expect(source).toContain("bold: true");
-    expect(source).toContain("italic: true");
-    expect(source).toContain("underline: true");
-    expect(source).toContain("textAlign: right");
-    expect(source).toContain("lineHeight: 1.8");
+    expect(source).toContain(
+      '- A <!-- sm:{"shape":"pill","fill":"#112233","borderColor":"#223344","borderWidth":3,"fontFamily":"Georgia","fontSize":16,"textColor":"#778899","bold":true,"italic":true,"underline":true,"textAlign":"right","lineHeight":1.8} -->',
+    );
+    expect(source).toContain("- B\n");
+    expect(source).not.toContain("- B <!-- sm:");
 
-    const root = host.querySelector<HTMLElement>(".simple-mind-map")!;
-    expect(root.style.getPropertyValue("--sm-node-bg")).toBe("#112233");
-    expect(root.style.getPropertyValue("--sm-node-border")).toBe("#223344");
-    expect(root.style.getPropertyValue("--sm-node-border-width")).toBe("3px");
-    expect(root.style.getPropertyValue("--sm-edge-width")).toBe("4");
-    expect(root.style.getPropertyValue("--sm-font-style")).toBe("italic");
-    expect(root.style.getPropertyValue("--sm-text-align")).toBe("right");
-    expect(root.style.getPropertyValue("--sm-text-decoration")).toBe("underline");
-    expect(host.querySelector(".simple-mind-edge")?.getAttribute("stroke")).toBe("#445566");
+    const node = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n2"]')!;
+    expect(node.classList.contains("shape-pill")).toBe(true);
+    expect(node.style.getPropertyValue("--sm-node-bg")).toBe("#112233");
+    expect(node.style.getPropertyValue("--sm-node-border")).toBe("#223344");
+    expect(node.style.getPropertyValue("--sm-node-border-width")).toBe("3px");
+    expect(node.style.getPropertyValue("--sm-font")).toBe("Georgia");
+    expect(node.style.getPropertyValue("--sm-font-size")).toBe("16px");
+    expect(node.style.fontWeight).toBe("600");
+    expect(node.style.getPropertyValue("--sm-font-style")).toBe("italic");
+    expect(node.style.getPropertyValue("--sm-line-height")).toBe("1.8");
+    expect(node.style.getPropertyValue("--sm-text-align")).toBe("right");
+    expect(node.style.getPropertyValue("--sm-text-decoration")).toBe("underline");
 
     canvas.destroy();
     host.remove();
   });
 
-  it("clears a color override back to the theme value", () => {
+  it("styles the root through the H1 line", () => {
     const { host, canvas } = createCanvas("# Root\n- A\n");
+    selectNode(host, "n1");
+    const fill = host.querySelector<HTMLInputElement>(".simple-mind-sidebar-node-fill")!;
+    fill.value = "#ff0000";
+    fill.dispatchEvent(new Event("change", { bubbles: true }));
+
+    expect(canvas.getSource()).toContain('# Root <!-- sm:{"fill":"#ff0000"} -->');
+    const root = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n1"]')!;
+    expect(root.style.getPropertyValue("--sm-root-bg")).toBe("#ff0000");
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("clears a node color override back to the theme value", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    selectNode(host, "n2");
     const input = host.querySelector<HTMLInputElement>(".simple-mind-sidebar-node-fill")!;
     const reset = input.nextElementSibling as HTMLButtonElement;
 
@@ -424,11 +457,30 @@ describe("MapCanvas", () => {
     input.value = "#112233";
     input.dispatchEvent(new Event("change", { bubbles: true }));
     expect(reset.disabled).toBe(false);
-    expect(canvas.getSource()).toContain("nodeFillColor");
+    expect(canvas.getSource()).toContain('<!-- sm:{"fill":"#112233"} -->');
 
     reset.click();
     expect(reset.disabled).toBe(true);
-    expect(canvas.getSource()).not.toContain("nodeFillColor");
+    expect(canvas.getSource()).not.toContain("<!-- sm:");
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("applies global connector color and thickness", () => {
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      defaultConnectorColor: "#445566",
+      defaultLineWidth: 4,
+    };
+    const { host, canvas } = createCanvas("# Root\n- A\n", settings);
+
+    expect(host.querySelector(".simple-mind-edge")?.getAttribute("stroke")).toBe("#445566");
+    expect(
+      host
+        .querySelector<HTMLElement>(".simple-mind-map")
+        ?.style.getPropertyValue("--sm-edge-width"),
+    ).toBe("4");
 
     canvas.destroy();
     host.remove();

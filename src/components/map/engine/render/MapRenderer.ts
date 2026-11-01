@@ -1,8 +1,9 @@
 import { ZOOM_MAX, ZOOM_MIN } from "../../../../config/constants";
 import { DEFAULT_MINDMAP_META } from "../../../../config/defaults";
-import type { MindMapDocument, MindNode } from "../../../../types/mindmap";
+import type { MindMapDocument, MindNode, NodeStyle } from "../../../../types/mindmap";
 import type { ThemeDefinition, ThemeTokens } from "../../../../types/theme";
 import { tokensForMode } from "../../themes/applyTheme";
+import { type NodeVisual, nodeVisual } from "../../themes/nodeVisual";
 import { layoutDocument } from "../layout/layout";
 import type { LayoutBounds, LayoutResult, NodeMeasurer, PositionedNode } from "../layout/types";
 import { connectorPath } from "./connectors";
@@ -441,12 +442,12 @@ export class MapRenderer {
     color: string,
   ): void {
     const node = positioned.node;
-    const shape = isRoot ? this.themeTokens().root.shape : this.themeTokens().node.shape;
+    const visual = nodeVisual(this.themeTokens(), node.style, isRoot);
     const selected = this.selectedId === node.id;
     element.className = [
       "simple-mind-node",
       `side-${positioned.side}`,
-      `shape-${shape}`,
+      `shape-${visual.shape}`,
       isRoot ? "is-root" : "",
       selected ? "is-selected" : "",
       this.editingNodeId === node.id ? "is-editing" : "",
@@ -458,6 +459,7 @@ export class MapRenderer {
     element.style.height = `${positioned.height}px`;
     element.style.transform = `translate3d(${positioned.x}px, ${positioned.y}px, 0)`;
     element.style.setProperty("--sm-branch-color", color);
+    this.applyNodeVisual(element, visual, node.style, isRoot, color);
     element.setAttribute("aria-level", String(positioned.depth + 1));
     element.setAttribute("aria-selected", String(selected));
     if (node.children.length > 0) {
@@ -480,6 +482,30 @@ export class MapRenderer {
       collapse.setAttribute("aria-label", node.collapsed ? "Expand node" : "Collapse node");
       collapse.setAttribute("aria-expanded", String(!node.collapsed && hasChildren));
     }
+  }
+
+  /** Applies per-node colors and typography as inline variables. */
+  private applyNodeVisual(
+    element: HTMLElement,
+    visual: NodeVisual,
+    style: NodeStyle | undefined,
+    isRoot: boolean,
+    branchColor: string,
+  ): void {
+    const prefix = isRoot ? "root" : "node";
+    element.style.setProperty(`--sm-${prefix}-bg`, visual.background);
+    element.style.setProperty(`--sm-${prefix}-border`, visual.border);
+    element.style.setProperty(`--sm-${prefix}-border-width`, `${visual.borderWidth}px`);
+    element.style.setProperty(`--sm-${prefix}-text`, visual.text);
+    element.style.setProperty("--sm-font", visual.fontFamily);
+    element.style.setProperty("--sm-font-size", `${visual.fontSize}px`);
+    element.style.fontWeight = String(visual.fontWeight);
+    element.style.setProperty("--sm-font-style", visual.fontStyle);
+    element.style.setProperty("--sm-line-height", String(visual.lineHeight));
+    element.style.setProperty("--sm-text-align", visual.textAlign);
+    element.style.setProperty("--sm-text-decoration", visual.textDecoration);
+    element.style.setProperty("--sm-underline-color", style?.borderColor ?? branchColor);
+    element.style.setProperty("--sm-underline-width", `${style?.borderWidth ?? 2}px`);
   }
 
   /** Creates an edge element for a child id. */

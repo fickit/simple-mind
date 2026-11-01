@@ -8,6 +8,7 @@ import type {
   ParseWarning,
 } from "../../../../types/mindmap";
 import { parseMeta, splitFrontmatter } from "./frontmatter";
+import { extractNodeLabel } from "./nodeStyle";
 
 interface Level {
   indent: number;
@@ -74,7 +75,13 @@ export function parseSource(
         });
         return { document: null, errors, warnings };
       }
-      root = createNode(rootMatch[1].trim(), nextId);
+      const parsed = extractNodeLabel(rootMatch[1], lineNumber, warnings);
+      if (parsed.label === "") {
+        errors.push({ line: lineNumber, message: "The root needs a label." });
+        return { document: null, errors, warnings };
+      }
+      root = createNode(parsed.label, nextId);
+      root.style = parsed.style;
       continue;
     }
 
@@ -102,15 +109,15 @@ export function parseSource(
     }
 
     const indent = rawLine.length - rawLine.trimStart().length;
-    const text = listMatch[2].trim();
-    if (text === "") {
+    const parsed = extractNodeLabel(listMatch[2], lineNumber, warnings);
+    if (parsed.label === "") {
       errors.push({ line: lineNumber, message: "A list item needs a label." });
       continue;
     }
 
-    const node = createNode(text, nextId);
-    if (!attachNode(root, node, indent, levels, lineNumber, errors)) {
-    }
+    const node = createNode(parsed.label, nextId);
+    node.style = parsed.style;
+    attachNode(root, node, indent, levels, lineNumber, errors);
   }
 
   if (root === null) {

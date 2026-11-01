@@ -14,7 +14,10 @@ Obsidian's global styles and make light/dark switching and custom themes determi
 - `applyTheme.ts`: compiles a token set into `--sm-*` variables and resolves the active light/dark
   variant.
 - `presets.ts`: eight built-in themes with light and dark variants, plus fallback resolution.
-- `overrides.ts`: applies per-file node, connector, and text overrides on top of a theme.
+- `overrides.ts`: applies the file's connector shape and global font/connector defaults on top of a
+  theme.
+- `nodeVisual.ts`: resolves one node's effective colors and typography from a theme plus its inline
+  style marker.
 - `theme-utils.ts`: clones, validates, and serializes theme definitions for custom theme management.
 
 ## Built-in themes
@@ -24,6 +27,7 @@ complete style design—colors, typography, node shape and border, and connector
 
 ## Call flow
 
-`MapCanvas` resolves the selected theme from the file frontmatter, applies per-file overrides, applies
-the effective tokens to its root, and passes them to `MapRenderer` for measurement and connector
-styling. Obsidian's `css-change` event reapplies the active light or dark variant.
+`MapCanvas` resolves the selected theme from the file frontmatter, applies the file's connector shape
+and global defaults, and passes the effective tokens to `MapRenderer`. The renderer and measurer call
+`nodeVisual` for each node so inline style markers override the theme. Obsidian's `css-change` event
+reapplies the active light or dark variant.

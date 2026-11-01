@@ -20,10 +20,14 @@ describe("defaults", () => {
     expect(DEFAULT_MINDMAP_META.maxWidth).toBeLessThanOrEqual(LIMITS.maxWidth.max);
   });
 
-  it("uses the global font only when one is set", () => {
-    expect(metaFromSettings(DEFAULT_SETTINGS).fontFamily).toBeUndefined();
-    expect(
-      metaFromSettings({ ...DEFAULT_SETTINGS, defaultFontFamily: "Georgia, serif" }).fontFamily,
-    ).toBe("Georgia, serif");
+  it("keeps global style defaults out of per-file metadata", () => {
+    const meta = metaFromSettings({
+      ...DEFAULT_SETTINGS,
+      defaultFontFamily: "Georgia, serif",
+      defaultConnectorColor: "#123456",
+      defaultLineWidth: 4,
+    });
+
+    expect(meta).toEqual(DEFAULT_MINDMAP_META);
   });
 });

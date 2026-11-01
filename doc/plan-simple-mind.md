@@ -165,16 +165,18 @@ Branch: `feat/core`
 - `√` Implement Tab/Shift+Tab/Enter/Delete/F2 shortcuts; Enter/Tab in the editor commit and continue
   with a sibling/child; Space is reserved for text input and the collapse shortcut is deferred.
 - `√` New nodes open as empty single-line editors with a default width and no placeholder.
-- `√` Add a two-tab front-end style panel for the current file. Style: theme, layout, alignment,
-  compact mode, node shape/fill/border, and connector style/color/thickness. Text: font family and
-  size, text color, weight, italic, underline, alignment, and line height.
-- `√` Keep horizontal gap, vertical gap, and maximum node width in plugin settings instead of the
-  panel; add a global default font to settings with a per-file override.
-- `√` Add per-file style overrides (node fill/border/width, connector color, text color, bold,
-  italic, underline, alignment, line height) written to frontmatter and applied on top of the theme.
-- `√` Let color controls show the effective theme color and reset an override back to the theme.
-- `√` Honor per-file connector colors and typography in the renderer, measurement, inline editor,
-  and stylesheet.
+- `√` Add a two-tab style panel. Style: theme, layout, alignment, compact mode, and connector shape
+  for the file; node shape, fill, border color, and border width for the selected node. Text: font
+  family and size, text color, bold, italic, underline, alignment, and line height for the selected
+  node.
+- `√` Keep horizontal gap, vertical gap, and maximum node width in plugin settings. Add global
+  defaults for font, connector color, and connector thickness; a thickness of 0 uses the theme.
+- `√` Store per-node styles in trailing `<!-- sm:{...} -->` markers, validate and clamp them on parse,
+  and preserve them through rename, move, copy, and paste.
+- `√` Apply per-node styles in the renderer, measurement cache, inline editor, and stylesheet; show
+  the effective color in each color control and let reset remove the override.
+- `√` Keep connector shape per file, and disable node/text controls until a node is selected.
+- `√` Drop legacy file-level node/text style keys with a warning.
 - `√` Refresh maps on Obsidian light/dark changes through `css-change` plus a body-class fallback.
 - `√` Implement drag start threshold, reparent, reorder, drop indicators, and hover-to-expand.
 - `√` Implement internal clipboard, cut, copy, and paste, plus system-clipboard text fallback.
@@ -253,8 +255,8 @@ Manual: complete the source/map switching checklist.
 Branch: `feat/core`
 
 - `√` Implement the settings schema and persistence.
-- `√` Implement the settings tab: general defaults, layout defaults, global default font, theme
-  management, language.
+- `√` Implement the settings tab: general defaults, layout defaults, global font/connector defaults,
+  theme management, language.
 - `√` Implement English and Chinese dictionaries and `t()`.
 - `√` Re-register commands on language change without changing command ids.
 - `√` Translate the view, toolbar, notices, commands, settings, and theme editor strings.
@@ -320,15 +322,16 @@ node scripts/benchmark.mjs
 - Phase 4 renderer: canvas, themes, pan/zoom, collapse, and inline Markdown complete; visual demo
   passed in light and dark mode. rAF batching and culling remain performance tasks.
 - Phase 5 interaction: selection, inline editing, live reflow, add/delete, drag-and-drop, clipboard,
-  undo/redo, and source serialization are implemented and tested. The style panel is split into Style
-  and Text tabs; node, connector, and text overrides are written to frontmatter and applied live.
+  undo/redo, and source serialization are implemented and tested. The Style/Text panel edits the
+  selected node through inline style markers; connector shape stays per file, while connector color
+  and thickness are global settings.
 - Phase 6 themes: eight built-in themes, per-file selection, automatic light/dark switching, custom
   theme editing, import/export, and live preview are implemented.
 - Phase 7 view integration: TextFileView, source switching, status bar, commands, and new-map creation
   are implemented; filename prompt and per-file view-state restore remain.
-- Phase 8 settings/i18n: settings tab (including the global default font), custom theme management,
-  language switching, command re-registration, and English/Chinese UI are implemented; manual
-  verification remains.
+- Phase 8 settings/i18n: settings tab (including global font and connector defaults), custom theme
+  management, language switching, command re-registration, and English/Chinese UI are implemented;
+  manual verification remains.
 - Next: manual verification in Obsidian, then performance benchmark, README polish, and release assets.
 - Test vault: created with a sample map.
 - Author metadata: `fickit`; repository URL still pending.

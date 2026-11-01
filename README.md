@@ -38,7 +38,8 @@ The file opens as a map. The Source action switches the same tab to Obsidian's n
 - Three layouts: mind map, tree, and organization chart.
 - Direct editing: add, edit, delete, collapse, drag, copy/paste, undo, and redo.
 - Eight built-in themes with automatic light/dark switching and a custom theme editor.
-- A per-map Style/Text panel for node, connector, and text overrides.
+- A Style/Text panel that styles the selected node; connector shape per map, connector color and
+  thickness in settings.
 - English and Chinese UI.
 - Desktop-first performance target of 1,000 nodes per map.
 
@@ -67,6 +68,7 @@ The file opens as a map. The Source action switches the same tab to Obsidian's n
 - Exactly one H1 root.
 - One nested unordered list under the root.
 - Node labels are single-line basic inline Markdown.
+- Per-node styles live in a trailing `<!-- sm:{...} -->` comment on the node's line.
 - Invalid source shows a line-numbered error and locks map editing to prevent data loss.
 - Blank lines and list-marker style are normalized when the map writes the file.
 

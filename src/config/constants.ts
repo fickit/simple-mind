@@ -35,7 +35,7 @@ export const LIMITS = {
   spacingY: { min: 4, max: 120 },
   maxWidth: { min: 120, max: 600 },
   fontSize: { min: 8, max: 32 },
-  lineWidth: { min: 1, max: 6 },
+  lineWidth: { min: 0, max: 6 },
   nodeBorderWidth: { min: 0, max: 8 },
   lineHeight: { min: 1, max: 3 },
 } as const;

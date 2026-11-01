@@ -16,6 +16,8 @@ export interface SimpleMindSettings {
   defaultCompact: boolean;
   defaultMaxWidth: number;
   defaultFontFamily: string;
+  defaultConnectorColor: string;
+  defaultLineWidth: number;
   customThemes: ThemeDefinition[];
   restoreSourceCursor: boolean;
 }

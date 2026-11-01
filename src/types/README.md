@@ -11,8 +11,8 @@ module keeps those contracts consistent and prevents circular imports between im
 
 ## Files
 
-- `mindmap.ts`: layout enums, map metadata (including per-file style overrides), node tree, source
-  text, parser errors, and parse results.
+- `mindmap.ts`: layout enums, map metadata, per-node style overrides, node tree, source text,
+  parser errors, and parse results.
 - `theme.ts`: node shapes, connector styles, text alignment, theme tokens, and theme definitions.
 - `settings.ts`: language and persistent plugin settings.
 

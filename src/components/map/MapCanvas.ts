@@ -6,6 +6,7 @@ import type {
   MindMapMeta,
   MindNode,
   NodeAlignment,
+  NodeStyle,
   TreeDirection,
 } from "../../types/mindmap";
 import type { SimpleMindSettings } from "../../types/settings";
@@ -22,6 +23,7 @@ import type { PositionedNode } from "./engine/layout/types";
 import { parseSource } from "./engine/parser/parser";
 import { MapRenderer } from "./engine/render/MapRenderer";
 import { applyTheme, tokensForMode } from "./themes/applyTheme";
+import { nodeVisual } from "./themes/nodeVisual";
 import { applyMetaOverrides } from "./themes/overrides";
 import { BUILT_IN_THEMES, OBSIDIAN_THEME, resolveTheme } from "./themes/presets";
 
@@ -90,13 +92,13 @@ export class MapCanvas {
   private sidebarDirectionSelect!: HTMLSelectElement;
   private sidebarAlignSelect!: HTMLSelectElement;
   private sidebarCompactInput!: HTMLInputElement;
+  private sidebarNodeHint!: HTMLElement;
+  private sidebarTextHint!: HTMLElement;
   private sidebarNodeShapeSelect!: HTMLSelectElement;
   private sidebarNodeFill!: SidebarColorControl;
   private sidebarNodeBorder!: SidebarColorControl;
   private sidebarNodeBorderWidthInput!: HTMLInputElement;
   private sidebarConnectorSelect!: HTMLSelectElement;
-  private sidebarConnectorColor!: SidebarColorControl;
-  private sidebarLineWidthInput!: HTMLInputElement;
   private sidebarFontFamilyInput!: HTMLInputElement;
   private sidebarFontSizeInput!: HTMLInputElement;
   private sidebarTextColor!: SidebarColorControl;
@@ -164,6 +166,7 @@ export class MapCanvas {
       onEditRequest: (nodeId) => this.startEdit(nodeId),
       onSelectionChange: (nodeId) => {
         this.selectedId = nodeId;
+        this.syncSidebar();
         this.updateToolbar();
       },
     });
@@ -404,6 +407,7 @@ export class MapCanvas {
     );
 
     const nodeSection = this.createSidebarSection(this.sidebarStylePane, t("sidebar.node"));
+    this.sidebarNodeHint = this.createSidebarHint(nodeSection, t("sidebar.selectNode"));
     this.sidebarNodeShapeSelect = this.createSidebarSelect(
       nodeSection,
       t("sidebar.nodeShape"),
@@ -414,20 +418,17 @@ export class MapCanvas {
         { value: "underline", label: t("themeEditor.shape.underline") },
         { value: "plain", label: t("themeEditor.shape.plain") },
       ],
-      (value) =>
-        this.updateMetaAndRender({
-          nodeShape: value ? (value as NodeShape) : undefined,
-        }),
+      (value) => this.updateSelectedNodeStyle({ shape: value ? (value as NodeShape) : undefined }),
     );
     this.sidebarNodeShapeSelect.classList.add("simple-mind-sidebar-node-shape");
     this.sidebarNodeFill = this.createSidebarColor(nodeSection, t("sidebar.fill"), (value) =>
-      this.updateMetaAndRender({ nodeFillColor: value }),
+      this.updateSelectedNodeStyle({ fill: value }),
     );
     this.sidebarNodeFill.input.classList.add("simple-mind-sidebar-node-fill");
     this.sidebarNodeBorder = this.createSidebarColor(
       nodeSection,
       t("sidebar.borderColor"),
-      (value) => this.updateMetaAndRender({ nodeBorderColor: value }),
+      (value) => this.updateSelectedNodeStyle({ borderColor: value }),
     );
     this.sidebarNodeBorder.input.classList.add("simple-mind-sidebar-node-border");
     this.sidebarNodeBorderWidthInput = this.createSidebarNumber(
@@ -437,7 +438,7 @@ export class MapCanvas {
         min: LIMITS.nodeBorderWidth.min,
         max: LIMITS.nodeBorderWidth.max,
         placeholder: t("sidebar.defaultValue"),
-        onChange: (value) => this.updateMetaAndRender({ nodeBorderWidth: value }),
+        onChange: (value) => this.updateSelectedNodeStyle({ borderWidth: value }),
       },
     );
     this.sidebarNodeBorderWidthInput.classList.add("simple-mind-sidebar-node-border-width");
@@ -448,7 +449,7 @@ export class MapCanvas {
     );
     this.sidebarConnectorSelect = this.createSidebarSelect(
       connectorSection,
-      t("themeEditor.connector"),
+      t("sidebar.connectorShape"),
       [
         { value: "", label: t("sidebar.themeDefault") },
         { value: "curve", label: t("themeEditor.connector.curve") },
@@ -461,62 +462,43 @@ export class MapCanvas {
         }),
     );
     this.sidebarConnectorSelect.classList.add("simple-mind-sidebar-connector");
-    this.sidebarConnectorColor = this.createSidebarColor(
-      connectorSection,
-      t("sidebar.connectorColor"),
-      (value) => this.updateMetaAndRender({ connectorColor: value }),
-    );
-    this.sidebarConnectorColor.input.classList.add("simple-mind-sidebar-connector-color");
-    this.sidebarLineWidthInput = this.createSidebarNumber(
-      connectorSection,
-      t("sidebar.connectorWidth"),
-      {
-        min: LIMITS.lineWidth.min,
-        max: LIMITS.lineWidth.max,
-        placeholder: t("sidebar.defaultValue"),
-        onChange: (value) => this.updateMetaAndRender({ lineWidth: value }),
-      },
-    );
-    this.sidebarLineWidthInput.classList.add("simple-mind-sidebar-line-width");
 
     const fontSection = this.createSidebarSection(this.sidebarTextPane, t("sidebar.font"));
+    this.sidebarTextHint = this.createSidebarHint(fontSection, t("sidebar.selectNode"));
     this.sidebarFontFamilyInput = this.createSidebarText(
       fontSection,
       t("themeEditor.fontFamily"),
-      t("sidebar.themeDefault"),
-      (value) =>
-        this.updateMetaAndRender({
-          fontFamily: value.trim() || undefined,
-        }),
+      t("sidebar.defaultValue"),
+      (value) => this.updateSelectedNodeStyle({ fontFamily: value.trim() || undefined }),
     );
     this.sidebarFontFamilyInput.classList.add("simple-mind-sidebar-font-family");
     this.sidebarFontSizeInput = this.createSidebarNumber(fontSection, t("themeEditor.fontSize"), {
       min: LIMITS.fontSize.min,
       max: LIMITS.fontSize.max,
       placeholder: t("sidebar.defaultValue"),
-      onChange: (value) => this.updateMetaAndRender({ fontSize: value }),
+      onChange: (value) => this.updateSelectedNodeStyle({ fontSize: value }),
     });
     this.sidebarFontSizeInput.classList.add("simple-mind-sidebar-font-size");
 
     const textSection = this.createSidebarSection(this.sidebarTextPane, t("sidebar.text"));
     this.sidebarTextColor = this.createSidebarColor(textSection, t("sidebar.textColor"), (value) =>
-      this.updateMetaAndRender({ textColor: value }),
+      this.updateSelectedNodeStyle({ textColor: value }),
     );
     this.sidebarTextColor.input.classList.add("simple-mind-sidebar-text-color");
     this.sidebarBoldInput = this.createSidebarCheckbox(textSection, t("sidebar.bold"), (value) =>
-      this.updateMetaAndRender({ bold: value ? true : undefined }),
+      this.updateSelectedNodeStyle({ bold: value }),
     );
     this.sidebarBoldInput.classList.add("simple-mind-sidebar-bold");
     this.sidebarItalicInput = this.createSidebarCheckbox(
       textSection,
       t("sidebar.italic"),
-      (value) => this.updateMetaAndRender({ italic: value ? true : undefined }),
+      (value) => this.updateSelectedNodeStyle({ italic: value }),
     );
     this.sidebarItalicInput.classList.add("simple-mind-sidebar-italic");
     this.sidebarUnderlineInput = this.createSidebarCheckbox(
       textSection,
       t("sidebar.underline"),
-      (value) => this.updateMetaAndRender({ underline: value ? true : undefined }),
+      (value) => this.updateSelectedNodeStyle({ underline: value }),
     );
     this.sidebarUnderlineInput.classList.add("simple-mind-sidebar-underline");
     this.sidebarTextAlignSelect = this.createSidebarSelect(
@@ -529,7 +511,7 @@ export class MapCanvas {
         { value: "right", label: t("sidebar.textAlign.right") },
       ],
       (value) =>
-        this.updateMetaAndRender({
+        this.updateSelectedNodeStyle({
           textAlign: value ? (value as TextAlign) : undefined,
         }),
     );
@@ -539,7 +521,7 @@ export class MapCanvas {
       max: LIMITS.lineHeight.max,
       step: 0.1,
       placeholder: t("sidebar.defaultValue"),
-      onChange: (value) => this.updateMetaAndRender({ lineHeight: value }),
+      onChange: (value) => this.updateSelectedNodeStyle({ lineHeight: value }),
     });
     this.sidebarLineHeightInput.classList.add("simple-mind-sidebar-line-height");
 
@@ -578,6 +560,15 @@ export class MapCanvas {
     section.appendChild(heading);
     parent.appendChild(section);
     return section;
+  }
+
+  /** Adds a muted hint inside a section. */
+  private createSidebarHint(parent: HTMLElement, text: string): HTMLElement {
+    const hint = this.sidebarEl.ownerDocument.createElement("p");
+    hint.className = "simple-mind-sidebar-hint";
+    hint.textContent = text;
+    parent.appendChild(hint);
+    return hint;
   }
 
   /** Appends a label/control row and returns the control. */
@@ -719,48 +710,74 @@ export class MapCanvas {
       : "obsidian";
   }
 
-  /** Synchronizes sidebar controls with the current file metadata. */
+  /** Synchronizes sidebar controls with the file metadata and selected node. */
   private syncSidebar(): void {
     if (!this.sidebarThemeSelect) return;
     const meta = this.controller?.getDocument().meta;
     const tokens = tokensForMode(this.effectiveTheme, this.dark);
+    const node = this.getSelectedNode();
+    const isRoot = node ? this.controller?.isRoot(node.id) === true : false;
+    const visual = nodeVisual(tokens, node?.style, isRoot);
+    const style = node?.style ?? {};
+    const hasSelection = node !== null;
 
     this.syncThemeOptions();
     this.sidebarLayoutSelect.value = meta?.layout ?? this.settings.defaultLayout;
     this.sidebarDirectionSelect.value = meta?.direction ?? this.settings.defaultDirection;
     this.sidebarAlignSelect.value = meta?.align ?? this.settings.defaultAlign;
     this.sidebarCompactInput.checked = meta?.compact ?? this.settings.defaultCompact;
-
-    this.sidebarNodeShapeSelect.value = meta?.nodeShape ?? "";
-    this.syncColorControl(this.sidebarNodeFill, meta?.nodeFillColor, tokens.node.background);
-    this.syncColorControl(this.sidebarNodeBorder, meta?.nodeBorderColor, tokens.node.border);
-    this.sidebarNodeBorderWidthInput.value = optionalNumber(meta?.nodeBorderWidth);
     this.sidebarConnectorSelect.value = meta?.connectorStyle ?? "";
-    this.syncColorControl(
-      this.sidebarConnectorColor,
-      meta?.connectorColor,
-      tokens.branch.overrideColor ?? tokens.branch.palette[0] ?? tokens.selection.outline,
-    );
-    this.sidebarLineWidthInput.value = optionalNumber(meta?.lineWidth);
 
-    this.sidebarFontFamilyInput.value = meta?.fontFamily ?? "";
-    this.sidebarFontSizeInput.value = optionalNumber(meta?.fontSize);
-    this.syncColorControl(this.sidebarTextColor, meta?.textColor, tokens.node.text);
-    this.sidebarBoldInput.checked = meta?.bold === true;
-    this.sidebarItalicInput.checked = meta?.italic === true;
-    this.sidebarUnderlineInput.checked = meta?.underline === true;
-    this.sidebarTextAlignSelect.value = meta?.textAlign ?? "";
-    this.sidebarLineHeightInput.value = optionalNumber(meta?.lineHeight);
+    this.sidebarNodeShapeSelect.value = style.shape ?? "";
+    this.syncColorControl(this.sidebarNodeFill, hasSelection, style.fill, visual.background);
+    this.syncColorControl(this.sidebarNodeBorder, hasSelection, style.borderColor, visual.border);
+    this.sidebarNodeBorderWidthInput.value = optionalNumber(style.borderWidth);
+    this.sidebarFontFamilyInput.value = style.fontFamily ?? "";
+    this.sidebarFontSizeInput.value = optionalNumber(style.fontSize);
+    this.syncColorControl(this.sidebarTextColor, hasSelection, style.textColor, visual.text);
+    this.sidebarBoldInput.checked = style.bold ?? visual.fontWeight >= 600;
+    this.sidebarItalicInput.checked = style.italic ?? visual.fontStyle === "italic";
+    this.sidebarUnderlineInput.checked = style.underline ?? visual.textDecoration === "underline";
+    this.sidebarTextAlignSelect.value = style.textAlign ?? "";
+    this.sidebarLineHeightInput.value = optionalNumber(style.lineHeight);
+
+    this.setNodeStyleControlsEnabled(hasSelection);
+    this.sidebarNodeHint.hidden = hasSelection;
+    this.sidebarTextHint.hidden = hasSelection;
   }
 
-  /** Shows the effective color and enables reset only when an override exists. */
+  /** Returns the selected live node, if any. */
+  private getSelectedNode(): MindNode | null {
+    if (!this.controller || !this.selectedId) return null;
+    return this.controller.findNode(this.selectedId);
+  }
+
+  /** Enables or disables controls that require a selected node. */
+  private setNodeStyleControlsEnabled(enabled: boolean): void {
+    const controls: Array<HTMLInputElement | HTMLSelectElement> = [
+      this.sidebarNodeShapeSelect,
+      this.sidebarNodeBorderWidthInput,
+      this.sidebarFontFamilyInput,
+      this.sidebarFontSizeInput,
+      this.sidebarBoldInput,
+      this.sidebarItalicInput,
+      this.sidebarUnderlineInput,
+      this.sidebarTextAlignSelect,
+      this.sidebarLineHeightInput,
+    ];
+    for (const control of controls) control.disabled = !enabled;
+  }
+
+  /** Shows the effective color and enables reset only for an available override. */
   private syncColorControl(
     control: SidebarColorControl,
+    enabled: boolean,
     override: string | undefined,
     fallback: string,
   ): void {
+    control.input.disabled = !enabled;
     control.input.value = resolveColorInput(override ?? fallback, this.rootEl);
-    control.reset.disabled = override === undefined;
+    control.reset.disabled = !enabled || override === undefined;
   }
 
   /** Applies per-file metadata changes and redraws. */
@@ -773,7 +790,22 @@ export class MapCanvas {
     this.updateToolbar();
   }
 
-  /** Resolves the base theme plus per-file style overrides. */
+  /** Applies a style patch to the selected node and redraws. */
+  private updateSelectedNodeStyle(patch: Partial<NodeStyle>): void {
+    const controller = this.controller;
+    const nodeId = this.selectedId;
+    if (!controller || !nodeId) return;
+    if (!controller.updateNodeStyle(nodeId, patch)) {
+      this.syncSidebar();
+      return;
+    }
+
+    this.rerender(false);
+    this.syncSidebar();
+    this.updateToolbar();
+  }
+
+  /** Resolves the base theme plus connector shape and global style defaults. */
   private applyCurrentTheme(): void {
     const document = this.controller?.getDocument();
     const base = resolveTheme(
@@ -781,7 +813,7 @@ export class MapCanvas {
       this.settings.customThemes,
     );
     this.theme = base;
-    const effective = document ? applyMetaOverrides(base, document.meta) : base;
+    const effective = document ? applyMetaOverrides(base, document.meta, this.settings) : base;
     this.effectiveTheme = effective;
     this.dark = isDarkDocument(this.rootEl.ownerDocument);
     applyTheme(this.rootEl, effective, this.dark);
@@ -941,6 +973,7 @@ export class MapCanvas {
   private copyNodeData(node: MindNode): CopiedNode {
     return {
       text: node.text,
+      style: node.style ? { ...node.style } : undefined,
       children: node.children.map((child) => this.copyNodeData(child)),
     };
   }

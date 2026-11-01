@@ -79,77 +79,87 @@ describe("parseSource", () => {
     expect(result.document!.meta).toEqual(defaults);
   });
 
-  it("parses and serializes per-file style overrides", () => {
+  it("parses and serializes per-node styles and connector shape", () => {
     const source = `---
 mindmap:
-  nodeShape: pill
-  nodeFillColor: "#fffaf0"
-  nodeBorderColor: "#8c5e3c"
-  nodeBorderWidth: 3
   connectorStyle: orthogonal
-  connectorColor: "#8c5e3c"
-  lineWidth: 3
-  fontFamily: "Georgia, serif"
-  fontSize: 16
-  textColor: "#3b3226"
-  bold: true
-  italic: true
-  underline: false
-  textAlign: right
-  lineHeight: 1.8
 ---
-# Root
-- A
+# Root <!-- sm:{"textColor":"#aabbcc","bold":true} -->
+- A <!-- sm:{"shape":"pill","fill":"#ffe8cc","fontSize":16,"textAlign":"left"} -->
+  - B
 `;
     const result = parseSource(source);
-    const meta = result.document!.meta;
+    const document = result.document!;
+    const first = document.root.children[0];
 
-    expect(meta.nodeShape).toBe("pill");
-    expect(meta.nodeFillColor).toBe("#fffaf0");
-    expect(meta.nodeBorderColor).toBe("#8c5e3c");
-    expect(meta.nodeBorderWidth).toBe(3);
-    expect(meta.connectorStyle).toBe("orthogonal");
-    expect(meta.connectorColor).toBe("#8c5e3c");
-    expect(meta.fontFamily).toBe("Georgia, serif");
-    expect(meta.fontSize).toBe(16);
-    expect(meta.lineWidth).toBe(3);
-    expect(meta.textColor).toBe("#3b3226");
-    expect(meta.bold).toBe(true);
-    expect(meta.italic).toBe(true);
-    expect(meta.underline).toBe(false);
-    expect(meta.textAlign).toBe("right");
-    expect(meta.lineHeight).toBe(1.8);
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toEqual([]);
+    expect(document.meta.connectorStyle).toBe("orthogonal");
+    expect(document.root.text).toBe("Root");
+    expect(document.root.style).toEqual({ textColor: "#aabbcc", bold: true });
+    expect(first.text).toBe("A");
+    expect(first.style).toEqual({
+      shape: "pill",
+      fill: "#ffe8cc",
+      fontSize: 16,
+      textAlign: "left",
+    });
 
-    const serialized = serializeDocument(result.document!);
-    expect(serialized).toContain("nodeShape: pill");
-    expect(serialized).toContain('nodeFillColor: "#fffaf0"');
-    expect(serialized).toContain('nodeBorderColor: "#8c5e3c"');
-    expect(serialized).toContain("nodeBorderWidth: 3");
+    const serialized = serializeDocument(document);
     expect(serialized).toContain("connectorStyle: orthogonal");
-    expect(serialized).toContain('connectorColor: "#8c5e3c"');
-    expect(serialized).toContain("lineWidth: 3");
-    expect(serialized).toContain('fontFamily: "Georgia, serif"');
-    expect(serialized).toContain("fontSize: 16");
-    expect(serialized).toContain('textColor: "#3b3226"');
-    expect(serialized).toContain("bold: true");
-    expect(serialized).toContain("italic: true");
-    expect(serialized).toContain("underline: false");
-    expect(serialized).toContain("textAlign: right");
-    expect(serialized).toContain("lineHeight: 1.8");
+    expect(serialized).toContain('# Root <!-- sm:{"textColor":"#aabbcc","bold":true} -->');
+    expect(serialized).toContain(
+      '- A <!-- sm:{"shape":"pill","fill":"#ffe8cc","fontSize":16,"textAlign":"left"} -->',
+    );
+
+    const second = parseSource(serialized).document!;
+    expect(second.meta).toEqual(document.meta);
+    expect(second.root.style).toEqual(document.root.style);
+    expect(second.root.children[0].style).toEqual(first.style);
   });
 
-  it("drops invalid optional style values with warnings", () => {
+  it("clamps and validates node style fields", () => {
     const result = parseSource(
-      "---\nmindmap:\n  nodeBorderWidth: wide\n  lineHeight: tall\n  textAlign: middle\n  bold: yes\n---\n# Root\n",
+      '# Root\n- A <!-- sm:{"fontSize":99,"lineHeight":"tall","shape":"circle","fill":""} -->\n',
     );
-    const meta = result.document!.meta;
+    const style = result.document!.root.children[0].style;
 
     expect(result.errors).toEqual([]);
     expect(result.warnings).toHaveLength(4);
-    expect(meta.nodeBorderWidth).toBeUndefined();
-    expect(meta.lineHeight).toBeUndefined();
-    expect(meta.textAlign).toBeUndefined();
-    expect(meta.bold).toBeUndefined();
+    expect(style?.fontSize).toBe(32);
+    expect(style?.lineHeight).toBeUndefined();
+    expect(style?.shape).toBeUndefined();
+    expect(style?.fill).toBeUndefined();
+  });
+
+  it("drops a malformed node style marker with a warning", () => {
+    const result = parseSource("# Root\n- A <!-- sm:{bad} -->\n- B\n");
+    const first = result.document!.root.children[0];
+
+    expect(result.errors).toEqual([]);
+    expect(result.warnings).toHaveLength(1);
+    expect(first.text).toBe("A");
+    expect(first.style).toBeUndefined();
+  });
+
+  it("drops legacy file-level style keys with warnings", () => {
+    const result = parseSource(
+      '---\nmindmap:\n  nodeShape: pill\n  fontFamily: Georgia\n  connectorColor: "#fff"\n  lineWidth: 3\n  connectorStyle: straight\n---\n# Root\n',
+    );
+    const record = result.document!.meta as unknown as Record<string, unknown>;
+
+    expect(result.document!.meta.connectorStyle).toBe("straight");
+    expect(record.nodeShape).toBeUndefined();
+    expect(record.fontFamily).toBeUndefined();
+    expect(record.connectorColor).toBeUndefined();
+    expect(record.lineWidth).toBeUndefined();
+    expect(result.warnings).toHaveLength(4);
+
+    const serialized = serializeDocument(result.document!);
+    expect(serialized).not.toContain("nodeShape");
+    expect(serialized).not.toContain("fontFamily");
+    expect(serialized).not.toContain("connectorColor");
+    expect(serialized).not.toContain("lineWidth");
   });
 
   it("normalizes CRLF, tabs, and mixed list markers", () => {
