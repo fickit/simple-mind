@@ -41,6 +41,7 @@ export class MapRenderer {
   private document: MindMapDocument | null = null;
   private layout: LayoutResult | null = null;
   private selectedId: string | null = null;
+  private editingNodeId: string | null = null;
   private scale = 1;
   private translateX = 0;
   private translateY = 0;
@@ -251,6 +252,20 @@ export class MapRenderer {
     this.onSelectionChange?.(nodeId);
   }
 
+  /**
+   * Hides the node that is currently represented by the inline editor.
+   *
+   * @param nodeId Node being edited, or null when editing ends.
+   */
+  setEditingNode(nodeId: string | null): void {
+    if (this.editingNodeId === nodeId) return;
+    if (this.editingNodeId) {
+      this.nodeEls.get(this.editingNodeId)?.classList.remove("is-editing");
+    }
+    this.editingNodeId = nodeId;
+    if (nodeId) this.nodeEls.get(nodeId)?.classList.add("is-editing");
+  }
+
   /** Applies the world transform. */
   private applyTransform(): void {
     this.world.style.transform = `translate3d(${this.translateX}px, ${this.translateY}px, 0) scale(${this.scale})`;
@@ -297,6 +312,9 @@ export class MapRenderer {
     if (this.selectedId && !seen.has(this.selectedId)) {
       this.selectedId = null;
       this.onSelectionChange?.(null);
+    }
+    if (this.editingNodeId && !seen.has(this.editingNodeId)) {
+      this.editingNodeId = null;
     }
   }
 
@@ -386,6 +404,7 @@ export class MapRenderer {
       `shape-${shape}`,
       isRoot ? "is-root" : "",
       selected ? "is-selected" : "",
+      this.editingNodeId === node.id ? "is-editing" : "",
     ]
       .filter(Boolean)
       .join(" ");

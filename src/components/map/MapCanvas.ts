@@ -106,6 +106,7 @@ export class MapCanvas {
    */
   setSource(source: string): void {
     this.editor.close();
+    this.renderer.setEditingNode(null);
     this.pendingAdd = null;
     this.selectedId = null;
     this.sourceText = source;
@@ -163,6 +164,7 @@ export class MapCanvas {
   /** Removes the renderer and map DOM. */
   destroy(): void {
     this.editor.close();
+    this.renderer.setEditingNode(null);
     this.canvasEl.removeEventListener("keydown", this.keydownHandler);
     this.renderer.destroy();
     this.rootEl.remove();
@@ -282,6 +284,7 @@ export class MapCanvas {
 
     const meta = this.controller?.getDocument().meta;
     this.renderer.selectNode(nodeId);
+    this.renderer.setEditingNode(nodeId);
     this.editor.open(
       position,
       text,
@@ -302,6 +305,7 @@ export class MapCanvas {
   private commitEdit(nodeId: string, value: string, isNew: boolean): void {
     const controller = this.controller;
     if (!controller) return;
+    this.renderer.setEditingNode(null);
 
     if (isNew && this.pendingAdd?.node.id === nodeId) {
       if (value.trim() === "") {
@@ -338,6 +342,7 @@ export class MapCanvas {
   /** Cancels an inline edit. */
   private cancelEdit(nodeId: string, isNew: boolean): void {
     const controller = this.controller;
+    this.renderer.setEditingNode(null);
     if (isNew && this.pendingAdd?.node.id === nodeId) {
       const parentId = this.pendingAdd.parentId;
       controller?.cancelAdd(nodeId);

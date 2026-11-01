@@ -105,7 +105,8 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
-  outline: none;
+  outline: 2px solid var(--sm-selection-outline);
+  outline-offset: 2px;
 }
 
 .simple-mind-inline-editor::placeholder {
@@ -182,6 +183,10 @@
 .simple-mind-node.is-selected {
   outline: 2px solid var(--sm-selection-outline);
   outline-offset: 2px;
+}
+
+.simple-mind-node.is-editing {
+  visibility: hidden;
 }
 
 .simple-mind-node.shape-pill {

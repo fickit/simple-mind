@@ -203,7 +203,7 @@ export class InlineEditor {
     this.firstResize = false;
     const naturalWidth = this.mirror.offsetWidth || this.baseWidth;
     const minimumWidth = initial ? this.baseWidth : 40;
-    const width = Math.min(Math.max(minimumWidth, naturalWidth), this.maxWidth);
+    const width = Math.min(Math.max(minimumWidth, naturalWidth + (initial ? 0 : 1)), this.maxWidth);
 
     this.mirror.style.whiteSpace = "pre-wrap";
     this.mirror.style.width = `${width}px`;

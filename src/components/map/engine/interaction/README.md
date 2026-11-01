@@ -13,6 +13,8 @@ every change pass through one validation, serialization, and history path.
 
 - `MapController.ts`: add, rename, delete, move, collapse, undo, and redo over a document.
 - `InlineEditor.ts`: single-line input overlay with Enter, Escape, blur, and IME composition handling.
+  It mirrors the node's computed styles, grows with content up to `maxWidth`, wraps into more height,
+  and hides the underlying node while open so the old label cannot show through.
 
 ## Call flow
 
