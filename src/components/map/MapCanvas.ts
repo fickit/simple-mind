@@ -1,4 +1,5 @@
-import { InlineEditor } from "./engine/interaction/InlineEditor";
+import { NEW_NODE_EDITOR_WIDTH } from "../../config/constants";
+import { type CommitAction, InlineEditor } from "./engine/interaction/InlineEditor";
 import { type AddKind, MapController, type PendingAdd } from "./engine/interaction/MapController";
 import type { PositionedNode } from "./engine/layout/types";
 import { parseSource } from "./engine/parser/parser";
@@ -268,7 +269,7 @@ export class MapCanvas {
     this.pendingAdd = pending;
     this.rerender(false);
     this.renderer.selectNode(pending.node.id);
-    this.openEditor(pending.node.id, "", true, "New node");
+    this.openEditor(pending.node.id, "", true);
   }
 
   /** Opens the inline editor for an existing node. */
@@ -285,7 +286,7 @@ export class MapCanvas {
   }
 
   /** Positions the input over a node and wires commit/cancel. */
-  private openEditor(nodeId: string, text: string, isNew: boolean, placeholder = ""): void {
+  private openEditor(nodeId: string, text: string, isNew: boolean): void {
     this.renderer.selectNode(nodeId);
     this.renderer.setEditingNode(nodeId);
     const position = this.renderer.getNodePosition(nodeId);
@@ -299,12 +300,12 @@ export class MapCanvas {
       position,
       text,
       {
-        onCommit: (value) => this.commitEdit(nodeId, value, isNew),
+        onCommit: (value, action) => this.commitEdit(nodeId, value, isNew, action),
         onCancel: () => this.cancelEdit(nodeId, isNew),
       },
       {
         maxWidth: meta?.maxWidth ?? 280,
-        placeholder,
+        initialWidth: isNew ? NEW_NODE_EDITOR_WIDTH : undefined,
         nodeElement: this.renderer.getNodeElement(nodeId),
         onResize: (rect) => this.scheduleEditorLayout(nodeId, rect),
       },
@@ -352,7 +353,7 @@ export class MapCanvas {
   }
 
   /** Commits an inline edit into the controller. */
-  private commitEdit(nodeId: string, value: string, isNew: boolean): void {
+  private commitEdit(nodeId: string, value: string, isNew: boolean, action: CommitAction): void {
     this.cancelEditorLayout();
     const controller = this.controller;
     if (!controller) {
@@ -367,15 +368,18 @@ export class MapCanvas {
         this.renderer.setEditingNode(null);
         this.rerender(false);
         this.renderer.selectNode(null);
-      } else {
-        controller.commitAdd(nodeId, value, this.pendingAdd.previousSource);
-        this.pendingAdd = null;
-        this.renderer.setEditingNode(null);
-        this.rerender(false);
-        this.renderer.selectNode(nodeId);
+        this.renderer.focus();
+        this.updateToolbar();
+        return;
       }
-      this.renderer.focus();
+
+      controller.commitAdd(nodeId, value, this.pendingAdd.previousSource);
+      this.pendingAdd = null;
+      this.renderer.setEditingNode(null);
+      this.rerender(false);
+      this.renderer.selectNode(nodeId);
       this.updateToolbar();
+      this.afterCommit(action);
       return;
     }
 
@@ -392,8 +396,18 @@ export class MapCanvas {
     this.renderer.setEditingNode(null);
     this.rerender(false);
     this.renderer.selectNode(nodeId);
-    this.renderer.focus();
     this.updateToolbar();
+    this.afterCommit(action);
+  }
+
+  /** Starts the next insertion requested by Enter or Tab, or focuses the canvas. */
+  private afterCommit(action: CommitAction): void {
+    if (action === "child") {
+      this.addChild();
+    } else if (action === "sibling") {
+      this.addSibling();
+    }
+    if (!this.editor.isOpen()) this.renderer.focus();
   }
 
   /** Cancels an inline edit. */
@@ -420,11 +434,6 @@ export class MapCanvas {
     if (!this.controller || !this.controller.toggleCollapse(nodeId)) return;
     this.rerender(false);
     this.updateToolbar();
-  }
-
-  /** Toggles collapse for the selected node. */
-  private toggleSelectedCollapse(): void {
-    if (this.selectedId) this.toggleCollapse(this.selectedId);
   }
 
   /** Selects the parent of the selected node. */
@@ -527,11 +536,6 @@ export class MapCanvas {
     if (event.key === "Delete" || event.key === "Backspace") {
       event.preventDefault();
       this.deleteSelected();
-      return;
-    }
-    if (event.key === " ") {
-      event.preventDefault();
-      this.toggleSelectedCollapse();
       return;
     }
     if (

@@ -117,14 +117,69 @@ describe("MapCanvas", () => {
     selectNode(host, "n2");
     clickButton(host, "+ Child");
 
-    const input = host.querySelector<HTMLInputElement>(".simple-mind-inline-editor");
+    const input = host.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor");
     expect(input).not.toBeNull();
     input!.value = "New child";
-    pressKey(input, "Enter");
+    input!.dispatchEvent(new FocusEvent("blur"));
 
     expect(onChange).toHaveBeenCalledOnce();
     expect(canvas.getSource()).toContain("- A\n  - New child");
     expect(host.querySelectorAll(".simple-mind-node")).toHaveLength(3);
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("starts an empty single-line editor without a placeholder", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    selectNode(host, "n2");
+    clickButton(host, "+ Child");
+
+    const input = host.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor");
+    expect(input?.value).toBe("");
+    expect(input?.placeholder).toBe("");
+    expect(input?.style.width).toBe("120px");
+    expect(Number.parseFloat(input?.style.height ?? "0")).toBeLessThanOrEqual(33);
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("commits on Enter and immediately starts a sibling editor", () => {
+    const { host, canvas, onChange } = createCanvas("# Root\n- A\n");
+    selectNode(host, "n2");
+    clickButton(host, "+ Child");
+
+    const input = host.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor");
+    input!.value = "First";
+    pressKey(input, "Enter");
+
+    expect(onChange).toHaveBeenCalledOnce();
+    expect(canvas.getSource()).toContain("- A\n  - First");
+    const nextInput = host.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor");
+    expect(nextInput).not.toBeNull();
+    expect(nextInput?.value).toBe("");
+    expect(document.activeElement).toBe(nextInput);
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("commits on Tab and immediately starts a child editor", () => {
+    const { host, canvas, onChange } = createCanvas("# Root\n- A\n");
+    selectNode(host, "n2");
+    clickButton(host, "+ Child");
+
+    const input = host.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor");
+    input!.value = "Parent";
+    pressKey(input, "Tab");
+
+    expect(onChange).toHaveBeenCalledOnce();
+    expect(canvas.getSource()).toContain("- A\n  - Parent");
+    const nextInput = host.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor");
+    expect(nextInput).not.toBeNull();
+    expect(nextInput?.value).toBe("");
+    expect(document.activeElement).toBe(nextInput);
 
     canvas.destroy();
     host.remove();
@@ -135,7 +190,7 @@ describe("MapCanvas", () => {
     const node = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n2"]');
     node?.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
 
-    const input = host.querySelector<HTMLInputElement>(".simple-mind-inline-editor");
+    const input = host.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor");
     expect(input?.value).toBe("A");
     input!.value = "Renamed";
     pressKey(input, "Enter");
@@ -177,6 +232,17 @@ describe("MapCanvas", () => {
     expect(onNotice).toHaveBeenCalledWith("The root node cannot be deleted.");
     expect(onChange).not.toHaveBeenCalled();
     expect(canvas.getSource()).toContain("# Root");
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("does not collapse a node on Space", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n  - A1\n- B\n");
+    selectNode(host, "n2");
+    pressKey(host.querySelector(".simple-mind-canvas"), " ");
+
+    expect(host.querySelectorAll(".simple-mind-node")).toHaveLength(4);
 
     canvas.destroy();
     host.remove();

@@ -26,6 +26,9 @@ export const ZOOM_MAX = 2.5;
 /** Node count above which the renderer may enable viewport culling. */
 export const CULLING_THRESHOLD = 1200;
 
+/** Initial inline-editor width for a new, empty node. */
+export const NEW_NODE_EDITOR_WIDTH = 120;
+
 /** Numeric bounds for per-file layout settings. */
 export const LIMITS = {
   spacingX: { min: 8, max: 240 },

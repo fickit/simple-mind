@@ -1,8 +1,11 @@
 import type { PositionedNode } from "../layout/types";
 
+/** Action to run after a committed edit. */
+export type CommitAction = "none" | "child" | "sibling";
+
 /** Callbacks for one inline editing session. */
 export interface InlineEditorCallbacks {
-  onCommit: (value: string) => void;
+  onCommit: (value: string, action: CommitAction) => void;
   onCancel: () => void;
 }
 
@@ -17,6 +20,7 @@ export interface EditorRect {
 /** Optional visual context for the editor. */
 export interface InlineEditorOptions {
   maxWidth?: number;
+  initialWidth?: number;
   placeholder?: string;
   nodeElement?: HTMLElement | null;
   onResize?: (rect: EditorRect) => void;
@@ -115,7 +119,8 @@ export class InlineEditor {
     this.position = position;
     this.maxWidth = Math.max(40, options.maxWidth ?? 280);
     this.placeholder = options.placeholder ?? "";
-    this.baseWidth = options.nodeElement?.offsetWidth || position.width || 40;
+    this.baseWidth =
+      options.initialWidth ?? options.nodeElement?.offsetWidth ?? position.width ?? 40;
     this.baseHeight = options.nodeElement?.offsetHeight || position.height || 30;
     this.composing = false;
     this.finished = false;
@@ -154,7 +159,11 @@ export class InlineEditor {
       if (event.key === "Enter") {
         event.preventDefault();
         event.stopPropagation();
-        this.commit();
+        this.commit(event.shiftKey ? "none" : "sibling");
+      } else if (event.key === "Tab") {
+        event.preventDefault();
+        event.stopPropagation();
+        this.commit(event.shiftKey ? "none" : "child");
       } else if (event.key === "Escape") {
         event.preventDefault();
         event.stopPropagation();
@@ -162,7 +171,7 @@ export class InlineEditor {
       }
     });
     input.addEventListener("blur", () => {
-      if (!this.finished) this.commit();
+      if (!this.finished) this.commit("none");
     });
     input.addEventListener("pointerdown", (event) => event.stopPropagation());
     input.addEventListener("click", (event) => event.stopPropagation());
@@ -175,14 +184,14 @@ export class InlineEditor {
     input.select();
   }
 
-  /** Commits the current value. */
-  commit(): void {
+  /** Commits the current value and reports the next action. */
+  commit(action: CommitAction = "none"): void {
     if (!this.input || this.finished) return;
     const value = this.input.value;
     const callbacks = this.callbacks;
     this.finished = true;
     this.remove();
-    callbacks?.onCommit(value);
+    callbacks?.onCommit(value, action);
   }
 
   /** Discards the edit. */

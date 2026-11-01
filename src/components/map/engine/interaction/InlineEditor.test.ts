@@ -22,19 +22,45 @@ function setup() {
 }
 
 describe("InlineEditor", () => {
-  it("commits on Enter", () => {
+  it("commits and requests a sibling on Enter", () => {
     const { world, editor } = setup();
     const onCommit = vi.fn();
     const onCancel = vi.fn();
 
     editor.open(position, "A", { onCommit, onCancel });
-    const input = world.querySelector<HTMLInputElement>(".simple-mind-inline-editor")!;
+    const input = world.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor")!;
     input.value = "B";
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
 
-    expect(onCommit).toHaveBeenCalledWith("B");
+    expect(onCommit).toHaveBeenCalledWith("B", "sibling");
     expect(onCancel).not.toHaveBeenCalled();
     expect(editor.isOpen()).toBe(false);
+  });
+
+  it("commits and requests a child on Tab", () => {
+    const { world, editor } = setup();
+    const onCommit = vi.fn();
+
+    editor.open(position, "A", { onCommit, onCancel: vi.fn() });
+    const input = world.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor")!;
+    input.value = "Child";
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true }));
+
+    expect(onCommit).toHaveBeenCalledWith("Child", "child");
+  });
+
+  it("commits without a follow-up action on Shift+Enter", () => {
+    const { world, editor } = setup();
+    const onCommit = vi.fn();
+
+    editor.open(position, "A", { onCommit, onCancel: vi.fn() });
+    const input = world.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor")!;
+    input.value = "Only";
+    input.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", shiftKey: true, bubbles: true }),
+    );
+
+    expect(onCommit).toHaveBeenCalledWith("Only", "none");
   });
 
   it("cancels on Escape", () => {
@@ -43,7 +69,7 @@ describe("InlineEditor", () => {
     const onCancel = vi.fn();
 
     editor.open(position, "A", { onCommit, onCancel });
-    const input = world.querySelector<HTMLInputElement>(".simple-mind-inline-editor")!;
+    const input = world.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor")!;
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
 
     expect(onCancel).toHaveBeenCalledOnce();
@@ -56,11 +82,11 @@ describe("InlineEditor", () => {
     const onCommit = vi.fn();
 
     editor.open(position, "A", { onCommit, onCancel: vi.fn() });
-    const input = world.querySelector<HTMLInputElement>(".simple-mind-inline-editor")!;
+    const input = world.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor")!;
     input.value = "Blurred";
     input.dispatchEvent(new FocusEvent("blur"));
 
-    expect(onCommit).toHaveBeenCalledWith("Blurred");
+    expect(onCommit).toHaveBeenCalledWith("Blurred", "none");
   });
 
   it("ignores Enter while composing", () => {
@@ -68,7 +94,7 @@ describe("InlineEditor", () => {
     const onCommit = vi.fn();
 
     editor.open(position, "A", { onCommit, onCancel: vi.fn() });
-    const input = world.querySelector<HTMLInputElement>(".simple-mind-inline-editor")!;
+    const input = world.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor")!;
     input.value = "中文";
     input.dispatchEvent(new CompositionEvent("compositionstart"));
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
@@ -76,6 +102,6 @@ describe("InlineEditor", () => {
 
     input.dispatchEvent(new CompositionEvent("compositionend"));
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
-    expect(onCommit).toHaveBeenCalledWith("中文");
+    expect(onCommit).toHaveBeenCalledWith("中文", "sibling");
   });
 });

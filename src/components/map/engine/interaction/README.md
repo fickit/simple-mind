@@ -12,10 +12,12 @@ every change pass through one validation, serialization, and history path.
 ## Files
 
 - `MapController.ts`: add, rename, delete, move, collapse, undo, and redo over a document.
-- `InlineEditor.ts`: single-line input overlay with Enter, Escape, blur, and IME composition handling.
-  It mirrors the node's computed styles, grows with content up to `maxWidth`, wraps into more height,
-  and hides the underlying node while open so the old label cannot show through. Every resize reports
-  its live rectangle to the canvas.
+- `InlineEditor.ts`: single-line input overlay with Enter, Tab, Escape, blur, and IME composition
+  handling. It mirrors the node's computed styles, grows with content up to `maxWidth`, wraps into more
+  height, and hides the underlying node while open so the old label cannot show through. Every resize
+  reports its live rectangle to the canvas. Enter commits and starts a sibling editor; Tab commits and
+  starts a child editor; Shift+Enter/Shift+Tab commit only. New nodes start as empty single-line
+  editors with no placeholder.
 
 ## Call flow
 
