@@ -351,16 +351,28 @@ selecting the node.
 
 ### 8.1 Shortcuts
 
+While the canvas has focus:
+
 - Arrow keys: move selection spatially.
 - Tab: add child and start editing.
-- Shift+Tab: move selection to parent.
-- Enter: add sibling after the selected node and start editing.
+- Shift+Tab: move selection to the parent.
+- Enter: add a sibling after the selected node and start editing.
 - Delete/Backspace: delete the selected node, except the root.
 - F2 or double-click: edit the selected node.
-- Space: toggle collapse when the selected node has children.
 - Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z: undo/redo map commands.
 - Ctrl/Cmd+C/X/V: copy, cut, paste a subtree.
-- Escape: cancel editing or clear selection.
+- Escape: clear selection.
+
+While the inline editor is focused:
+
+- Enter: commit and start a sibling editor.
+- Tab: commit and start a child editor.
+- Shift+Enter or Shift+Tab: commit without starting another node.
+- Escape: cancel the edit.
+- Blur: commit without starting another node.
+
+Collapse and expand are available from the node badge. The keyboard collapse shortcut is deferred, and
+Space is reserved for text input.
 
 ### 8.2 Inline editor
 
@@ -371,7 +383,9 @@ is inside the world layer, it inherits the current zoom transform.
 - It auto-sizes to the longest content line, capped by `maxWidth`, and grows vertically when the text
   wraps. The editor's live rectangle temporarily replaces the node's measured size, so the tree
   reflows and connectors stay attached while typing.
-- Enter commits; Escape cancels; blur commits.
+- A new node opens as an empty single-line editor with a default width of 120px and no placeholder.
+- Enter commits and starts a sibling editor; Tab commits and starts a child editor. Shift+Enter and
+  Shift+Tab commit only. Escape cancels; blur commits without a follow-up.
 - Composition events protect Chinese and other IME input.
 - A new empty node is removed if editing is cancelled without committing text.
 - Committing an empty label on an existing node keeps the old label and shows a notice.

@@ -162,7 +162,9 @@ Branch: `feat/core`
 - `√` Implement the inline input editor with Enter/Escape/blur behavior and IME composition handling.
 - `√` Reflow the tree with the live editor size on animation frames so children move and connectors
   stay attached while typing.
-- `√` Implement Tab/Shift+Tab/Enter/Delete/F2/Space shortcuts.
+- `√` Implement Tab/Shift+Tab/Enter/Delete/F2 shortcuts; Enter/Tab in the editor commit and continue
+  with a sibling/child; Space is reserved for text input and the collapse shortcut is deferred.
+- `√` New nodes open as empty single-line editors with a default width and no placeholder.
 - `-` Implement drag start threshold, reparent, reorder, drop indicators, and hover-to-expand.
 - `-` Implement internal clipboard, cut, copy, and paste.
 - `√` Wire add, rename, delete, move, collapse, undo, and redo through `MapController` and history.

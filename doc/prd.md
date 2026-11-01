@@ -95,8 +95,12 @@ mindmap:
 - Drag to reparent or reorder.
 - Undo and redo for all map operations.
 - Copy, cut, and paste a node subtree.
-- Keyboard navigation and shortcuts: Tab, Enter, Shift+Tab, Delete, F2, Space, arrow keys,
+- Keyboard navigation and shortcuts: Tab, Enter, Shift+Tab, Delete, F2, arrow keys,
   Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, Ctrl/Cmd+C/X/V.
+- Enter commits an inline edit and starts a sibling; Tab commits and starts a child;
+  Shift+Enter and Shift+Tab commit without starting another node.
+- Collapse and expand are available from the node badge. A keyboard collapse shortcut is deferred, and
+  Space is reserved for text input.
 - The root node cannot be deleted.
 - Empty new nodes are discarded if editing is cancelled.
 
