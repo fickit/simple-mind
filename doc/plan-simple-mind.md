@@ -178,8 +178,8 @@ Branch: `feat/core`
   the effective color in each color control and let reset remove the override.
 - `√` Keep connector shape per file, and disable node/text controls until a node is selected.
 - `√` Drop legacy file-level node/text style keys with a warning.
-- `√` Hide collapse and add controls until hover or selection; place them on opposite sides of the
-  connector at the fork, 8 px from the node, and use rounded chevrons.
+- `√` Hide collapse and add controls until hover or selection; line them up along the connector with
+  the chevron first, 8 px from the node, and the add button outside, using rounded chevrons.
 - `√` Color control backgrounds from the branch connector color with a contrasting glyph.
 - `√` Add floating `+` buttons per layout side: tree direction, organization downward, mind-map root
   both sides, and branch nodes only their own side.
@@ -337,10 +337,10 @@ node scripts/benchmark.mjs
 - Phase 5 interaction: selection, inline editing, live reflow, add/delete, drag-and-drop, clipboard,
   undo/redo, and source serialization are implemented and tested. The Style/Text panel edits the
   selected node through inline metadata; connector shape stays per file, while connector color and
-  thickness are global settings. Connectors leave a short lead before branching, the collapse and add
-  controls flank the connector at the fork with connector-colored backgrounds, collapsed groups
-  become count bubbles and lose the add button, and side-aware add buttons persist a branch's root
-  side. Compact spacing and the straight connector style are removed.
+  thickness are global settings. Connectors leave a lead before branching, the collapse and add
+  controls line up along that lead with connector-colored backgrounds, collapsed groups become count
+  bubbles and lose the add button, and side-aware add buttons persist a branch's root side. Compact
+  spacing and the straight connector style are removed.
 - Phase 6 themes: eight built-in themes, per-file selection, automatic light/dark switching, custom
   theme editing, import/export, and live preview are implemented.
 - Phase 7 view integration: TextFileView, source switching, status bar, commands, and new-map creation

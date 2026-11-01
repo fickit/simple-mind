@@ -1,10 +1,10 @@
 import {
   COLOR_INPUT_FALLBACK,
-  CONNECTOR_LEAD,
   LIMITS,
   NEW_NODE_EDITOR_WIDTH,
-  NODE_CONTROL_OFFSET,
+  NODE_CONTROL_GAP,
   NODE_CONTROL_SIZE,
+  NODE_CONTROL_SPACING,
 } from "../../config/constants";
 import { DEFAULT_SETTINGS, metaFromSettings } from "../../config/defaults";
 import { t } from "../../config/i18n";
@@ -144,8 +144,8 @@ export class MapCanvas {
     this.rootEl = doc.createElement("div");
     this.rootEl.className = "simple-mind-map";
     this.rootEl.style.setProperty("--sm-control-size", `${NODE_CONTROL_SIZE}px`);
-    this.rootEl.style.setProperty("--sm-control-lead", `${CONNECTOR_LEAD}px`);
-    this.rootEl.style.setProperty("--sm-control-offset", `${NODE_CONTROL_OFFSET}px`);
+    this.rootEl.style.setProperty("--sm-control-gap", `${NODE_CONTROL_GAP}px`);
+    this.rootEl.style.setProperty("--sm-control-spacing", `${NODE_CONTROL_SPACING}px`);
     container.replaceChildren(this.rootEl);
 
     const toolbar = doc.createElement("div");

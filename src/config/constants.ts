@@ -32,20 +32,17 @@ export const NEW_NODE_EDITOR_WIDTH = 120;
 /** Diameter of a floating node control. */
 export const NODE_CONTROL_SIZE = 20;
 
-/** Gap along the connector between a node edge and its nearest control. */
+/** Gap between a node edge and its nearest floating control. */
 export const NODE_CONTROL_GAP = 8;
 
-/** Gap between the connector line and the side of a control. */
-export const NODE_CONTROL_SIDE_GAP = 4;
+/** Gap between the collapse and add controls. */
+export const NODE_CONTROL_SPACING = 4;
 
-/** Distance from a node edge to the fork where connectors branch. */
-export const CONNECTOR_LEAD = NODE_CONTROL_GAP + NODE_CONTROL_SIZE / 2;
+/** Distance a connector travels before branching toward its children. */
+export const CONNECTOR_LEAD = NODE_CONTROL_GAP + NODE_CONTROL_SIZE * 2 + NODE_CONTROL_SPACING;
 
-/** Perpendicular distance from the connector line to a control center. */
-export const NODE_CONTROL_OFFSET = NODE_CONTROL_SIZE / 2 + NODE_CONTROL_SIDE_GAP;
-
-/** Minimum parent-child gap that keeps children clear of the fork controls. */
-export const CONNECTOR_CLEARANCE = CONNECTOR_LEAD + NODE_CONTROL_SIZE / 2 + NODE_CONTROL_GAP;
+/** Minimum parent-child gap that keeps node controls clear. */
+export const CONNECTOR_CLEARANCE = CONNECTOR_LEAD + 10;
 
 /** Numeric bounds for per-file layout and style settings. */
 export const LIMITS = {
