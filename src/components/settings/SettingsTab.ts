@@ -5,7 +5,7 @@ import { setLanguage, t } from "../../config/i18n";
 import type { LayoutKind, NodeAlignment, TreeDirection } from "../../types/mindmap";
 import type { Language, SimpleMindSettingsHost } from "../../types/settings";
 import type { ThemeDefinition } from "../../types/theme";
-import { BUILT_IN_THEMES } from "../map/themes/presets";
+import { BUILT_IN_THEMES, createObsidianCustomTheme } from "../map/themes/presets";
 import { cloneTheme, createCustomThemeId, themeFromJson } from "../map/themes/theme-utils";
 import { ThemeEditorModal } from "./ThemeEditorModal";
 
@@ -263,7 +263,8 @@ export class SettingsTab extends PluginSettingTab {
     const source = base ?? BUILT_IN_THEMES[0];
     const id = createCustomThemeId(this.allThemes());
     const name = base === null ? t("settings.newTheme") : `${base.name} ${t("settings.duplicate")}`;
-    const theme = cloneTheme(source, id, name);
+    const theme =
+      source.id === "obsidian" ? createObsidianCustomTheme(id, name) : cloneTheme(source, id, name);
     new ThemeEditorModal(this.app, {
       title: t("themeEditor.newTitle"),
       theme,

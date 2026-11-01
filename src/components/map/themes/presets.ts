@@ -91,6 +91,59 @@ export const OBSIDIAN_THEME: ThemeDefinition = {
   dark: obsidianTokens(),
 };
 
+/**
+ * Creates an editable Obsidian-style theme with concrete light and dark colors.
+ *
+ * The built-in theme resolves through Obsidian CSS variables, so copying it
+ * needs explicit variants for the theme editor.
+ *
+ * @param id Custom theme id.
+ * @param name Theme name.
+ */
+export function createObsidianCustomTheme(id: string, name: string): ThemeDefinition {
+  return {
+    id,
+    name,
+    builtIn: false,
+    light: buildTokens({
+      canvas: "#ffffff",
+      surface: "#f5f6f8",
+      text: "#2e2e2e",
+      border: "#d9dde3",
+      accent: "#4c6ef5",
+      accentText: "#ffffff",
+      palette: [
+        "#4c6ef5",
+        "#2f9e44",
+        "#e8590c",
+        "#7048e8",
+        "#0b7285",
+        "#d6336c",
+        "#e67700",
+        "#c92a2a",
+      ],
+    }),
+    dark: buildTokens({
+      canvas: "#1e1e1e",
+      surface: "#2a2a2a",
+      text: "#e6e6e6",
+      border: "#3f3f3f",
+      accent: "#6b8afd",
+      accentText: "#ffffff",
+      palette: [
+        "#8ba4ff",
+        "#69db7c",
+        "#ffa94d",
+        "#b197fc",
+        "#66d9e8",
+        "#faa2c1",
+        "#ffd43b",
+        "#ff8787",
+      ],
+    }),
+  };
+}
+
 export const PAPER_THEME: ThemeDefinition = {
   id: "paper",
   name: "Paper",

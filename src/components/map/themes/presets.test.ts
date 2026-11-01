@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { ThemeDefinition } from "../../../types/theme";
-import { BUILT_IN_THEMES, getBuiltInTheme, OBSIDIAN_THEME, resolveTheme } from "./presets";
+import {
+  BUILT_IN_THEMES,
+  createObsidianCustomTheme,
+  getBuiltInTheme,
+  OBSIDIAN_THEME,
+  resolveTheme,
+} from "./presets";
 
 describe("built-in themes", () => {
   it("ships eight unique themes", () => {
@@ -34,5 +40,13 @@ describe("built-in themes", () => {
     };
     expect(resolveTheme("custom-1", [custom])).toBe(custom);
     expect(resolveTheme("nord", [custom]).id).toBe("nord");
+  });
+
+  it("creates an editable Obsidian theme with distinct light and dark colors", () => {
+    const custom = createObsidianCustomTheme("custom-1", "Custom");
+
+    expect(custom.builtIn).toBe(false);
+    expect(custom.light.canvasBackground).not.toBe(custom.dark.canvasBackground);
+    expect(custom.light.node.background).not.toBe(custom.dark.node.background);
   });
 });

@@ -24,6 +24,6 @@ export function t(key: MessageKey, params?: Record<string, string | number>): st
   const template = (language === "zh" ? zh : en)[key] ?? en[key];
   if (!params) return template;
   return template.replace(/\{(\w+)\}/g, (match, name: string) =>
-    Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match,
+    Object.hasOwn(params, name) ? String(params[name]) : match,
   );
 }
