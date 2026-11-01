@@ -17,6 +17,8 @@ export const en = {
   "notice.emptyLabel": "A node label cannot be empty.",
   "notice.fixErrors": "Fix the source errors before editing.",
   "notice.clipboardEmpty": "The clipboard is empty or unavailable.",
+  "node.expand": "Expand node",
+  "node.collapse": "Collapse node",
   "notice.saveFailed": "Could not save the file: {reason}",
   "notice.newMapFailed": "Could not create the mind map: {reason}",
   "notice.openMapFirst": "Open a .mindmap file first.",

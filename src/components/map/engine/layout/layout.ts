@@ -153,7 +153,7 @@ function placeVertical(
   }
 }
 
-/** Splits root children into two sides by accumulated block height. */
+/** Splits root children by explicit side, balancing the remaining branches. */
 function splitMindMapSides(
   context: LayoutContext,
   children: MindNode[],
@@ -162,8 +162,31 @@ function splitMindMapSides(
   const right: MindNode[] = [];
   let leftHeight = 0;
   let rightHeight = 0;
+  let explicitLeft = 0;
+  let explicitRight = 0;
 
   for (const child of children) {
+    if (!child.side) continue;
+    const height = blockHeight(context, child);
+    if (child.side === "left") {
+      leftHeight += height + (explicitLeft > 0 ? context.gapY : 0);
+      explicitLeft += 1;
+    } else {
+      rightHeight += height + (explicitRight > 0 ? context.gapY : 0);
+      explicitRight += 1;
+    }
+  }
+
+  for (const child of children) {
+    if (child.side === "left") {
+      left.push(child);
+      continue;
+    }
+    if (child.side === "right") {
+      right.push(child);
+      continue;
+    }
+
     const height = blockHeight(context, child);
     if (leftHeight <= rightHeight) {
       leftHeight += height + (left.length > 0 ? context.gapY : 0);

@@ -209,15 +209,56 @@ describe("MapController", () => {
     expect(controller.getSource()).toContain("- A <!-- sm:");
   });
 
-  it("keeps node styles when copying and pasting a subtree", () => {
-    const source = '# Root\n- A <!-- sm:{"fill":"#aabbcc"} -->\n  - A1\n- B\n';
+  it("places a root child on the requested side", () => {
+    const { controller, document } = setup();
+    const root = document.root;
+
+    const left = controller.beginAdd("child", root.id, "left")!;
+    controller.commitAdd(left.node.id, "Left", left.previousSource);
+    expect(left.node.side).toBe("left");
+    expect(controller.getSource()).toContain('- Left <!-- sm:{"side":"left"} -->');
+
+    const right = controller.beginAdd("child", root.id, "right")!;
+    controller.commitAdd(right.node.id, "Right", right.previousSource);
+    expect(right.node.side).toBe("right");
+    expect(controller.getSource()).toContain('- Right <!-- sm:{"side":"right"} -->');
+  });
+
+  it("inherits the root-child side for a new sibling", () => {
+    const source = '# Root\n- A <!-- sm:{"side":"left"} -->\n';
+    const { controller, document } = setup(source);
+    const a = document.root.children[0];
+
+    const pending = controller.beginAdd("sibling", a.id)!;
+    controller.commitAdd(pending.node.id, "B", pending.previousSource);
+
+    expect(pending.node.side).toBe("left");
+    expect(controller.getSource()).toContain('- B <!-- sm:{"side":"left"} -->');
+  });
+
+  it("does not record a side outside the mind-map layout", () => {
+    const source = "---\nmindmap:\n  layout: tree\n---\n# Root\n- A\n";
+    const { controller, document } = setup(source);
+
+    const pending = controller.beginAdd("child", document.root.id, "left")!;
+    controller.commitAdd(pending.node.id, "B", pending.previousSource);
+
+    expect(pending.node.side).toBeUndefined();
+    expect(controller.getSource()).not.toContain('"side"');
+  });
+
+  it("keeps node styles and sides when copying and pasting a subtree", () => {
+    const source = '# Root\n- A <!-- sm:{"side":"right","fill":"#aabbcc"} -->\n  - A1\n- B\n';
     const { controller, document } = setup(source);
     const a = document.root.children[0];
     const b = document.root.children[1];
 
     const copied = controller.copySubtree(a.id)!;
     expect(copied.style).toEqual({ fill: "#aabbcc" });
+    expect(copied.side).toBe("right");
     expect(controller.pasteSubtree(b.id, [copied])).toHaveLength(1);
-    expect(controller.getSource()).toContain('- B\n  - A <!-- sm:{"fill":"#aabbcc"} -->');
+    expect(controller.getSource()).toContain(
+      '- B\n  - A <!-- sm:{"side":"right","fill":"#aabbcc"} -->',
+    );
   });
 });

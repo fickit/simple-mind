@@ -117,6 +117,7 @@ export function parseSource(
 
     const node = createNode(parsed.label, nextId);
     node.style = parsed.style;
+    node.side = parsed.side;
     attachNode(root, node, indent, levels, lineNumber, errors);
   }
 

@@ -4,6 +4,9 @@ export type LayoutKind = "mindmap" | "tree" | "org";
 /** Horizontal direction used by the tree layout. */
 export type TreeDirection = "right" | "left";
 
+/** Side of the root that owns a branch in the mind-map layout. */
+export type BranchSide = "left" | "right";
+
 /** Alignment of a parent node relative to its child block. */
 export type NodeAlignment = "center" | "start";
 
@@ -46,6 +49,7 @@ export interface MindNode {
   children: MindNode[];
   collapsed: boolean;
   style?: NodeStyle;
+  side?: BranchSide;
 }
 
 /** Raw source parts preserved for round-trip serialization. */

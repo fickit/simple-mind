@@ -1,7 +1,7 @@
 import { INDENT_WIDTH, LIST_MARKER } from "../../../../config/constants";
 import type { MindMapDocument, MindNode } from "../../../../types/mindmap";
 import { renderFrontmatter } from "./frontmatter";
-import { serializeNodeStyle } from "./nodeStyle";
+import { serializeNodeMarker } from "./nodeStyle";
 
 /** Returns one safe, single-line label. */
 function normalizeLabel(text: string): string {
@@ -9,9 +9,9 @@ function normalizeLabel(text: string): string {
   return label === "" ? "Untitled" : label;
 }
 
-/** Serializes one label with its optional per-node style marker. */
+/** Serializes one label with its optional per-node metadata marker. */
 function serializeLabel(node: MindNode): string {
-  return `${normalizeLabel(node.text)}${serializeNodeStyle(node.style)}`;
+  return `${normalizeLabel(node.text)}${serializeNodeMarker(node.style, node.side)}`;
 }
 
 /** Serializes the node tree into a canonical unordered outline. */

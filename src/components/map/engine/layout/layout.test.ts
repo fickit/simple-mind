@@ -63,6 +63,22 @@ describe("layoutDocument", () => {
     expect(find(result, "b").x).toBe(rootPosition.x + rootPosition.width + 64);
   });
 
+  it("honors explicit root-child sides in the mind map", () => {
+    const root = node("r", "R", [
+      { ...node("a", "A"), side: "right" },
+      { ...node("b", "B"), side: "left" },
+      node("c", "C"),
+    ]);
+    const result = layoutDocument(root, meta({ layout: "mindmap" }), measure);
+    const rootPosition = find(result, "r");
+
+    expect(find(result, "a").side).toBe("right");
+    expect(find(result, "b").side).toBe("left");
+    expect(find(result, "c").side).toBe("left");
+    expect(find(result, "a").x).toBe(rootPosition.x + rootPosition.width + 64);
+    expect(find(result, "b").x + find(result, "b").width).toBe(rootPosition.x - 64);
+  });
+
   it("lays out an organization chart downward", () => {
     const root = node("r", "R", [node("a", "A"), node("b", "B")]);
     const result = layoutDocument(root, meta({ layout: "org" }), measure);

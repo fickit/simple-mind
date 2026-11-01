@@ -2,6 +2,7 @@ import { COLOR_INPUT_FALLBACK, LIMITS, NEW_NODE_EDITOR_WIDTH } from "../../confi
 import { DEFAULT_SETTINGS, metaFromSettings } from "../../config/defaults";
 import { t } from "../../config/i18n";
 import type {
+  BranchSide,
   LayoutKind,
   MindMapMeta,
   MindNode,
@@ -21,7 +22,7 @@ import {
 } from "./engine/interaction/MapController";
 import type { PositionedNode } from "./engine/layout/types";
 import { parseSource } from "./engine/parser/parser";
-import { MapRenderer } from "./engine/render/MapRenderer";
+import { type AddSide, MapRenderer } from "./engine/render/MapRenderer";
 import { applyTheme, tokensForMode } from "./themes/applyTheme";
 import { nodeVisual } from "./themes/nodeVisual";
 import { applyMetaOverrides } from "./themes/overrides";
@@ -163,6 +164,7 @@ export class MapCanvas {
     applyTheme(this.rootEl, this.theme, this.dark);
     this.renderer = new MapRenderer(this.canvasEl, this.theme, this.dark, {
       onToggleCollapse: (nodeId) => this.toggleCollapse(nodeId),
+      onAddRequest: (nodeId, side) => this.addChildFrom(nodeId, side),
       onEditRequest: (nodeId) => this.startEdit(nodeId),
       onSelectionChange: (nodeId) => {
         this.selectedId = nodeId;
@@ -310,6 +312,7 @@ export class MapCanvas {
     this.styleButton.textContent = t("toolbar.style");
     this.buildSidebar();
     this.syncSidebar();
+    if (this.controller) this.rerender(false);
   }
 
   /** Rebuilds sidebar controls so labels follow the active language. */
@@ -974,6 +977,7 @@ export class MapCanvas {
     return {
       text: node.text,
       style: node.style ? { ...node.style } : undefined,
+      side: node.side,
       children: node.children.map((child) => this.copyNodeData(child)),
     };
   }
@@ -1066,12 +1070,20 @@ export class MapCanvas {
     toolbar.appendChild(divider);
   }
 
-  /** Starts a pending insertion and opens the inline editor. */
-  private beginAdd(kind: AddKind): void {
-    if (!this.canEdit() || !this.controller || !this.selectedId) return;
-    if (this.editor.isOpen()) return;
+  /** Adds a child from a floating button on either the root side or a branch. */
+  private addChildFrom(nodeId: string, side: AddSide): void {
+    this.beginAdd("child", nodeId, side === "down" ? undefined : side);
+  }
 
-    const pending = this.controller.beginAdd(kind, this.selectedId);
+  /** Starts a pending insertion and opens the inline editor. */
+  private beginAdd(
+    kind: AddKind,
+    targetId: string | null = this.selectedId,
+    preferredSide?: BranchSide,
+  ): void {
+    if (!this.canEdit() || !this.controller || !targetId) return;
+
+    const pending = this.controller.beginAdd(kind, targetId, preferredSide);
     if (!pending) return;
     this.pendingAdd = pending;
     this.rerender(false);

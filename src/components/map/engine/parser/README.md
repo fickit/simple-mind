@@ -13,11 +13,12 @@ line-numbered errors, and round-trip behavior independent from rendering and Obs
 
 - `frontmatter.ts`: splits frontmatter, reads the `mindmap` block, clamps values, preserves unknown
   lines, and renders the canonical block.
-- `nodeStyle.ts`: reads and writes the inline `<!-- sm:{...} -->` style marker on node lines.
+- `nodeStyle.ts`: reads and writes the inline `<!-- sm:{...} -->` marker for per-node styles and the
+  mind-map branch side.
 - `parser.ts`: parses the H1 root and nested unordered list into `MindMapDocument`, with warnings and
   errors.
 - `serializer.ts`: writes canonical two-space indentation, `-` markers, preserved frontmatter, and
-  per-node style markers.
+  per-node metadata markers.
 - `__fixtures__/`: paired input and canonical output used by the tests.
 
 ## Call flow

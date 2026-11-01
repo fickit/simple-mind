@@ -177,6 +177,12 @@ Branch: `feat/core`
   the effective color in each color control and let reset remove the override.
 - `√` Keep connector shape per file, and disable node/text controls until a node is selected.
 - `√` Drop legacy file-level node/text style keys with a warning.
+- `√` Hide collapse and add controls until hover or selection; use action arrows for collapse and
+  keep the expand arrow visible on collapsed nodes.
+- `√` Add floating `+` buttons per layout side: tree direction, organization downward, mind-map root
+  both sides, and branch nodes only their own side.
+- `√` Persist the chosen root side in the node marker so a left `+` adds to the left and a right `+`
+  adds to the right, and group explicitly sided branches during layout.
 - `√` Refresh maps on Obsidian light/dark changes through `css-change` plus a body-class fallback.
 - `√` Implement drag start threshold, reparent, reorder, drop indicators, and hover-to-expand.
 - `√` Implement internal clipboard, cut, copy, and paste, plus system-clipboard text fallback.
@@ -323,8 +329,9 @@ node scripts/benchmark.mjs
   passed in light and dark mode. rAF batching and culling remain performance tasks.
 - Phase 5 interaction: selection, inline editing, live reflow, add/delete, drag-and-drop, clipboard,
   undo/redo, and source serialization are implemented and tested. The Style/Text panel edits the
-  selected node through inline style markers; connector shape stays per file, while connector color
-  and thickness are global settings.
+  selected node through inline metadata; connector shape stays per file, while connector color and
+  thickness are global settings. Collapse and add controls appear on hover/selection, arrows replace
+  +/−, and side-aware add buttons persist a branch's root side.
 - Phase 6 themes: eight built-in themes, per-file selection, automatic light/dark switching, custom
   theme editing, import/export, and live preview are implemented.
 - Phase 7 view integration: TextFileView, source switching, status bar, commands, and new-map creation

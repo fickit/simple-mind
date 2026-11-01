@@ -82,6 +82,104 @@ describe("MapCanvas", () => {
     host.remove();
   });
 
+  it("places add buttons according to the layout and node side", () => {
+    const mindmap = createCanvas("# Root\n- A\n- B\n");
+    const mindmapRoot = mindmap.host.querySelector<HTMLElement>(
+      '.simple-mind-node[data-node-id="n1"]',
+    )!;
+    const leftBranch = mindmap.host.querySelector<HTMLElement>(
+      '.simple-mind-node[data-node-id="n2"]',
+    )!;
+    const rightBranch = mindmap.host.querySelector<HTMLElement>(
+      '.simple-mind-node[data-node-id="n3"]',
+    )!;
+
+    expect(mindmapRoot.querySelector(".simple-mind-add.add-left")).not.toBeNull();
+    expect(mindmapRoot.querySelector(".simple-mind-add.add-right")).not.toBeNull();
+    expect(leftBranch.querySelector(".simple-mind-add.add-left")).not.toBeNull();
+    expect(leftBranch.querySelector(".simple-mind-add.add-right")).toBeNull();
+    expect(rightBranch.querySelector(".simple-mind-add.add-right")).not.toBeNull();
+    expect(rightBranch.querySelector(".simple-mind-add.add-left")).toBeNull();
+    mindmap.canvas.destroy();
+    mindmap.host.remove();
+
+    const leftTree = createCanvas(
+      "---\nmindmap:\n  layout: tree\n  direction: left\n---\n# Root\n- A\n",
+    );
+    const treeRoot = leftTree.host.querySelector<HTMLElement>(
+      '.simple-mind-node[data-node-id="n1"]',
+    )!;
+    expect(treeRoot.querySelector(".simple-mind-add.add-left")).not.toBeNull();
+    expect(treeRoot.querySelector(".simple-mind-add.add-right")).toBeNull();
+    leftTree.canvas.destroy();
+    leftTree.host.remove();
+
+    const org = createCanvas("---\nmindmap:\n  layout: org\n---\n# Root\n- A\n");
+    const orgRoot = org.host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n1"]')!;
+    expect(orgRoot.querySelector(".simple-mind-add.add-down")).not.toBeNull();
+    expect(orgRoot.querySelector(".simple-mind-add.add-left")).toBeNull();
+    org.canvas.destroy();
+    org.host.remove();
+  });
+
+  it("uses side-aware arrows for collapse and expand", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n  - A1\n- B\n");
+    const root = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n1"]')!;
+    const branch = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n2"]')!;
+    const rootCollapse = root.querySelector<HTMLButtonElement>(".simple-mind-collapse")!;
+    const branchCollapse = branch.querySelector<HTMLButtonElement>(".simple-mind-collapse")!;
+
+    expect(rootCollapse.textContent).toBe("←");
+    expect(branchCollapse.textContent).toBe("→");
+    branchCollapse.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(branchCollapse.textContent).toBe("←");
+    expect(branchCollapse.dataset.collapsed).toBe("true");
+
+    canvas.destroy();
+    host.remove();
+
+    const org = createCanvas("---\nmindmap:\n  layout: org\n---\n# Root\n- A\n- B\n");
+    const orgRoot = org.host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n1"]')!;
+    expect(orgRoot.querySelector<HTMLButtonElement>(".simple-mind-collapse")?.textContent).toBe(
+      "↑",
+    );
+    org.canvas.destroy();
+    org.host.remove();
+  });
+
+  it("adds a child on the side of the clicked floating button", () => {
+    const { host, canvas, onChange } = createCanvas("# Root\n- A\n- B\n");
+    const root = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n1"]')!;
+
+    root
+      .querySelector(".simple-mind-add.add-left")!
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    const leftInput = host.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor")!;
+    expect(leftInput).not.toBeNull();
+    leftInput.value = "Left child";
+    leftInput.dispatchEvent(new FocusEvent("blur"));
+
+    expect(onChange).toHaveBeenCalledOnce();
+    expect(canvas.getSource()).toContain('- Left child <!-- sm:{"side":"left"} -->');
+    const leftNode = Array.from(host.querySelectorAll<HTMLElement>(".simple-mind-node")).find(
+      (element) => element.textContent?.includes("Left child"),
+    )!;
+    expect(leftNode.classList.contains("side-left")).toBe(true);
+
+    root
+      .querySelector(".simple-mind-add.add-right")!
+      .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    const rightInput = host.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor")!;
+    rightInput.value = "Right child";
+    rightInput.dispatchEvent(new FocusEvent("blur"));
+
+    expect(onChange).toHaveBeenCalledTimes(2);
+    expect(canvas.getSource()).toContain('- Right child <!-- sm:{"side":"right"} -->');
+
+    canvas.destroy();
+    host.remove();
+  });
+
   it("shows a line-numbered banner for invalid source", () => {
     const { host, canvas } = createCanvas("# Root\nhello\n");
     const banner = host.querySelector<HTMLElement>(".simple-mind-banner");

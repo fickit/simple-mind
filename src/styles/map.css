@@ -488,47 +488,83 @@
   font-weight: 600;
 }
 
-.simple-mind-collapse {
+.simple-mind-collapse,
+.simple-mind-add {
   position: absolute;
   z-index: 2;
   display: grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   padding: 0;
   border: 1px solid var(--sm-node-border);
   border-radius: 50%;
-  background: var(--sm-collapse-bg);
+  background: var(--background-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
   color: var(--sm-collapse-text);
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1;
   cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
 }
 
 .simple-mind-collapse[hidden] {
   display: none;
 }
 
-.simple-mind-collapse:hover {
+.simple-mind-collapse[data-collapsed="true"],
+.simple-mind-node:hover > .simple-mind-collapse,
+.simple-mind-node.is-selected > .simple-mind-collapse,
+.simple-mind-node:focus-within > .simple-mind-collapse,
+.simple-mind-node:hover > .simple-mind-add,
+.simple-mind-node.is-selected > .simple-mind-add,
+.simple-mind-node:focus-within > .simple-mind-add,
+.simple-mind-collapse:focus-visible,
+.simple-mind-add:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.simple-mind-collapse:hover,
+.simple-mind-add:hover {
   background: var(--background-modifier-hover);
 }
 
-.simple-mind-node.side-right > .simple-mind-collapse,
-.simple-mind-node.side-center > .simple-mind-collapse {
+.add-right {
   top: 50%;
-  right: -9px;
+  right: -10px;
   transform: translateY(-50%);
 }
 
-.simple-mind-node.side-left > .simple-mind-collapse {
+.add-left {
   top: 50%;
-  left: -9px;
+  left: -10px;
   transform: translateY(-50%);
 }
 
-.simple-mind-node.side-down > .simple-mind-collapse {
-  bottom: -9px;
+.add-down {
+  bottom: -10px;
   left: 50%;
+  transform: translateX(-50%);
+}
+
+.collapse-right {
+  top: 50%;
+  right: -30px;
+  transform: translateY(-50%);
+}
+
+.collapse-left {
+  top: 50%;
+  left: -30px;
+  transform: translateY(-50%);
+}
+
+.collapse-down {
+  bottom: -10px;
+  left: calc(50% + 25px);
   transform: translateX(-50%);
 }
 

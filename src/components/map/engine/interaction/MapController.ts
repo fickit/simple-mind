@@ -1,4 +1,10 @@
-import type { MindMapDocument, MindMapMeta, MindNode, NodeStyle } from "../../../../types/mindmap";
+import type {
+  BranchSide,
+  MindMapDocument,
+  MindMapMeta,
+  MindNode,
+  NodeStyle,
+} from "../../../../types/mindmap";
 import { SourceHistory } from "../history/SourceHistory";
 import { containsNode, findNodeById, findParentById, type ParentMatch } from "../model/tree";
 import { cloneNodeStyle } from "../parser/nodeStyle";
@@ -16,6 +22,7 @@ export interface CopiedNode {
   text: string;
   children: CopiedNode[];
   style?: NodeStyle;
+  side?: BranchSide;
 }
 
 /** State captured while a new node is being edited. */
@@ -181,8 +188,9 @@ export class MapController {
    *
    * @param kind Insert as a child or as the next sibling.
    * @param targetId Selected node.
+   * @param preferredSide Root side requested by a floating add button.
    */
-  beginAdd(kind: AddKind, targetId: string): PendingAdd | null {
+  beginAdd(kind: AddKind, targetId: string, preferredSide?: BranchSide): PendingAdd | null {
     const target = this.findNode(targetId);
     if (!target) return null;
 
@@ -200,6 +208,11 @@ export class MapController {
     }
 
     const node = createNode();
+    if (parent.id === this.document.root.id && this.document.meta.layout === "mindmap") {
+      const inheritedSide = kind === "sibling" && !this.isRoot(targetId) ? target.side : undefined;
+      const side = preferredSide ?? inheritedSide;
+      if (side) node.side = side;
+    }
     parent.children.splice(index, 0, node);
     return {
       node,
@@ -356,6 +369,7 @@ export class MapController {
     return {
       text: node.text,
       style: cloneNodeStyle(node.style),
+      side: node.side,
       children: node.children.map((child) => this.copyNode(child)),
     };
   }
@@ -364,6 +378,7 @@ export class MapController {
   private cloneCopiedNode(source: CopiedNode): MindNode {
     const node = createNode(source.text);
     node.style = cloneNodeStyle(source.style);
+    node.side = source.side;
     node.children = source.children.map((child) => this.cloneCopiedNode(child));
     return node;
   }

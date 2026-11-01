@@ -1,15 +1,17 @@
 import { LIMITS } from "../../../../config/constants";
-import type { NodeStyle, ParseWarning } from "../../../../types/mindmap";
+import type { BranchSide, NodeStyle, ParseWarning } from "../../../../types/mindmap";
 import type { NodeShape, TextAlign } from "../../../../types/theme";
 
 const NODE_SHAPES: NodeShape[] = ["rounded", "pill", "underline", "plain"];
 const TEXT_ALIGNMENTS: TextAlign[] = ["left", "center", "right"];
+const BRANCH_SIDES: BranchSide[] = ["left", "right"];
 const STYLE_PATTERN = /\s*<!--\s*sm:(\{[\s\S]*\})\s*-->\s*$/;
 
-/** Result of separating a node label from its inline style marker. */
+/** Result of separating a node label from its inline metadata marker. */
 export interface ParsedNodeLabel {
   label: string;
   style?: NodeStyle;
+  side?: BranchSide;
 }
 
 /** Reads a non-empty string field from a style object. */
@@ -22,7 +24,7 @@ function readString(
   const value = record[key];
   if (value === undefined) return undefined;
   if (typeof value !== "string" || value.trim() === "") {
-    warnings.push({ line, message: `Node style ${key} must be a non-empty string.` });
+    warnings.push({ line, message: `Node marker ${key} must be a non-empty string.` });
     return undefined;
   }
   return value.trim();
@@ -40,14 +42,14 @@ function readNumber(
   const value = record[key];
   if (value === undefined) return undefined;
   if (typeof value !== "number" || !Number.isFinite(value)) {
-    warnings.push({ line, message: `Node style ${key} must be a number.` });
+    warnings.push({ line, message: `Node marker ${key} must be a number.` });
     return undefined;
   }
   const clamped = Math.min(max, Math.max(min, value));
   if (clamped !== value) {
     warnings.push({
       line,
-      message: `Node style ${key} must be between ${min} and ${max}; using ${clamped}.`,
+      message: `Node marker ${key} must be between ${min} and ${max}; using ${clamped}.`,
     });
   }
   return clamped;
@@ -63,7 +65,7 @@ function readBoolean(
   const value = record[key];
   if (value === undefined) return undefined;
   if (typeof value !== "boolean") {
-    warnings.push({ line, message: `Node style ${key} must be true or false.` });
+    warnings.push({ line, message: `Node marker ${key} must be true or false.` });
     return undefined;
   }
   return value;
@@ -82,33 +84,34 @@ function readEnum<T extends string>(
   if (typeof value !== "string" || !allowed.includes(value as T)) {
     warnings.push({
       line,
-      message: `Node style ${key} must be one of ${allowed.join(", ")}.`,
+      message: `Node marker ${key} must be one of ${allowed.join(", ")}.`,
     });
     return undefined;
   }
   return value as T;
 }
 
-/** Parses the JSON payload of one inline style marker. */
-function parseNodeStyle(
+/** Parses the JSON payload of one inline metadata marker. */
+function parseNodeMarker(
   raw: string,
   line: number,
   warnings: ParseWarning[],
-): NodeStyle | undefined {
+): { style?: NodeStyle; side?: BranchSide } {
   let value: unknown;
   try {
     value = JSON.parse(raw);
   } catch {
-    warnings.push({ line, message: "Node style is not valid JSON; the marker is ignored." });
-    return undefined;
+    warnings.push({ line, message: "Node marker is not valid JSON; the marker is ignored." });
+    return {};
   }
   if (!value || typeof value !== "object" || Array.isArray(value)) {
-    warnings.push({ line, message: "Node style must be a JSON object; the marker is ignored." });
-    return undefined;
+    warnings.push({ line, message: "Node marker must be a JSON object; the marker is ignored." });
+    return {};
   }
 
   const record = value as Record<string, unknown>;
   const style: NodeStyle = {};
+  const side = readEnum(record, "side", BRANCH_SIDES, line, warnings);
   const shape = readEnum(record, "shape", NODE_SHAPES, line, warnings);
   const fill = readString(record, "fill", line, warnings);
   const borderColor = readString(record, "borderColor", line, warnings);
@@ -156,11 +159,14 @@ function parseNodeStyle(
   if (textAlign !== undefined) style.textAlign = textAlign;
   if (lineHeight !== undefined) style.lineHeight = lineHeight;
 
-  return Object.keys(style).length > 0 ? style : undefined;
+  return {
+    style: Object.keys(style).length > 0 ? style : undefined,
+    side,
+  };
 }
 
 /**
- * Splits a label from a trailing `<!-- sm:{...} -->` style marker.
+ * Splits a label from a trailing `<!-- sm:{...} -->` metadata marker.
  *
  * @param text Raw heading or list label.
  * @param line One-based source line for warnings.
@@ -175,31 +181,33 @@ export function extractNodeLabel(
   if (!match) return { label: text.trim() };
 
   const label = text.slice(0, match.index).trim();
-  const style = parseNodeStyle(match[1], line, warnings);
-  return { label, style };
+  return { label, ...parseNodeMarker(match[1], line, warnings) };
 }
 
 /**
- * Serializes a style object into the suffix appended to a node label.
+ * Serializes a node's style and branch side into the suffix appended to its label.
  *
  * @param style Per-node style overrides.
+ * @param side Root side that owns the branch in the mind-map layout.
  */
-export function serializeNodeStyle(style: NodeStyle | undefined): string {
-  if (!style) return "";
-
+export function serializeNodeMarker(
+  style: NodeStyle | undefined,
+  side: BranchSide | undefined,
+): string {
   const record: Record<string, unknown> = {};
-  if (style.shape !== undefined) record.shape = style.shape;
-  if (style.fill !== undefined) record.fill = style.fill;
-  if (style.borderColor !== undefined) record.borderColor = style.borderColor;
-  if (style.borderWidth !== undefined) record.borderWidth = style.borderWidth;
-  if (style.fontFamily !== undefined) record.fontFamily = style.fontFamily;
-  if (style.fontSize !== undefined) record.fontSize = style.fontSize;
-  if (style.textColor !== undefined) record.textColor = style.textColor;
-  if (style.bold !== undefined) record.bold = style.bold;
-  if (style.italic !== undefined) record.italic = style.italic;
-  if (style.underline !== undefined) record.underline = style.underline;
-  if (style.textAlign !== undefined) record.textAlign = style.textAlign;
-  if (style.lineHeight !== undefined) record.lineHeight = style.lineHeight;
+  if (side !== undefined) record.side = side;
+  if (style?.shape !== undefined) record.shape = style.shape;
+  if (style?.fill !== undefined) record.fill = style.fill;
+  if (style?.borderColor !== undefined) record.borderColor = style.borderColor;
+  if (style?.borderWidth !== undefined) record.borderWidth = style.borderWidth;
+  if (style?.fontFamily !== undefined) record.fontFamily = style.fontFamily;
+  if (style?.fontSize !== undefined) record.fontSize = style.fontSize;
+  if (style?.textColor !== undefined) record.textColor = style.textColor;
+  if (style?.bold !== undefined) record.bold = style.bold;
+  if (style?.italic !== undefined) record.italic = style.italic;
+  if (style?.underline !== undefined) record.underline = style.underline;
+  if (style?.textAlign !== undefined) record.textAlign = style.textAlign;
+  if (style?.lineHeight !== undefined) record.lineHeight = style.lineHeight;
 
   const keys = Object.keys(record);
   return keys.length === 0 ? "" : ` <!-- sm:${JSON.stringify(record)} -->`;

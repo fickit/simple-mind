@@ -1,5 +1,6 @@
 import { ZOOM_MAX, ZOOM_MIN } from "../../../../config/constants";
 import { DEFAULT_MINDMAP_META } from "../../../../config/defaults";
+import { t } from "../../../../config/i18n";
 import type { MindMapDocument, MindNode, NodeStyle } from "../../../../types/mindmap";
 import type { ThemeDefinition, ThemeTokens } from "../../../../types/theme";
 import { tokensForMode } from "../../themes/applyTheme";
@@ -14,9 +15,13 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 const FIT_PADDING = 48;
 const SVG_PADDING = 80;
 
+/** Side of a node that hosts a floating add button. */
+export type AddSide = "left" | "right" | "down";
+
 /** Optional callbacks supplied by the canvas component. */
 export interface MapRendererOptions {
   onToggleCollapse?: (nodeId: string) => void;
+  onAddRequest?: (nodeId: string, side: AddSide) => void;
   onEditRequest?: (nodeId: string) => void;
   onSelectionChange?: (nodeId: string | null) => void;
 }
@@ -34,6 +39,7 @@ export class MapRenderer {
   private readonly disposers: Array<() => void> = [];
   private readonly resizeObserver: ResizeObserver;
   private readonly onToggleCollapse?: (nodeId: string) => void;
+  private readonly onAddRequest?: (nodeId: string, side: AddSide) => void;
   private readonly onEditRequest?: (nodeId: string) => void;
   private readonly onSelectionChange?: (nodeId: string | null) => void;
   private measurer: DomNodeMeasurer;
@@ -72,6 +78,7 @@ export class MapRenderer {
     this.theme = theme;
     this.dark = dark;
     this.onToggleCollapse = options.onToggleCollapse;
+    this.onAddRequest = options.onAddRequest;
     this.onEditRequest = options.onEditRequest;
     this.onSelectionChange = options.onSelectionChange;
 
@@ -423,6 +430,7 @@ export class MapRenderer {
     });
 
     element.addEventListener("dblclick", (event) => {
+      if ((event.target as HTMLElement).closest("button, a")) return;
       event.stopPropagation();
       this.canvas.focus();
       this.selectNode(nodeId);
@@ -460,7 +468,10 @@ export class MapRenderer {
     element.style.transform = `translate3d(${positioned.x}px, ${positioned.y}px, 0)`;
     element.style.setProperty("--sm-branch-color", color);
     this.applyNodeVisual(element, visual, node.style, isRoot, color);
+    const controlSide = this.controlSideFor(positioned, isRoot);
+    this.syncAddButtons(element, node.id, this.addSidesFor(positioned, isRoot));
     element.setAttribute("aria-level", String(positioned.depth + 1));
+    element.setAttribute("aria-label", node.text);
     element.setAttribute("aria-selected", String(selected));
     if (node.children.length > 0) {
       element.setAttribute("aria-expanded", String(!node.collapsed));
@@ -478,9 +489,71 @@ export class MapRenderer {
     if (collapse) {
       const hasChildren = node.children.length > 0;
       collapse.hidden = !hasChildren;
-      collapse.textContent = node.collapsed ? "+" : "−";
-      collapse.setAttribute("aria-label", node.collapsed ? "Expand node" : "Collapse node");
+      collapse.className = `simple-mind-collapse collapse-${controlSide}`;
+      collapse.dataset.collapsed = String(node.collapsed);
+      collapse.textContent = this.collapseGlyph(controlSide, node.collapsed);
+      collapse.setAttribute("aria-label", node.collapsed ? t("node.expand") : t("node.collapse"));
       collapse.setAttribute("aria-expanded", String(!node.collapsed && hasChildren));
+    }
+  }
+
+  /** Returns the add-button sides allowed for a node. */
+  private addSidesFor(positioned: PositionedNode, isRoot: boolean): AddSide[] {
+    const meta = this.document?.meta ?? DEFAULT_MINDMAP_META;
+    if (isRoot) {
+      if (meta.layout === "org") return ["down"];
+      if (meta.layout === "tree") return [meta.direction];
+      return ["left", "right"];
+    }
+    if (positioned.side === "down") return ["down"];
+    return [positioned.side === "left" ? "left" : "right"];
+  }
+
+  /** Returns the side used to place a node's collapse control. */
+  private controlSideFor(positioned: PositionedNode, isRoot: boolean): "left" | "right" | "down" {
+    if (!isRoot) {
+      if (positioned.side === "down") return "down";
+      return positioned.side === "left" ? "left" : "right";
+    }
+    const meta = this.document?.meta ?? DEFAULT_MINDMAP_META;
+    if (meta.layout === "org") return "down";
+    if (meta.layout === "tree") return meta.direction;
+    return "right";
+  }
+
+  /** Returns the action arrow for the current collapse state. */
+  private collapseGlyph(side: "left" | "right" | "down", collapsed: boolean): string {
+    if (side === "down") return collapsed ? "↓" : "↑";
+    if (side === "left") return collapsed ? "←" : "→";
+    return collapsed ? "→" : "←";
+  }
+
+  /** Creates, removes, and positions the floating add buttons on one node. */
+  private syncAddButtons(element: HTMLElement, nodeId: string, sides: AddSide[]): void {
+    const wanted = new Set(sides);
+    for (const button of element.querySelectorAll<HTMLButtonElement>(".simple-mind-add")) {
+      const side = button.dataset.side as AddSide | undefined;
+      if (!side || !wanted.has(side)) {
+        button.remove();
+        continue;
+      }
+      button.setAttribute("aria-label", t("command.addChild"));
+    }
+
+    for (const side of sides) {
+      if (element.querySelector(`.simple-mind-add[data-side="${side}"]`)) continue;
+      const button = this.canvas.ownerDocument.createElement("button");
+      button.type = "button";
+      button.className = `simple-mind-add add-${side}`;
+      button.dataset.side = side;
+      button.textContent = "+";
+      button.setAttribute("aria-label", t("command.addChild"));
+      button.addEventListener("click", (event) => {
+        event.stopPropagation();
+        this.canvas.focus();
+        this.onAddRequest?.(nodeId, side);
+      });
+      element.appendChild(button);
     }
   }
 

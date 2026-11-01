@@ -85,7 +85,7 @@ mindmap:
   connectorStyle: orthogonal
 ---
 # Root <!-- sm:{"textColor":"#aabbcc","bold":true} -->
-- A <!-- sm:{"shape":"pill","fill":"#ffe8cc","fontSize":16,"textAlign":"left"} -->
+- A <!-- sm:{"side":"left","shape":"pill","fill":"#ffe8cc","fontSize":16,"textAlign":"left"} -->
   - B
 `;
     const result = parseSource(source);
@@ -98,6 +98,7 @@ mindmap:
     expect(document.root.text).toBe("Root");
     expect(document.root.style).toEqual({ textColor: "#aabbcc", bold: true });
     expect(first.text).toBe("A");
+    expect(first.side).toBe("left");
     expect(first.style).toEqual({
       shape: "pill",
       fill: "#ffe8cc",
@@ -109,27 +110,29 @@ mindmap:
     expect(serialized).toContain("connectorStyle: orthogonal");
     expect(serialized).toContain('# Root <!-- sm:{"textColor":"#aabbcc","bold":true} -->');
     expect(serialized).toContain(
-      '- A <!-- sm:{"shape":"pill","fill":"#ffe8cc","fontSize":16,"textAlign":"left"} -->',
+      '- A <!-- sm:{"side":"left","shape":"pill","fill":"#ffe8cc","fontSize":16,"textAlign":"left"} -->',
     );
 
     const second = parseSource(serialized).document!;
     expect(second.meta).toEqual(document.meta);
     expect(second.root.style).toEqual(document.root.style);
     expect(second.root.children[0].style).toEqual(first.style);
+    expect(second.root.children[0].side).toBe("left");
   });
 
   it("clamps and validates node style fields", () => {
     const result = parseSource(
-      '# Root\n- A <!-- sm:{"fontSize":99,"lineHeight":"tall","shape":"circle","fill":""} -->\n',
+      '# Root\n- A <!-- sm:{"side":"middle","fontSize":99,"lineHeight":"tall","shape":"circle","fill":""} -->\n',
     );
-    const style = result.document!.root.children[0].style;
+    const node = result.document!.root.children[0];
 
     expect(result.errors).toEqual([]);
-    expect(result.warnings).toHaveLength(4);
-    expect(style?.fontSize).toBe(32);
-    expect(style?.lineHeight).toBeUndefined();
-    expect(style?.shape).toBeUndefined();
-    expect(style?.fill).toBeUndefined();
+    expect(result.warnings).toHaveLength(5);
+    expect(node.side).toBeUndefined();
+    expect(node.style?.fontSize).toBe(32);
+    expect(node.style?.lineHeight).toBeUndefined();
+    expect(node.style?.shape).toBeUndefined();
+    expect(node.style?.fill).toBeUndefined();
   });
 
   it("drops a malformed node style marker with a warning", () => {

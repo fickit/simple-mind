@@ -93,7 +93,7 @@ and dropped with a warning.
 
 YAML comments inside the `mindmap` block may be normalized when that block is rewritten.
 
-### 3.3 Per-node style markers
+### 3.3 Per-node metadata markers
 
 A node's style is stored in a trailing HTML comment on its own line:
 
@@ -103,9 +103,9 @@ A node's style is stored in a trailing HTML comment on its own line:
 ```
 
 - The parser strips the marker from the label, so the map and Markdown preview show only the label.
-- Supported keys: `shape`, `fill`, `borderColor`, `borderWidth` (0-8), `fontFamily`, `fontSize`
-  (8-32), `textColor`, `bold`, `italic`, `underline`, `textAlign` (`left`, `center`, `right`), and
-  `lineHeight` (1-3).
+- Supported keys: `side` (`left` or `right`; the root side that owns a mind-map branch), `shape`,
+  `fill`, `borderColor`, `borderWidth` (0-8), `fontFamily`, `fontSize` (8-32), `textColor`, `bold`,
+  `italic`, `underline`, `textAlign` (`left`, `center`, `right`), and `lineHeight` (1-3).
 - Invalid fields are dropped or clamped with a warning. Malformed JSON drops the marker.
 - Styles travel with the line under rename, reorder, and copy/paste. Deleting the line deletes the
   style; resetting every field removes the marker.
@@ -210,6 +210,7 @@ interface MindNode {
   children: MindNode[];
   collapsed: boolean;
   style?: NodeStyle;
+  side?: 'left' | 'right';
 }
 
 interface MindMapDocument {
@@ -617,7 +618,7 @@ The map view includes a right-side style panel with two tabs:
   height for the selected node.
 
 Node and text controls are disabled with a hint until a node is selected. Every edit is applied to
-that node only, written into its inline style marker, and reprocessed immediately. Color controls
+that node only, written into its inline metadata marker, and reprocessed immediately. Color controls
 fall back to the node's effective theme color and expose a reset action that removes the override.
 The root is a node too, so the H1 line can carry its own style.
 
@@ -634,6 +635,17 @@ Plugin settings provide a default font, a connector color, and a connector thick
 used by nodes without a font override. The connector color is empty by default and then follows each
 branch's theme color. A thickness of `0` keeps each theme's own line width. These defaults apply
 beneath per-node overrides and per-file connector shape.
+
+### 11.2.3 Node controls
+
+- Collapse and add controls stay invisible until a node is hovered or selected. A collapsed node keeps
+  its expand arrow visible so the collapsed state is discoverable.
+- The collapse arrow reflects the action: a right-side node shows `←` to collapse and `→` to expand;
+  a left-side node is mirrored. Organization charts use `↑` and `↓`.
+- Floating `+` buttons follow the layout: a tree uses its direction, an organization chart adds
+  downward, the mind-map root shows both left and right, and a branch node shows only its own side.
+- Clicking a root-side `+` pins the new branch to that side by writing `side` into the node marker.
+  Layout groups explicitly sided branches first and balances branches without a side.
 
 ### 11.3 Status bar
 

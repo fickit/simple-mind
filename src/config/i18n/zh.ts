@@ -19,6 +19,8 @@ export const zh: Record<MessageKey, string> = {
   "notice.emptyLabel": "节点文字不能为空。",
   "notice.fixErrors": "请先修复源码错误再编辑。",
   "notice.clipboardEmpty": "剪贴板为空或不可用。",
+  "node.expand": "展开节点",
+  "node.collapse": "折叠节点",
   "notice.saveFailed": "无法保存文件：{reason}",
   "notice.newMapFailed": "无法创建导图：{reason}",
   "notice.openMapFirst": "请先打开一个 .mindmap 文件。",
