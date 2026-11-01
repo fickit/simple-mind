@@ -9,14 +9,21 @@ import type { SimpleMindSettings } from "../types/settings";
 export class MindMapView extends TextFileView {
   private canvas: MapCanvas | null = null;
   private readonly getSettings: () => SimpleMindSettings;
+  private readonly onOpenSettings?: () => void;
 
   /**
    * @param leaf Workspace leaf that owns this view.
    * @param getSettings Reads the current plugin settings.
+   * @param onOpenSettings Opens the plugin settings tab.
    */
-  constructor(leaf: WorkspaceLeaf, getSettings: () => SimpleMindSettings = () => DEFAULT_SETTINGS) {
+  constructor(
+    leaf: WorkspaceLeaf,
+    getSettings: () => SimpleMindSettings = () => DEFAULT_SETTINGS,
+    onOpenSettings?: () => void,
+  ) {
     super(leaf);
     this.getSettings = getSettings;
+    this.onOpenSettings = onOpenSettings;
   }
 
   /** Returns the custom view type. */
@@ -49,6 +56,7 @@ export class MindMapView extends TextFileView {
       onNotice: (message) => {
         new Notice(`Simple Mind: ${message}`);
       },
+      onOpenSettings: this.onOpenSettings,
       settings: this.getSettings(),
     });
     if (this.data) {

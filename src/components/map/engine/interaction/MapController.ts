@@ -110,7 +110,14 @@ export class MapController {
    */
   updateMeta(patch: Partial<MindMapMeta>): boolean {
     const previousSource = this.source;
-    Object.assign(this.document.meta, patch);
+    const meta = this.document.meta as unknown as Record<string, unknown>;
+    for (const [key, value] of Object.entries(patch)) {
+      if (value === undefined) {
+        delete meta[key];
+      } else {
+        meta[key] = value;
+      }
+    }
     return this.serializeAndCommit(previousSource);
   }
 

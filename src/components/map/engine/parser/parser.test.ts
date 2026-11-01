@@ -79,6 +79,35 @@ describe("parseSource", () => {
     expect(result.document!.meta).toEqual(defaults);
   });
 
+  it("parses and serializes per-file style overrides", () => {
+    const source = `---
+mindmap:
+  nodeShape: pill
+  connectorStyle: orthogonal
+  fontFamily: "Georgia, serif"
+  fontSize: 16
+  lineWidth: 3
+---
+# Root
+- A
+`;
+    const result = parseSource(source);
+    const meta = result.document!.meta;
+
+    expect(meta.nodeShape).toBe("pill");
+    expect(meta.connectorStyle).toBe("orthogonal");
+    expect(meta.fontFamily).toBe("Georgia, serif");
+    expect(meta.fontSize).toBe(16);
+    expect(meta.lineWidth).toBe(3);
+
+    const serialized = serializeDocument(result.document!);
+    expect(serialized).toContain("nodeShape: pill");
+    expect(serialized).toContain("connectorStyle: orthogonal");
+    expect(serialized).toContain('fontFamily: "Georgia, serif"');
+    expect(serialized).toContain("fontSize: 16");
+    expect(serialized).toContain("lineWidth: 3");
+  });
+
   it("normalizes CRLF, tabs, and mixed list markers", () => {
     const result = parseSource("# Root\r\n* A\r\n\t- B\r\n+ C\r\n");
 

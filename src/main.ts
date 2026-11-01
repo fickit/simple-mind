@@ -34,7 +34,15 @@ export default class SimpleMindPlugin extends Plugin implements SimpleMindSettin
     this.settings = await loadSettings(this);
     setLanguage(this.settings.language);
 
-    this.registerView(VIEW_TYPE_MAP, (leaf) => new MindMapView(leaf, () => this.settings));
+    this.registerView(
+      VIEW_TYPE_MAP,
+      (leaf) =>
+        new MindMapView(
+          leaf,
+          () => this.settings,
+          () => this.openSettingsTab(),
+        ),
+    );
     this.registerCommands();
     this.registerStatusBar();
     this.registerRibbon();
@@ -60,6 +68,17 @@ export default class SimpleMindPlugin extends Plugin implements SimpleMindSettin
       const view = leaf.view;
       if (view instanceof MindMapView) view.refreshSettings();
     }
+  }
+
+  /** Opens the Simple Mind settings tab. */
+  openSettingsTab(): void {
+    const setting = (
+      this.app as unknown as {
+        setting?: { open(): void; openTabById(id: string): void };
+      }
+    ).setting;
+    setting?.open();
+    setting?.openTabById("simple-mind");
   }
 
   /** Applies a language change to commands, ribbon, status bar, and views. */

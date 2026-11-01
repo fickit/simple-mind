@@ -1,5 +1,6 @@
 import { LIMITS } from "../../../../config/constants";
 import type { MindMapMeta, ParseError, ParseWarning } from "../../../../types/mindmap";
+import type { ConnectorStyle, NodeShape } from "../../../../types/theme";
 
 /** Result of splitting a source file into frontmatter and body. */
 export interface FrontmatterSplit {
@@ -284,6 +285,58 @@ export function parseMeta(
           warnings,
         );
         break;
+      case "nodeShape": {
+        const shape = readScalar(value);
+        if (["rounded", "pill", "underline", "plain"].includes(shape)) {
+          meta.nodeShape = shape as NodeShape;
+        } else {
+          warnings.push({
+            line: lineNumber,
+            message: "nodeShape must be rounded, pill, underline, or plain.",
+          });
+        }
+        break;
+      }
+      case "connectorStyle": {
+        const style = readScalar(value);
+        if (["curve", "orthogonal", "straight"].includes(style)) {
+          meta.connectorStyle = style as ConnectorStyle;
+        } else {
+          warnings.push({
+            line: lineNumber,
+            message: "connectorStyle must be curve, orthogonal, or straight.",
+          });
+        }
+        break;
+      }
+      case "fontFamily": {
+        const family = readScalar(value);
+        if (family) meta.fontFamily = family;
+        else warnings.push({ line: lineNumber, message: "fontFamily must not be empty." });
+        break;
+      }
+      case "fontSize":
+        meta.fontSize = readNumber(
+          value,
+          meta.fontSize ?? 14,
+          LIMITS.fontSize.min,
+          LIMITS.fontSize.max,
+          lineNumber,
+          "fontSize",
+          warnings,
+        );
+        break;
+      case "lineWidth":
+        meta.lineWidth = readNumber(
+          value,
+          meta.lineWidth ?? 2,
+          LIMITS.lineWidth.min,
+          LIMITS.lineWidth.max,
+          lineNumber,
+          "lineWidth",
+          warnings,
+        );
+        break;
       default:
         extraLines.push(line);
         break;
@@ -315,6 +368,14 @@ export function renderFrontmatter(
     lines.push("");
   }
 
+  const optionalLines = [
+    ...(meta.nodeShape ? [`  nodeShape: ${meta.nodeShape}`] : []),
+    ...(meta.connectorStyle ? [`  connectorStyle: ${meta.connectorStyle}`] : []),
+    ...(meta.fontFamily ? [`  fontFamily: ${writeScalar(meta.fontFamily)}`] : []),
+    ...(meta.fontSize !== undefined ? [`  fontSize: ${meta.fontSize}`] : []),
+    ...(meta.lineWidth !== undefined ? [`  lineWidth: ${meta.lineWidth}`] : []),
+  ];
+
   lines.push(
     "mindmap:",
     "  version: 1",
@@ -326,6 +387,7 @@ export function renderFrontmatter(
     `  align: ${meta.align}`,
     `  compact: ${meta.compact}`,
     `  maxWidth: ${meta.maxWidth}`,
+    ...optionalLines,
     ...extraLines,
     "---",
   );

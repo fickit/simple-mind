@@ -165,6 +165,11 @@ Branch: `feat/core`
 - `√` Implement Tab/Shift+Tab/Enter/Delete/F2 shortcuts; Enter/Tab in the editor commit and continue
   with a sibling/child; Space is reserved for text input and the collapse shortcut is deferred.
 - `√` New nodes open as empty single-line editors with a default width and no placeholder.
+- `√` Add a front-end style sidebar for the current file: theme, layout, spacing, alignment, compact
+  mode, node shape, connector, font, and line width.
+- `√` Add per-file style overrides (shape, connector, font size/family, line width) written to
+  frontmatter and applied on top of the selected theme.
+- `√` Refresh maps on Obsidian light/dark changes through `css-change` plus a body-class fallback.
 - `√` Implement drag start threshold, reparent, reorder, drop indicators, and hover-to-expand.
 - `√` Implement internal clipboard, cut, copy, and paste, plus system-clipboard text fallback.
 - `√` Wire add, rename, delete, move, collapse, undo, and redo through `MapController` and history.

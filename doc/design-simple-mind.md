@@ -77,6 +77,9 @@ mindmap:
 - `align`: `center` or `start`; controls parent alignment relative to its child block.
 - `compact`: boolean; reduces gaps.
 - `maxWidth`: maximum node width; clamped to 120-600.
+- Optional per-file style overrides: `nodeShape` (`rounded`, `pill`, `underline`, `plain`),
+  `connectorStyle` (`curve`, `orthogonal`, `straight`), `fontFamily`, `fontSize` (8-32), and
+  `lineWidth` (1-6). They are applied on top of the selected theme.
 
 Missing values fall back to plugin defaults. Invalid values fall back to the default, produce a
 non-blocking notice, and are not written back until the user changes the corresponding setting.
@@ -561,6 +564,14 @@ Each theme provides both light and dark tokens. The active variant is selected b
 - Add child, add sibling, delete node, edit node, toggle collapse.
 - Undo, redo, fit to view.
 - Open settings.
+
+### 11.2.1 Front-end style sidebar
+
+The map view includes a right-side style panel. It controls the current file's theme, layout,
+direction, spacing, alignment, compact mode, maximum width, node shape, connector style, font family
+and size, and line width. Every change is written to the file's `mindmap` frontmatter and reprocessed
+immediately, so existing maps update without being recreated. A "Manage themes" action opens the
+settings tab for custom theme creation and color editing.
 
 Command names use the i18n dictionary. On language change, commands are removed and re-registered
 using the same ids. This requires `minAppVersion: 1.7.2`.

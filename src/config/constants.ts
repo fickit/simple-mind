@@ -34,4 +34,6 @@ export const LIMITS = {
   spacingX: { min: 8, max: 240 },
   spacingY: { min: 4, max: 120 },
   maxWidth: { min: 120, max: 600 },
+  fontSize: { min: 8, max: 32 },
+  lineWidth: { min: 1, max: 6 },
 } as const;

@@ -76,6 +76,125 @@
   position: relative;
   flex: 1;
   min-height: 0;
+  min-width: 0;
+}
+
+.simple-mind-content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.simple-mind-sidebar {
+  flex: 0 0 270px;
+  width: 270px;
+  min-height: 0;
+  padding: 12px;
+  overflow-y: auto;
+  border-left: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  box-sizing: border-box;
+}
+
+.simple-mind-sidebar[hidden] {
+  display: none;
+}
+
+.simple-mind-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  color: var(--text-normal);
+  font-size: var(--font-ui-medium);
+  font-weight: 600;
+}
+
+.simple-mind-sidebar-close {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.simple-mind-sidebar-close:hover {
+  background: var(--background-modifier-hover);
+}
+
+.simple-mind-sidebar-section {
+  margin-bottom: 16px;
+}
+
+.simple-mind-sidebar-section h4 {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.simple-mind-sidebar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+  color: var(--text-normal);
+  font-size: var(--font-ui-smaller);
+}
+
+.simple-mind-sidebar-select,
+.simple-mind-sidebar-number,
+.simple-mind-sidebar-text {
+  max-width: 130px;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 5px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: var(--font-ui-smaller);
+  box-sizing: border-box;
+}
+
+.simple-mind-sidebar-number {
+  width: 74px;
+}
+
+.simple-mind-sidebar-text {
+  width: 130px;
+}
+
+.simple-mind-sidebar-theme {
+  width: 100%;
+  max-width: none;
+}
+
+.simple-mind-sidebar-button {
+  width: 100%;
+  margin-top: 8px;
+  padding: 5px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 5px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: var(--font-ui-smaller);
+  cursor: pointer;
+}
+
+.simple-mind-sidebar-button:hover {
+  background: var(--background-modifier-hover);
+}
+
+.simple-mind-sidebar-checkbox {
+  width: 16px;
+  height: 16px;
 }
 
 .simple-mind-canvas {

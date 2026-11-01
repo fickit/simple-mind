@@ -286,9 +286,9 @@ describe("MapCanvas", () => {
     host.remove();
   });
 
-  it("switches theme from the toolbar and writes frontmatter", () => {
+  it("switches theme from the sidebar and writes frontmatter", () => {
     const { host, canvas, onChange } = createCanvas("# Root\n- A\n");
-    const select = host.querySelector<HTMLSelectElement>(".simple-mind-toolbar-select");
+    const select = host.querySelector<HTMLSelectElement>(".simple-mind-sidebar-theme");
 
     expect(select).not.toBeNull();
     select!.value = "nord";
@@ -299,6 +299,25 @@ describe("MapCanvas", () => {
     expect(host.querySelector(".simple-mind-map")?.getAttribute("data-simple-mind-theme")).toBe(
       "nord",
     );
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("writes per-file layout and node-shape overrides from the sidebar", () => {
+    const { host, canvas, onChange } = createCanvas("# Root\n- A\n");
+    const layout = host.querySelector<HTMLSelectElement>(".simple-mind-sidebar-layout")!;
+    const shape = host.querySelector<HTMLSelectElement>(".simple-mind-sidebar-node-shape")!;
+
+    layout.value = "org";
+    layout.dispatchEvent(new Event("change", { bubbles: true }));
+    shape.value = "pill";
+    shape.dispatchEvent(new Event("change", { bubbles: true }));
+
+    expect(onChange).toHaveBeenCalledTimes(2);
+    expect(canvas.getSource()).toContain("layout: org");
+    expect(canvas.getSource()).toContain("nodeShape: pill");
+    expect(host.querySelector(".simple-mind-node.shape-pill")).not.toBeNull();
 
     canvas.destroy();
     host.remove();

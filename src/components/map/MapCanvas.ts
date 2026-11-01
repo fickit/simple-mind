@@ -1,9 +1,15 @@
 import { NEW_NODE_EDITOR_WIDTH } from "../../config/constants";
 import { DEFAULT_SETTINGS, metaFromSettings } from "../../config/defaults";
 import { t } from "../../config/i18n";
-import type { MindNode } from "../../types/mindmap";
+import type {
+  LayoutKind,
+  MindMapMeta,
+  MindNode,
+  NodeAlignment,
+  TreeDirection,
+} from "../../types/mindmap";
 import type { SimpleMindSettings } from "../../types/settings";
-import type { ThemeDefinition } from "../../types/theme";
+import type { ConnectorStyle, NodeShape, ThemeDefinition } from "../../types/theme";
 import { DragController, type DropPosition } from "./engine/interaction/DragController";
 import { type CommitAction, InlineEditor } from "./engine/interaction/InlineEditor";
 import {
@@ -16,6 +22,7 @@ import type { PositionedNode } from "./engine/layout/types";
 import { parseSource } from "./engine/parser/parser";
 import { MapRenderer } from "./engine/render/MapRenderer";
 import { applyTheme } from "./themes/applyTheme";
+import { applyMetaOverrides } from "./themes/overrides";
 import { BUILT_IN_THEMES, OBSIDIAN_THEME, resolveTheme } from "./themes/presets";
 
 /** Callbacks supplied by the host view. */
@@ -23,6 +30,7 @@ export interface MapCanvasOptions {
   onSource: () => void;
   onChange?: (source: string) => void;
   onNotice?: (message: string) => void;
+  onOpenSettings?: () => void;
   settings?: SimpleMindSettings;
 }
 
@@ -31,7 +39,9 @@ type ArrowKey = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight";
 /** Canvas component that owns the renderer, controller, toolbar, and editing. */
 export class MapCanvas {
   private readonly rootEl: HTMLElement;
+  private readonly contentRow: HTMLElement;
   private readonly canvasEl: HTMLElement;
+  private readonly sidebarEl: HTMLElement;
   private readonly bannerEl: HTMLElement;
   private readonly renderer: MapRenderer;
   private readonly editor: InlineEditor;
@@ -41,6 +51,7 @@ export class MapCanvas {
   private readonly onSource: () => void;
   private readonly onChangeSource: (source: string) => void;
   private readonly onNotice: (message: string) => void;
+  private readonly onOpenSettings?: () => void;
   private readonly childButton: HTMLButtonElement;
   private readonly siblingButton: HTMLButtonElement;
   private readonly deleteButton: HTMLButtonElement;
@@ -50,7 +61,20 @@ export class MapCanvas {
   private readonly sourceButton: HTMLButtonElement;
   private readonly zoomInButton: HTMLButtonElement;
   private readonly zoomOutButton: HTMLButtonElement;
-  private readonly themeSelect: HTMLSelectElement;
+  private readonly styleButton: HTMLButtonElement;
+  private sidebarThemeSelect!: HTMLSelectElement;
+  private sidebarLayoutSelect!: HTMLSelectElement;
+  private sidebarDirectionSelect!: HTMLSelectElement;
+  private sidebarAlignSelect!: HTMLSelectElement;
+  private sidebarCompactInput!: HTMLInputElement;
+  private sidebarSpacingXInput!: HTMLInputElement;
+  private sidebarSpacingYInput!: HTMLInputElement;
+  private sidebarMaxWidthInput!: HTMLInputElement;
+  private sidebarNodeShapeSelect!: HTMLSelectElement;
+  private sidebarConnectorSelect!: HTMLSelectElement;
+  private sidebarFontFamilyInput!: HTMLInputElement;
+  private sidebarFontSizeInput!: HTMLInputElement;
+  private sidebarLineWidthInput!: HTMLInputElement;
   private readonly keydownHandler: (event: KeyboardEvent) => void;
   private controller: MapController | null = null;
   private pendingAdd: PendingAdd | null = null;
@@ -74,6 +98,7 @@ export class MapCanvas {
     this.onSource = options.onSource;
     this.onChangeSource = options.onChange ?? (() => {});
     this.onNotice = options.onNotice ?? (() => {});
+    this.onOpenSettings = options.onOpenSettings;
     this.settings = options.settings ?? DEFAULT_SETTINGS;
     this.dark = isDarkDocument(doc);
 
@@ -91,9 +116,17 @@ export class MapCanvas {
     this.bannerEl.setAttribute("role", "alert");
     this.rootEl.appendChild(this.bannerEl);
 
+    this.contentRow = doc.createElement("div");
+    this.contentRow.className = "simple-mind-content";
+    this.rootEl.appendChild(this.contentRow);
+
     this.canvasEl = doc.createElement("div");
     this.canvasEl.className = "simple-mind-canvas-host";
-    this.rootEl.appendChild(this.canvasEl);
+    this.contentRow.appendChild(this.canvasEl);
+
+    this.sidebarEl = doc.createElement("aside");
+    this.sidebarEl.className = "simple-mind-sidebar";
+    this.contentRow.appendChild(this.sidebarEl);
 
     applyTheme(this.rootEl, this.theme, this.dark);
     this.renderer = new MapRenderer(this.canvasEl, this.theme, this.dark, {
@@ -133,13 +166,9 @@ export class MapCanvas {
     this.undoButton = this.createToolbarButton(toolbar, t("toolbar.undo"), () => this.undo());
     this.redoButton = this.createToolbarButton(toolbar, t("toolbar.redo"), () => this.redo());
     this.createToolbarDivider(toolbar);
-    this.themeSelect = doc.createElement("select");
-    this.themeSelect.className = "simple-mind-toolbar-select";
-    this.themeSelect.setAttribute("aria-label", t("toolbar.theme"));
-    this.themeSelect.addEventListener("change", () => {
-      this.changeTheme(this.themeSelect.value);
-    });
-    toolbar.appendChild(this.themeSelect);
+    this.styleButton = this.createToolbarButton(toolbar, t("toolbar.style"), () =>
+      this.toggleSidebar(),
+    );
     const spacer = doc.createElement("span");
     spacer.className = "simple-mind-toolbar-spacer";
     toolbar.appendChild(spacer);
@@ -147,7 +176,8 @@ export class MapCanvas {
 
     this.keydownHandler = (event) => this.handleKeydown(event);
     this.canvasEl.addEventListener("keydown", this.keydownHandler);
-    this.syncThemeOptions();
+    this.buildSidebar();
+    this.syncSidebar();
     this.updateToolbar();
   }
 
@@ -191,17 +221,14 @@ export class MapCanvas {
     }
 
     if (result.document) {
-      this.theme = resolveTheme(result.document.meta.theme, this.settings.customThemes);
-      this.dark = isDarkDocument(this.rootEl.ownerDocument);
-      applyTheme(this.rootEl, this.theme, this.dark);
-      this.renderer.setTheme(this.theme, this.dark);
       this.controller = new MapController(result.document, source, (next) => {
         this.sourceText = next;
         this.onChangeSource(next);
       });
+      this.applyCurrentTheme();
       this.renderer.render(result.document, { fit: true });
       this.renderer.selectNode(null);
-      this.syncThemeOptions();
+      this.syncSidebar();
     } else {
       this.controller = null;
       this.renderer.clear();
@@ -228,11 +255,11 @@ export class MapCanvas {
     this.settings = settings;
     this.dark = isDarkDocument(this.rootEl.ownerDocument);
     this.refreshLanguage();
-    this.syncThemeOptions();
     if (this.sourceText) {
       this.setSource(this.getSource());
     } else {
       this.refreshTheme();
+      this.syncSidebar();
     }
   }
 
@@ -247,21 +274,317 @@ export class MapCanvas {
     this.undoButton.textContent = t("toolbar.undo");
     this.redoButton.textContent = t("toolbar.redo");
     this.sourceButton.textContent = t("toolbar.source");
-    this.themeSelect.setAttribute("aria-label", t("toolbar.theme"));
+    this.styleButton.textContent = t("toolbar.style");
+    this.buildSidebar();
+    this.syncSidebar();
   }
 
-  /** Rebuilds the per-file theme selector. */
+  /** Rebuilds sidebar controls so labels follow the active language. */
+  private buildSidebar(): void {
+    const doc = this.sidebarEl.ownerDocument;
+    this.sidebarEl.replaceChildren();
+
+    const header = doc.createElement("div");
+    header.className = "simple-mind-sidebar-header";
+    const title = doc.createElement("span");
+    title.textContent = t("sidebar.style");
+    const close = doc.createElement("button");
+    close.type = "button";
+    close.className = "simple-mind-sidebar-close";
+    close.textContent = "×";
+    close.setAttribute("aria-label", t("sidebar.close"));
+    close.addEventListener("click", () => this.toggleSidebar());
+    header.append(title, close);
+    this.sidebarEl.appendChild(header);
+
+    const themeSection = this.createSidebarSection(t("sidebar.theme"));
+    this.sidebarThemeSelect = doc.createElement("select");
+    this.sidebarThemeSelect.className = "simple-mind-sidebar-select simple-mind-sidebar-theme";
+    this.sidebarThemeSelect.setAttribute("aria-label", t("sidebar.theme"));
+    this.sidebarThemeSelect.addEventListener("change", () => {
+      this.changeTheme(this.sidebarThemeSelect.value);
+    });
+    themeSection.appendChild(this.sidebarThemeSelect);
+    if (this.onOpenSettings) {
+      const manage = doc.createElement("button");
+      manage.type = "button";
+      manage.className = "simple-mind-sidebar-button";
+      manage.textContent = t("sidebar.manageThemes");
+      manage.addEventListener("click", () => this.onOpenSettings?.());
+      themeSection.appendChild(manage);
+    }
+
+    const layoutSection = this.createSidebarSection(t("sidebar.layout"));
+    this.sidebarLayoutSelect = this.createSidebarSelect(
+      layoutSection,
+      t("sidebar.layoutType"),
+      [
+        { value: "mindmap", label: t("settings.layout.mindmap") },
+        { value: "tree", label: t("settings.layout.tree") },
+        { value: "org", label: t("settings.layout.org") },
+      ],
+      (value) => this.updateMetaAndRender({ layout: value as LayoutKind }),
+    );
+    this.sidebarLayoutSelect.classList.add("simple-mind-sidebar-layout");
+    this.sidebarDirectionSelect = this.createSidebarSelect(
+      layoutSection,
+      t("settings.direction"),
+      [
+        { value: "right", label: t("settings.direction.right") },
+        { value: "left", label: t("settings.direction.left") },
+      ],
+      (value) => this.updateMetaAndRender({ direction: value as TreeDirection }),
+    );
+    this.sidebarSpacingXInput = this.createSidebarNumber(
+      layoutSection,
+      t("settings.spacingX"),
+      8,
+      240,
+      (value) => this.updateMetaAndRender({ spacingX: value }),
+    );
+    this.sidebarSpacingYInput = this.createSidebarNumber(
+      layoutSection,
+      t("settings.spacingY"),
+      4,
+      120,
+      (value) => this.updateMetaAndRender({ spacingY: value }),
+    );
+    this.sidebarAlignSelect = this.createSidebarSelect(
+      layoutSection,
+      t("settings.align"),
+      [
+        { value: "center", label: t("settings.align.center") },
+        { value: "start", label: t("settings.align.start") },
+      ],
+      (value) => this.updateMetaAndRender({ align: value as NodeAlignment }),
+    );
+    this.sidebarMaxWidthInput = this.createSidebarNumber(
+      layoutSection,
+      t("settings.maxWidth"),
+      120,
+      600,
+      (value) => this.updateMetaAndRender({ maxWidth: value }),
+    );
+    this.sidebarCompactInput = this.createSidebarCheckbox(
+      layoutSection,
+      t("settings.compact"),
+      (value) => this.updateMetaAndRender({ compact: value }),
+    );
+
+    const styleSection = this.createSidebarSection(t("sidebar.nodeStyle"));
+    this.sidebarNodeShapeSelect = this.createSidebarSelect(
+      styleSection,
+      t("sidebar.nodeShape"),
+      [
+        { value: "", label: t("sidebar.themeDefault") },
+        { value: "rounded", label: t("themeEditor.shape.rounded") },
+        { value: "pill", label: t("themeEditor.shape.pill") },
+        { value: "underline", label: t("themeEditor.shape.underline") },
+        { value: "plain", label: t("themeEditor.shape.plain") },
+      ],
+      (value) =>
+        this.updateMetaAndRender({
+          nodeShape: value ? (value as NodeShape) : undefined,
+        }),
+    );
+    this.sidebarNodeShapeSelect.classList.add("simple-mind-sidebar-node-shape");
+    this.sidebarConnectorSelect = this.createSidebarSelect(
+      styleSection,
+      t("themeEditor.connector"),
+      [
+        { value: "", label: t("sidebar.themeDefault") },
+        { value: "curve", label: t("themeEditor.connector.curve") },
+        { value: "orthogonal", label: t("themeEditor.connector.orthogonal") },
+        { value: "straight", label: t("themeEditor.connector.straight") },
+      ],
+      (value) =>
+        this.updateMetaAndRender({
+          connectorStyle: value ? (value as ConnectorStyle) : undefined,
+        }),
+    );
+    this.sidebarConnectorSelect.classList.add("simple-mind-sidebar-connector");
+    this.sidebarFontFamilyInput = this.createSidebarText(
+      styleSection,
+      t("themeEditor.fontFamily"),
+      t("sidebar.themeDefault"),
+      (value) =>
+        this.updateMetaAndRender({
+          fontFamily: value.trim() || undefined,
+        }),
+    );
+    this.sidebarFontSizeInput = this.createSidebarNumber(
+      styleSection,
+      t("themeEditor.fontSize"),
+      8,
+      32,
+      (value) => this.updateMetaAndRender({ fontSize: value }),
+      "",
+    );
+    this.sidebarLineWidthInput = this.createSidebarNumber(
+      styleSection,
+      t("themeEditor.lineWidth"),
+      1,
+      6,
+      (value) => this.updateMetaAndRender({ lineWidth: value }),
+      "",
+    );
+  }
+
+  /** Creates a labeled sidebar section. */
+  private createSidebarSection(title: string): HTMLElement {
+    const doc = this.sidebarEl.ownerDocument;
+    const section = doc.createElement("section");
+    section.className = "simple-mind-sidebar-section";
+    const heading = doc.createElement("h4");
+    heading.textContent = title;
+    section.appendChild(heading);
+    this.sidebarEl.appendChild(section);
+    return section;
+  }
+
+  /** Appends a label/control row and returns the control. */
+  private createSidebarRow(section: HTMLElement, label: string, control: HTMLElement): void {
+    const doc = this.sidebarEl.ownerDocument;
+    const row = doc.createElement("div");
+    row.className = "simple-mind-sidebar-row";
+    const span = doc.createElement("span");
+    span.textContent = label;
+    row.append(span, control);
+    section.appendChild(row);
+  }
+
+  /** Adds a select control. */
+  private createSidebarSelect(
+    section: HTMLElement,
+    label: string,
+    options: Array<{ value: string; label: string }>,
+    onChange: (value: string) => void,
+  ): HTMLSelectElement {
+    const select = this.sidebarEl.ownerDocument.createElement("select");
+    select.className = "simple-mind-sidebar-select";
+    for (const option of options) {
+      const item = this.sidebarEl.ownerDocument.createElement("option");
+      item.value = option.value;
+      item.textContent = option.label;
+      select.appendChild(item);
+    }
+    select.addEventListener("change", () => onChange(select.value));
+    this.createSidebarRow(section, label, select);
+    return select;
+  }
+
+  /** Adds a number control. */
+  private createSidebarNumber(
+    section: HTMLElement,
+    label: string,
+    min: number,
+    max: number,
+    onChange: (value: number) => void,
+    placeholder = "",
+  ): HTMLInputElement {
+    const input = this.sidebarEl.ownerDocument.createElement("input");
+    input.type = "number";
+    input.min = String(min);
+    input.max = String(max);
+    input.placeholder = placeholder;
+    input.className = "simple-mind-sidebar-number";
+    input.addEventListener("change", () => {
+      const value = Number(input.value);
+      if (!Number.isFinite(value)) return;
+      onChange(Math.min(max, Math.max(min, value)));
+    });
+    this.createSidebarRow(section, label, input);
+    return input;
+  }
+
+  /** Adds a text control. */
+  private createSidebarText(
+    section: HTMLElement,
+    label: string,
+    placeholder: string,
+    onChange: (value: string) => void,
+  ): HTMLInputElement {
+    const input = this.sidebarEl.ownerDocument.createElement("input");
+    input.type = "text";
+    input.placeholder = placeholder;
+    input.className = "simple-mind-sidebar-text";
+    input.addEventListener("change", () => onChange(input.value));
+    this.createSidebarRow(section, label, input);
+    return input;
+  }
+
+  /** Adds a checkbox control. */
+  private createSidebarCheckbox(
+    section: HTMLElement,
+    label: string,
+    onChange: (value: boolean) => void,
+  ): HTMLInputElement {
+    const input = this.sidebarEl.ownerDocument.createElement("input");
+    input.type = "checkbox";
+    input.className = "simple-mind-sidebar-checkbox";
+    input.addEventListener("change", () => onChange(input.checked));
+    this.createSidebarRow(section, label, input);
+    return input;
+  }
+
+  /** Rebuilds the theme choices in the sidebar. */
   private syncThemeOptions(): void {
+    if (!this.sidebarThemeSelect) return;
     const options = [...BUILT_IN_THEMES, ...this.settings.customThemes];
     const current = this.controller?.getDocument().meta.theme ?? this.settings.defaultTheme;
-    this.themeSelect.replaceChildren();
+    this.sidebarThemeSelect.replaceChildren();
     for (const theme of options) {
-      const option = this.themeSelect.ownerDocument.createElement("option");
+      const option = this.sidebarEl.ownerDocument.createElement("option");
       option.value = theme.id;
       option.textContent = theme.name;
-      this.themeSelect.appendChild(option);
+      this.sidebarThemeSelect.appendChild(option);
     }
-    this.themeSelect.value = options.some((theme) => theme.id === current) ? current : "obsidian";
+    this.sidebarThemeSelect.value = options.some((theme) => theme.id === current)
+      ? current
+      : "obsidian";
+  }
+
+  /** Synchronizes sidebar controls with the current file metadata. */
+  private syncSidebar(): void {
+    if (!this.sidebarThemeSelect) return;
+    const meta = this.controller?.getDocument().meta;
+    this.syncThemeOptions();
+    this.sidebarLayoutSelect.value = meta?.layout ?? this.settings.defaultLayout;
+    this.sidebarDirectionSelect.value = meta?.direction ?? this.settings.defaultDirection;
+    this.sidebarSpacingXInput.value = String(meta?.spacingX ?? this.settings.defaultSpacingX);
+    this.sidebarSpacingYInput.value = String(meta?.spacingY ?? this.settings.defaultSpacingY);
+    this.sidebarAlignSelect.value = meta?.align ?? this.settings.defaultAlign;
+    this.sidebarMaxWidthInput.value = String(meta?.maxWidth ?? this.settings.defaultMaxWidth);
+    this.sidebarCompactInput.checked = meta?.compact ?? this.settings.defaultCompact;
+    this.sidebarNodeShapeSelect.value = meta?.nodeShape ?? "";
+    this.sidebarConnectorSelect.value = meta?.connectorStyle ?? "";
+    this.sidebarFontFamilyInput.value = meta?.fontFamily ?? "";
+    this.sidebarFontSizeInput.value = meta?.fontSize !== undefined ? String(meta.fontSize) : "";
+    this.sidebarLineWidthInput.value = meta?.lineWidth !== undefined ? String(meta.lineWidth) : "";
+  }
+
+  /** Applies per-file metadata changes and redraws. */
+  private updateMetaAndRender(patch: Partial<MindMapMeta>): void {
+    const controller = this.controller;
+    if (!controller || !controller.updateMeta(patch)) return;
+    this.applyCurrentTheme();
+    this.rerender(false);
+    this.syncSidebar();
+    this.updateToolbar();
+  }
+
+  /** Resolves the base theme plus per-file style overrides. */
+  private applyCurrentTheme(): void {
+    const document = this.controller?.getDocument();
+    const base = resolveTheme(
+      document?.meta.theme ?? this.settings.defaultTheme,
+      this.settings.customThemes,
+    );
+    this.theme = base;
+    const effective = document ? applyMetaOverrides(base, document.meta) : base;
+    this.dark = isDarkDocument(this.rootEl.ownerDocument);
+    applyTheme(this.rootEl, effective, this.dark);
+    this.renderer.setTheme(effective, this.dark);
   }
 
   /** Switches the file theme and saves the new frontmatter. */
@@ -269,21 +592,22 @@ export class MapCanvas {
     const controller = this.controller;
     if (!controller || !controller.updateMeta({ theme: themeId })) return;
 
-    this.theme = resolveTheme(themeId, this.settings.customThemes);
-    this.dark = isDarkDocument(this.rootEl.ownerDocument);
-    applyTheme(this.rootEl, this.theme, this.dark);
-    this.renderer.setTheme(this.theme, this.dark);
+    this.applyCurrentTheme();
     this.rerender(false);
+    this.syncSidebar();
     this.renderer.focus();
     this.updateToolbar();
   }
 
   /** Reapplies the theme after Obsidian changes its light/dark mode. */
   refreshTheme(): void {
-    this.dark = isDarkDocument(this.rootEl.ownerDocument);
-    applyTheme(this.rootEl, this.theme, this.dark);
-    this.renderer.setTheme(this.theme, this.dark);
+    this.applyCurrentTheme();
     this.updateToolbar();
+  }
+
+  /** Shows or hides the style sidebar. */
+  private toggleSidebar(): void {
+    this.sidebarEl.hidden = !this.sidebarEl.hidden;
   }
 
   /** Removes the renderer and map DOM. */
