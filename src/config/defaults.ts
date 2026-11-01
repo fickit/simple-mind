@@ -28,3 +28,22 @@ export const DEFAULT_SETTINGS: SimpleMindSettings = {
   customThemes: [],
   restoreSourceCursor: true,
 };
+
+/**
+ * Converts plugin defaults into per-file fallback metadata.
+ *
+ * @param settings Current plugin settings.
+ */
+export function metaFromSettings(settings: SimpleMindSettings): MindMapMeta {
+  return {
+    version: 1,
+    theme: settings.defaultTheme,
+    layout: settings.defaultLayout,
+    direction: settings.defaultDirection,
+    spacingX: settings.defaultSpacingX,
+    spacingY: settings.defaultSpacingY,
+    align: settings.defaultAlign,
+    compact: settings.defaultCompact,
+    maxWidth: settings.defaultMaxWidth,
+  };
+}

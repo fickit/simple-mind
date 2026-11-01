@@ -67,6 +67,18 @@ describe("parseSource", () => {
     expect(serializeDocument(result.document!)).toContain("mindmap:");
   });
 
+  it("uses plugin defaults for missing metadata", () => {
+    const defaults = {
+      ...DEFAULT_MINDMAP_META,
+      theme: "nord",
+      layout: "org" as const,
+      spacingX: 120,
+    };
+    const result = parseSource("# Root\n- A\n", defaults);
+
+    expect(result.document!.meta).toEqual(defaults);
+  });
+
   it("normalizes CRLF, tabs, and mixed list markers", () => {
     const result = parseSource("# Root\r\n* A\r\n\t- B\r\n+ C\r\n");
 

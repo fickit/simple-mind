@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { BUILT_IN_THEMES, getBuiltInTheme, OBSIDIAN_THEME } from "./presets";
+import type { ThemeDefinition } from "../../../types/theme";
+import { BUILT_IN_THEMES, getBuiltInTheme, OBSIDIAN_THEME, resolveTheme } from "./presets";
 
 describe("built-in themes", () => {
   it("ships eight unique themes", () => {
@@ -22,5 +23,16 @@ describe("built-in themes", () => {
   it("falls back to the native theme for unknown ids", () => {
     expect(getBuiltInTheme("missing")).toBe(OBSIDIAN_THEME);
     expect(getBuiltInTheme("nord").id).toBe("nord");
+  });
+
+  it("resolves custom themes before built-ins", () => {
+    const custom: ThemeDefinition = {
+      ...OBSIDIAN_THEME,
+      id: "custom-1",
+      name: "Custom",
+      builtIn: false,
+    };
+    expect(resolveTheme("custom-1", [custom])).toBe(custom);
+    expect(resolveTheme("nord", [custom]).id).toBe("nord");
   });
 });

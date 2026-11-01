@@ -417,3 +417,13 @@ export const BUILT_IN_THEMES: ThemeDefinition[] = [
 export function getBuiltInTheme(id: string): ThemeDefinition {
   return BUILT_IN_THEMES.find((theme) => theme.id === id) ?? OBSIDIAN_THEME;
 }
+
+/**
+ * Resolves a built-in or custom theme.
+ *
+ * @param id Theme id from frontmatter or settings.
+ * @param customThemes User themes from plugin settings.
+ */
+export function resolveTheme(id: string, customThemes: ThemeDefinition[] = []): ThemeDefinition {
+  return customThemes.find((theme) => theme.id === id) ?? getBuiltInTheme(id);
+}

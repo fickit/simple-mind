@@ -1,5 +1,7 @@
+import { DEFAULT_MINDMAP_META } from "../../../../config/defaults";
 import type {
   MindMapDocument,
+  MindMapMeta,
   MindNode,
   ParseError,
   ParseResult,
@@ -31,8 +33,12 @@ function createNode(text: string, nextId: () => string): MindNode {
  * while keeping editing disabled.
  *
  * @param source Full file content.
+ * @param defaults Settings used for keys missing from the file.
  */
-export function parseSource(source: string): ParseResult {
+export function parseSource(
+  source: string,
+  defaults: MindMapMeta = DEFAULT_MINDMAP_META,
+): ParseResult {
   const cleanSource = source.replace(/^\uFEFF/, "");
   const split = splitFrontmatter(cleanSource);
   const errors: ParseError[] = [...split.errors];
@@ -42,7 +48,7 @@ export function parseSource(source: string): ParseResult {
     return { document: null, errors, warnings };
   }
 
-  const metaResult = parseMeta(split.raw, split.raw === null ? 1 : 2);
+  const metaResult = parseMeta(split.raw, split.raw === null ? 1 : 2, defaults);
   warnings.push(...metaResult.warnings);
 
   const body = split.body.replace(/\t/g, "  ");

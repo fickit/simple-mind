@@ -18,3 +18,11 @@ export interface SimpleMindSettings {
   customThemes: ThemeDefinition[];
   restoreSourceCursor: boolean;
 }
+
+/** Host surface used by the settings tab. */
+export interface SimpleMindSettingsHost {
+  settings: SimpleMindSettings;
+  saveSettings(): Promise<void>;
+  refreshMapViews(): void;
+  refreshLanguage(): void;
+}

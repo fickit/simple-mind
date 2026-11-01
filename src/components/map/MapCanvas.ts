@@ -1,5 +1,8 @@
 import { NEW_NODE_EDITOR_WIDTH } from "../../config/constants";
+import { DEFAULT_SETTINGS, metaFromSettings } from "../../config/defaults";
+import { t } from "../../config/i18n";
 import type { MindNode } from "../../types/mindmap";
+import type { SimpleMindSettings } from "../../types/settings";
 import type { ThemeDefinition } from "../../types/theme";
 import { DragController, type DropPosition } from "./engine/interaction/DragController";
 import { type CommitAction, InlineEditor } from "./engine/interaction/InlineEditor";
@@ -13,13 +16,14 @@ import type { PositionedNode } from "./engine/layout/types";
 import { parseSource } from "./engine/parser/parser";
 import { MapRenderer } from "./engine/render/MapRenderer";
 import { applyTheme } from "./themes/applyTheme";
-import { getBuiltInTheme, OBSIDIAN_THEME } from "./themes/presets";
+import { OBSIDIAN_THEME, resolveTheme } from "./themes/presets";
 
 /** Callbacks supplied by the host view. */
 export interface MapCanvasOptions {
   onSource: () => void;
   onChange?: (source: string) => void;
   onNotice?: (message: string) => void;
+  settings?: SimpleMindSettings;
 }
 
 type ArrowKey = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight";
@@ -33,6 +37,7 @@ export class MapCanvas {
   private readonly editor: InlineEditor;
   private readonly drag: DragController;
   private theme: ThemeDefinition = OBSIDIAN_THEME;
+  private settings: SimpleMindSettings;
   private readonly onSource: () => void;
   private readonly onChangeSource: (source: string) => void;
   private readonly onNotice: (message: string) => void;
@@ -41,6 +46,10 @@ export class MapCanvas {
   private readonly deleteButton: HTMLButtonElement;
   private readonly undoButton: HTMLButtonElement;
   private readonly redoButton: HTMLButtonElement;
+  private readonly fitButton: HTMLButtonElement;
+  private readonly sourceButton: HTMLButtonElement;
+  private readonly zoomInButton: HTMLButtonElement;
+  private readonly zoomOutButton: HTMLButtonElement;
   private readonly keydownHandler: (event: KeyboardEvent) => void;
   private controller: MapController | null = null;
   private pendingAdd: PendingAdd | null = null;
@@ -64,6 +73,7 @@ export class MapCanvas {
     this.onSource = options.onSource;
     this.onChangeSource = options.onChange ?? (() => {});
     this.onNotice = options.onNotice ?? (() => {});
+    this.settings = options.settings ?? DEFAULT_SETTINGS;
     this.dark = isDarkDocument(doc);
 
     this.rootEl = doc.createElement("div");
@@ -103,20 +113,28 @@ export class MapCanvas {
       drop: (sourceId, targetId, position) => this.dropNode(sourceId, targetId, position),
     });
 
-    this.createToolbarButton(toolbar, "Fit", () => this.renderer.fit());
-    this.createToolbarButton(toolbar, "−", () => this.renderer.zoomBy(0.8));
-    this.createToolbarButton(toolbar, "+", () => this.renderer.zoomBy(1.2));
+    this.fitButton = this.createToolbarButton(toolbar, t("toolbar.fit"), () => this.renderer.fit());
+    this.zoomOutButton = this.createToolbarButton(toolbar, "−", () => this.renderer.zoomBy(0.8));
+    this.zoomInButton = this.createToolbarButton(toolbar, "+", () => this.renderer.zoomBy(1.2));
+    this.zoomOutButton.setAttribute("aria-label", t("toolbar.zoomOut"));
+    this.zoomInButton.setAttribute("aria-label", t("toolbar.zoomIn"));
     this.createToolbarDivider(toolbar);
-    this.childButton = this.createToolbarButton(toolbar, "+ Child", () => this.addChild());
-    this.siblingButton = this.createToolbarButton(toolbar, "+ Sibling", () => this.addSibling());
-    this.deleteButton = this.createToolbarButton(toolbar, "Delete", () => this.deleteSelected());
+    this.childButton = this.createToolbarButton(toolbar, t("toolbar.addChild"), () =>
+      this.addChild(),
+    );
+    this.siblingButton = this.createToolbarButton(toolbar, t("toolbar.addSibling"), () =>
+      this.addSibling(),
+    );
+    this.deleteButton = this.createToolbarButton(toolbar, t("toolbar.delete"), () =>
+      this.deleteSelected(),
+    );
     this.createToolbarDivider(toolbar);
-    this.undoButton = this.createToolbarButton(toolbar, "Undo", () => this.undo());
-    this.redoButton = this.createToolbarButton(toolbar, "Redo", () => this.redo());
+    this.undoButton = this.createToolbarButton(toolbar, t("toolbar.undo"), () => this.undo());
+    this.redoButton = this.createToolbarButton(toolbar, t("toolbar.redo"), () => this.redo());
     const spacer = doc.createElement("span");
     spacer.className = "simple-mind-toolbar-spacer";
     toolbar.appendChild(spacer);
-    this.createToolbarButton(toolbar, "Source", this.onSource);
+    this.sourceButton = this.createToolbarButton(toolbar, t("toolbar.source"), this.onSource);
 
     this.keydownHandler = (event) => this.handleKeydown(event);
     this.canvasEl.addEventListener("keydown", this.keydownHandler);
@@ -137,13 +155,20 @@ export class MapCanvas {
     this.selectedId = null;
     this.sourceText = source;
 
-    const result = parseSource(source);
+    const result = parseSource(source, metaFromSettings(this.settings));
     this.readOnly = result.errors.length > 0;
 
     if (result.errors.length > 0) {
       const first = result.errors[0];
-      const more = result.errors.length > 1 ? ` (+${result.errors.length - 1} more)` : "";
-      this.showBanner(`Source error at line ${first.line}: ${first.message}${more}`);
+      const more =
+        result.errors.length > 1 ? t("banner.moreErrors", { count: result.errors.length - 1 }) : "";
+      this.showBanner(
+        t("banner.sourceError", {
+          line: first.line,
+          message: first.message,
+          more,
+        }),
+      );
     } else {
       this.hideBanner();
     }
@@ -156,7 +181,7 @@ export class MapCanvas {
     }
 
     if (result.document) {
-      this.theme = getBuiltInTheme(result.document.meta.theme);
+      this.theme = resolveTheme(result.document.meta.theme, this.settings.customThemes);
       this.dark = isDarkDocument(this.rootEl.ownerDocument);
       applyTheme(this.rootEl, this.theme, this.dark);
       this.renderer.setTheme(this.theme, this.dark);
@@ -181,6 +206,36 @@ export class MapCanvas {
   /** Returns the selected node id. */
   getSelectedId(): string | null {
     return this.selectedId;
+  }
+
+  /**
+   * Applies new plugin defaults and custom themes, then reparses the file.
+   *
+   * @param settings Updated plugin settings.
+   */
+  updateSettings(settings: SimpleMindSettings): void {
+    const languageChanged = this.settings.language !== settings.language;
+    this.settings = settings;
+    this.dark = isDarkDocument(this.rootEl.ownerDocument);
+    if (languageChanged) this.refreshLanguage();
+    if (this.sourceText) {
+      this.setSource(this.getSource());
+    } else {
+      this.refreshTheme();
+    }
+  }
+
+  /** Updates toolbar labels after a language change. */
+  refreshLanguage(): void {
+    this.fitButton.textContent = t("toolbar.fit");
+    this.zoomOutButton.setAttribute("aria-label", t("toolbar.zoomOut"));
+    this.zoomInButton.setAttribute("aria-label", t("toolbar.zoomIn"));
+    this.childButton.textContent = t("toolbar.addChild");
+    this.siblingButton.textContent = t("toolbar.addSibling");
+    this.deleteButton.textContent = t("toolbar.delete");
+    this.undoButton.textContent = t("toolbar.undo");
+    this.redoButton.textContent = t("toolbar.redo");
+    this.sourceButton.textContent = t("toolbar.source");
   }
 
   /** Reapplies the theme after Obsidian changes its light/dark mode. */
@@ -216,7 +271,7 @@ export class MapCanvas {
   deleteSelected(): void {
     if (!this.canEdit() || !this.controller || !this.selectedId) return;
     if (this.controller.isRoot(this.selectedId)) {
-      this.onNotice("The root node cannot be deleted.");
+      this.onNotice(t("notice.rootDelete"));
       return;
     }
 
@@ -251,7 +306,7 @@ export class MapCanvas {
   private cutSelected(): void {
     if (!this.controller || !this.selectedId) return;
     if (this.controller.isRoot(this.selectedId)) {
-      this.onNotice("The root node cannot be cut.");
+      this.onNotice(t("notice.rootCut"));
       return;
     }
     this.copySelected();
@@ -271,7 +326,7 @@ export class MapCanvas {
       subtrees = await this.readSystemClipboard();
     }
     if (subtrees.length === 0) {
-      this.onNotice("The clipboard is empty or unavailable.");
+      this.onNotice(t("notice.clipboardEmpty"));
       return;
     }
 
@@ -358,6 +413,33 @@ export class MapCanvas {
     this.updateToolbar();
   }
 
+  /** Fits the map into the canvas. */
+  fit(): void {
+    this.renderer.fit();
+  }
+
+  /** Returns true when editing commands are allowed. */
+  canEdit(): boolean {
+    return !this.readOnly && !!this.controller && !this.editor.isOpen();
+  }
+
+  /** Returns true when the current selection can be deleted. */
+  canDeleteSelected(): boolean {
+    return (
+      this.canEdit() && !!this.selectedId && this.controller?.isRoot(this.selectedId) === false
+    );
+  }
+
+  /** Returns true when undo is available. */
+  canUndo(): boolean {
+    return this.canEdit() && this.controller?.canUndo() === true;
+  }
+
+  /** Returns true when redo is available. */
+  canRedo(): boolean {
+    return this.canEdit() && this.controller?.canRedo() === true;
+  }
+
   /**
    * Creates a toolbar button.
    *
@@ -402,7 +484,7 @@ export class MapCanvas {
   /** Opens the inline editor for an existing node. */
   private startEdit(nodeId: string): void {
     if (this.readOnly || !this.controller) {
-      this.onNotice("Fix the source errors before editing.");
+      this.onNotice(t("notice.fixErrors"));
       return;
     }
     if (this.editor.isOpen()) this.editor.commit();
@@ -512,7 +594,7 @@ export class MapCanvas {
     }
 
     if (value.trim() === "") {
-      this.onNotice("A node label cannot be empty.");
+      this.onNotice(t("notice.emptyLabel"));
       this.renderer.setEditingNode(null);
       this.rerender(false);
       this.renderer.selectNode(nodeId);
@@ -677,7 +759,7 @@ export class MapCanvas {
       event.key === "Backspace";
     if (this.readOnly && editingKey) {
       event.preventDefault();
-      this.onNotice("Fix the source errors before editing.");
+      this.onNotice(t("notice.fixErrors"));
       return;
     }
 
@@ -711,11 +793,6 @@ export class MapCanvas {
       event.preventDefault();
       this.moveSelection(event.key);
     }
-  }
-
-  /** Returns true when editing commands are allowed. */
-  private canEdit(): boolean {
-    return !this.readOnly && !!this.controller && !this.editor.isOpen();
   }
 
   /** Updates toolbar disabled states. */

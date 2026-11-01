@@ -1,5 +1,6 @@
 import { Notice, TextFileView, type TFile, type WorkspaceLeaf } from "obsidian";
 import { VIEW_TYPE_MAP } from "../../config/constants";
+import { t } from "../../config/i18n";
 import { clearSourceMode, markSourceMode } from "./SourceModeGuard";
 
 /**
@@ -17,7 +18,7 @@ async function saveBeforeSwitch(leaf: WorkspaceLeaf): Promise<boolean> {
     return true;
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error);
-    new Notice(`Simple Mind: could not save the file. ${reason}`);
+    new Notice(`Simple Mind: ${t("notice.saveFailed", { reason })}`);
     return false;
   }
 }

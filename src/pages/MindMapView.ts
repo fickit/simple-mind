@@ -2,16 +2,21 @@ import { Notice, TextFileView, type WorkspaceLeaf } from "obsidian";
 import { MapCanvas } from "../components/map/MapCanvas";
 import { switchToSource } from "../components/source/SourceSwitch";
 import { VIEW_TYPE_MAP } from "../config/constants";
+import { DEFAULT_SETTINGS } from "../config/defaults";
+import type { SimpleMindSettings } from "../types/settings";
 
 /** Obsidian view that renders a `.mindmap` file as an interactive canvas. */
 export class MindMapView extends TextFileView {
   private canvas: MapCanvas | null = null;
+  private readonly getSettings: () => SimpleMindSettings;
 
   /**
    * @param leaf Workspace leaf that owns this view.
+   * @param getSettings Reads the current plugin settings.
    */
-  constructor(leaf: WorkspaceLeaf) {
+  constructor(leaf: WorkspaceLeaf, getSettings: () => SimpleMindSettings = () => DEFAULT_SETTINGS) {
     super(leaf);
+    this.getSettings = getSettings;
   }
 
   /** Returns the custom view type. */
@@ -44,6 +49,7 @@ export class MindMapView extends TextFileView {
       onNotice: (message) => {
         new Notice(`Simple Mind: ${message}`);
       },
+      settings: this.getSettings(),
     });
     if (this.data) {
       this.canvas.setSource(this.data);
@@ -80,6 +86,71 @@ export class MindMapView extends TextFileView {
   clear(): void {
     this.data = "";
     this.canvas?.setSource("");
+  }
+
+  /** Reapplies plugin defaults and custom themes. */
+  refreshSettings(): void {
+    this.canvas?.updateSettings(this.getSettings());
+  }
+
+  /** Adds a child to the selected node. */
+  addChildNode(): void {
+    this.canvas?.addChild();
+  }
+
+  /** Adds a sibling after the selected node. */
+  addSibling(): void {
+    this.canvas?.addSibling();
+  }
+
+  /** Deletes the selected node. */
+  deleteSelected(): void {
+    this.canvas?.deleteSelected();
+  }
+
+  /** Edits the selected node. */
+  editSelected(): void {
+    this.canvas?.editSelected();
+  }
+
+  /** Undoes the last map command. */
+  undo(): void {
+    this.canvas?.undo();
+  }
+
+  /** Redoes the last undone map command. */
+  redo(): void {
+    this.canvas?.redo();
+  }
+
+  /** Fits the map into the view. */
+  fit(): void {
+    this.canvas?.fit();
+  }
+
+  /** Returns true when editing commands are available. */
+  canEdit(): boolean {
+    return this.canvas?.canEdit() ?? false;
+  }
+
+  /** Returns true when the selected node can be deleted. */
+  canDeleteSelected(): boolean {
+    return this.canvas?.canDeleteSelected() ?? false;
+  }
+
+  /** Returns true when undo is available. */
+  canUndo(): boolean {
+    return this.canvas?.canUndo() ?? false;
+  }
+
+  /** Returns true when redo is available. */
+  canRedo(): boolean {
+    return this.canvas?.canRedo() ?? false;
+  }
+
+  /** Returns the selected node id. */
+  getSelectedId(): string | null {
+    return this.canvas?.getSelectedId() ?? null;
   }
 
   /** Switches the same leaf to Obsidian's native Markdown editor. */

@@ -213,22 +213,20 @@ npm run test -- theme
 
 ## Phase 7 — View integration
 
-Branch: `feat/view`
+Branch: `feat/core`
 
-- `-` Implement `MindMapView extends TextFileView` with `getViewData`, `setViewData`, `clear`, and
+- `√` Implement `MindMapView extends TextFileView` with `getViewData`, `setViewData`, `clear`, and
   `requestSave` integration.
-- `-` Implement parse-error handling and read-only rendering.
-- `-` Implement the Source action: save, store cursor/scroll, switch the same leaf to `markdown`
-  source mode.
-- `-` Implement the status-bar action and toggle command to return to the map.
-- `-` Implement commands: new mind map, toggle, add child, add sibling, delete, edit, collapse, undo,
-  redo, fit.
-- `-` Implement the new-file modal with name validation.
+- `√` Implement parse-error handling and read-only rendering.
+- `√` Implement the Source action: save, switch the same leaf to `markdown` source mode.
+- `√` Implement the status-bar action and toggle command to return to the map.
+- `√` Implement commands: new mind map, toggle, add child, add sibling, delete, edit, undo, redo, fit.
+- `-` Implement a filename prompt for new maps; v1 creates a numbered file directly.
 - `-` Restore map pan/zoom/selection per file where practical.
-- `-` Add the module `README.md` and update the root README architecture section.
-- `-` Verify: `npm run typecheck && npm run build`.
+- `-` Update the root README architecture section for the final module layout.
+- `√` Verify: `npm run typecheck && npm run build`.
 - `-` Manual test in `test-vault`: default map, source switch, save/reload, commands, status bar.
-- `-` Commit `feat/view`.
+- `√` Commit the integration checkpoint.
 
 Verification:
 
@@ -241,18 +239,19 @@ Manual: complete the source/map switching checklist.
 
 ## Phase 8 — Settings and internationalization
 
-Branch: `feat/settings`
+Branch: `feat/core`
 
-- `-` Implement the settings schema and persistence.
-- `-` Implement the settings tab: general defaults, layout defaults, theme management, language.
-- `-` Implement English and Chinese dictionaries and `t()`.
-- `-` Re-register commands on language change without changing command ids.
-- `-` Translate all view, toolbar, notice, and settings strings.
-- `-` Implement reset-to-defaults.
-- `-` Add `README.md` for the settings module.
-- `-` Verify: `npm run typecheck && npm run test`.
-- `-` Manual test: switch languages, change defaults, create a new file, verify frontmatter.
-- `-` Commit `feat/settings`.
+- `√` Implement the settings schema and persistence.
+- `√` Implement the settings tab: general defaults, layout defaults, theme management, language.
+- `√` Implement English and Chinese dictionaries and `t()`.
+- `√` Re-register commands on language change without changing command ids.
+- `√` Translate the view, toolbar, notices, commands, settings, and theme editor strings.
+- `√` Implement reset-to-defaults.
+- `√` Add `README.md` for the settings module.
+- `√` Verify: `npm run typecheck && npm run test`.
+- `-` Manual test: switch languages, change defaults, create a new file, verify frontmatter, edit and
+  import/export custom themes.
+- `√` Commit the settings and theme-editor checkpoint.
 
 Verification:
 
@@ -310,8 +309,12 @@ node scripts/benchmark.mjs
   passed in light and dark mode. rAF batching and culling remain performance tasks.
 - Phase 5 interaction: selection, inline editing, live reflow, add/delete, drag-and-drop, clipboard,
   undo/redo, and source serialization are implemented and tested.
-- Phase 6 themes: eight built-in themes, per-file selection, and automatic light/dark switching are
-  complete; custom themes, the theme editor, and settings are next.
-- Next: manual editing verification, then drag/clipboard and commands on `feat/core`.
+- Phase 6 themes: eight built-in themes, per-file selection, automatic light/dark switching, custom
+  theme editing, import/export, and live preview are implemented.
+- Phase 7 view integration: TextFileView, source switching, status bar, commands, and new-map creation
+  are implemented; filename prompt and per-file view-state restore remain.
+- Phase 8 settings/i18n: settings tab, custom theme management, language switching, command
+  re-registration, and English/Chinese UI are implemented; manual verification remains.
+- Next: manual verification in Obsidian, then performance benchmark, README polish, and release assets.
 - Test vault: created with a sample map.
 - Author metadata: `fickit`; repository URL still pending.

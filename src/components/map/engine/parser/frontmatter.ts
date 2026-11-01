@@ -1,5 +1,4 @@
 import { LIMITS } from "../../../../config/constants";
-import { DEFAULT_MINDMAP_META } from "../../../../config/defaults";
 import type { MindMapMeta, ParseError, ParseWarning } from "../../../../types/mindmap";
 
 /** Result of splitting a source file into frontmatter and body. */
@@ -147,9 +146,14 @@ function readBoolean(
  *
  * @param raw Frontmatter content without the surrounding --- lines.
  * @param startLine One-based line number where the frontmatter starts.
+ * @param defaults Settings used for keys missing from the file.
  */
-export function parseMeta(raw: string | null, startLine: number): MetaParseResult {
-  const meta: MindMapMeta = { ...DEFAULT_MINDMAP_META };
+export function parseMeta(
+  raw: string | null,
+  startLine: number,
+  defaults: MindMapMeta,
+): MetaParseResult {
+  const meta: MindMapMeta = { ...defaults };
   const warnings: ParseWarning[] = [];
 
   if (raw === null || raw.trim() === "") {
