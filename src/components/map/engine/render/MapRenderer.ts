@@ -221,6 +221,11 @@ export class MapRenderer {
     return this.layout?.nodes.find((node) => node.node.id === nodeId) ?? null;
   }
 
+  /** Returns one node's rendered element. */
+  getNodeElement(nodeId: string): HTMLElement | null {
+    return this.nodeEls.get(nodeId) ?? null;
+  }
+
   /** Returns the transformed world layer. */
   getWorldElement(): HTMLElement {
     return this.world;

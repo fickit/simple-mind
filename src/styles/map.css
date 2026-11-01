@@ -89,6 +89,7 @@
   position: absolute;
   z-index: 10;
   box-sizing: border-box;
+  margin: 0;
   padding: var(--sm-node-padding-y) var(--sm-node-padding-x);
   border: 1px solid var(--sm-selection-outline);
   border-radius: var(--sm-node-radius);
@@ -98,11 +99,28 @@
   font-size: var(--sm-font-size);
   font-weight: var(--sm-font-weight);
   line-height: var(--sm-line-height);
+  overflow: hidden;
+  resize: none;
+  text-align: center;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   outline: none;
 }
 
 .simple-mind-inline-editor::placeholder {
   color: var(--text-faint);
+}
+
+.simple-mind-editor-mirror {
+  position: absolute;
+  top: 0;
+  left: -100000px;
+  visibility: hidden;
+  pointer-events: none;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .simple-mind-world {

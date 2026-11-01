@@ -6,13 +6,72 @@ export interface InlineEditorCallbacks {
   onCancel: () => void;
 }
 
-/** Positions a single-line input over a node inside the world layer. */
+/** Optional visual context for the editor. */
+export interface InlineEditorOptions {
+  maxWidth?: number;
+  placeholder?: string;
+  nodeElement?: HTMLElement | null;
+}
+
+const MIRROR_STYLE_PROPS = [
+  "fontFamily",
+  "fontSize",
+  "fontWeight",
+  "lineHeight",
+  "letterSpacing",
+  "textAlign",
+  "paddingTop",
+  "paddingRight",
+  "paddingBottom",
+  "paddingLeft",
+  "borderTopWidth",
+  "borderTopStyle",
+  "borderTopColor",
+  "borderRightWidth",
+  "borderRightStyle",
+  "borderRightColor",
+  "borderBottomWidth",
+  "borderBottomStyle",
+  "borderBottomColor",
+  "borderLeftWidth",
+  "borderLeftStyle",
+  "borderLeftColor",
+  "borderRadius",
+  "boxShadow",
+  "backgroundColor",
+  "color",
+];
+
+/** Copies computed text/box styles so the editor looks like the node. */
+function copyComputedStyles(source: HTMLElement, target: HTMLElement): void {
+  const view = source.ownerDocument.defaultView;
+  if (!view) return;
+  const style = view.getComputedStyle(source);
+  for (const property of MIRROR_STYLE_PROPS) {
+    target.style.setProperty(kebab(property), style.getPropertyValue(kebab(property)));
+  }
+  target.style.boxSizing = "border-box";
+}
+
+/** Converts a camelCase CSS property to kebab-case. */
+function kebab(property: string): string {
+  return property.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+}
+
+/** Positions a single-line textarea over a node inside the world layer. */
 export class InlineEditor {
   private readonly world: HTMLElement;
-  private input: HTMLInputElement | null = null;
+  private input: HTMLTextAreaElement | null = null;
+  private mirror: HTMLElement | null = null;
   private callbacks: InlineEditorCallbacks | null = null;
+  private position: PositionedNode | null = null;
+  private maxWidth = 280;
+  private baseWidth = 40;
+  private baseHeight = 30;
+  private placeholder = "";
   private composing = false;
   private finished = false;
+  private firstResize = true;
 
   /**
    * @param world Transformed map world that hosts the input.
@@ -32,39 +91,53 @@ export class InlineEditor {
    * @param position Node position in world coordinates.
    * @param text Current label.
    * @param callbacks Commit and cancel handlers.
-   * @param placeholder Placeholder for a new node.
+   * @param options Sizing and placeholder context.
    */
   open(
     position: PositionedNode,
     text: string,
     callbacks: InlineEditorCallbacks,
-    placeholder = "",
+    options: InlineEditorOptions = {},
   ): void {
     this.close();
 
     const doc = this.world.ownerDocument;
-    const input = doc.createElement("input");
-    input.type = "text";
-    input.className = "simple-mind-inline-editor";
-    input.value = text;
-    input.placeholder = placeholder;
-    input.setAttribute("aria-label", "Edit node label");
-    input.style.left = `${position.x}px`;
-    input.style.top = `${position.y}px`;
-    input.style.width = `${Math.max(position.width, 180)}px`;
-    input.style.height = `${Math.max(position.height, 30)}px`;
-
+    this.position = position;
+    this.maxWidth = Math.max(40, options.maxWidth ?? 280);
+    this.placeholder = options.placeholder ?? "";
+    this.baseWidth = options.nodeElement?.offsetWidth || position.width || 40;
+    this.baseHeight = options.nodeElement?.offsetHeight || position.height || 30;
     this.composing = false;
     this.finished = false;
+    this.firstResize = true;
     this.callbacks = callbacks;
-    this.input = input;
+
+    const input = doc.createElement("textarea");
+    input.className = "simple-mind-inline-editor";
+    input.rows = 1;
+    input.wrap = "soft";
+    input.value = text;
+    input.placeholder = this.placeholder;
+    input.spellcheck = false;
+
+    const mirror = doc.createElement("div");
+    mirror.className = "simple-mind-editor-mirror";
+
+    if (options.nodeElement) {
+      copyComputedStyles(options.nodeElement, input);
+      copyComputedStyles(options.nodeElement, mirror);
+    }
+    input.style.textAlign = "center";
+    mirror.style.textAlign = "center";
 
     input.addEventListener("compositionstart", () => {
       this.composing = true;
     });
     input.addEventListener("compositionend", () => {
       this.composing = false;
+      this.resize();
     });
+    input.addEventListener("input", () => this.resize());
     input.addEventListener("keydown", (event) => {
       if (event.isComposing || this.composing) return;
       if (event.key === "Enter") {
@@ -83,7 +156,10 @@ export class InlineEditor {
     input.addEventListener("pointerdown", (event) => event.stopPropagation());
     input.addEventListener("click", (event) => event.stopPropagation());
 
-    this.world.appendChild(input);
+    this.input = input;
+    this.mirror = mirror;
+    this.world.append(input, mirror);
+    this.resize();
     input.focus();
     input.select();
   }
@@ -113,10 +189,53 @@ export class InlineEditor {
     this.remove();
   }
 
-  /** Removes the input element. */
+  /** Resizes the input to the longest line, capped by maxWidth. */
+  private resize(): void {
+    if (!this.input || !this.mirror || !this.position) return;
+    const value = this.input.value;
+    const displayText = value || this.placeholder || " ";
+
+    this.mirror.style.whiteSpace = "pre";
+    this.mirror.style.width = "max-content";
+    this.mirror.style.maxWidth = "none";
+    this.mirror.textContent = displayText;
+    const initial = this.firstResize;
+    this.firstResize = false;
+    const naturalWidth = this.mirror.offsetWidth || this.baseWidth;
+    const minimumWidth = initial ? this.baseWidth : 40;
+    const width = Math.min(Math.max(minimumWidth, naturalWidth), this.maxWidth);
+
+    this.mirror.style.whiteSpace = "pre-wrap";
+    this.mirror.style.width = `${width}px`;
+    this.mirror.style.maxWidth = "none";
+    const naturalHeight = this.mirror.offsetHeight || this.baseHeight;
+    const height = Math.max(initial ? this.baseHeight : 30, naturalHeight);
+
+    this.input.style.width = `${width}px`;
+    this.input.style.height = `${height}px`;
+    this.positionInput(width);
+  }
+
+  /** Anchors the input so it grows away from the parent. */
+  private positionInput(width: number): void {
+    if (!this.input || !this.position) return;
+    let left = this.position.x;
+    if (this.position.side === "left") {
+      left = this.position.x + this.position.width - width;
+    } else if (this.position.side === "down") {
+      left = this.position.x + (this.position.width - width) / 2;
+    }
+    this.input.style.left = `${left}px`;
+    this.input.style.top = `${this.position.y}px`;
+  }
+
+  /** Removes the input and mirror elements. */
   private remove(): void {
     this.input?.remove();
+    this.mirror?.remove();
     this.input = null;
+    this.mirror = null;
     this.callbacks = null;
+    this.position = null;
   }
 }

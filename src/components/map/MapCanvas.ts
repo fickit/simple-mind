@@ -280,6 +280,7 @@ export class MapCanvas {
     const position = this.renderer.getNodePosition(nodeId);
     if (!position) return;
 
+    const meta = this.controller?.getDocument().meta;
     this.renderer.selectNode(nodeId);
     this.editor.open(
       position,
@@ -288,7 +289,11 @@ export class MapCanvas {
         onCommit: (value) => this.commitEdit(nodeId, value, isNew),
         onCancel: () => this.cancelEdit(nodeId, isNew),
       },
-      placeholder,
+      {
+        maxWidth: meta?.maxWidth ?? 280,
+        placeholder,
+        nodeElement: this.renderer.getNodeElement(nodeId),
+      },
     );
     this.updateToolbar();
   }
