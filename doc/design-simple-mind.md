@@ -324,9 +324,10 @@ The theme selects a connector style:
 - `curve`: leaves the parent along a straight lead, then uses a cubic Bezier to the child.
 - `orthogonal`: leaves the parent along the same lead, then uses elbows to the child.
 
-The lead is long enough to hold the collapse and add controls, so the line visibly walks out of the
-node before branching. Parent-child gaps are clamped to the control clearance; sibling gaps keep using
-the configured spacing.
+The lead ends at the collapse control, so the line walks out of the node and branches exactly where the
+chevron sits. The add control is placed beyond that fork and the parent-child gap is clamped so children
+start past it, which keeps the button inside the fan of child lines. Sibling gaps keep using the
+configured spacing.
 
 ### 6.5 Parameters
 
@@ -638,9 +639,9 @@ beneath per-node overrides and per-file connector shape.
 ### 11.2.3 Node controls
 
 - Collapse and add controls stay invisible until a node is hovered or selected.
-- Controls line up along the connector: the collapse chevron comes first, 8 px away from the node,
-  and the add button sits outside it. The connector branches after both. In the organization layout
-  the add button is below the downward chevron.
+- Controls line up along the connector: the collapse chevron sits on the fork, 8 px away from the node
+  where the child lines branch, and the add button sits beyond the fork between those lines. In the
+  organization layout the same order runs downward.
 - Controls use rounded chevrons: a right-side node shows `‹` to collapse and `›` to expand; a
   left-side node is mirrored. Organization charts use `⌃` and `⌄`.
 - When a group is collapsed, its control becomes a circular count bubble showing how many descendants

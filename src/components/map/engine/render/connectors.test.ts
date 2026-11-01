@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { CONNECTOR_LEAD } from "../../../../config/constants";
+import {
+  CONNECTOR_CLEARANCE,
+  CONNECTOR_LEAD,
+  NODE_CONTROL_CENTER,
+  NODE_CONTROL_EXTENT,
+} from "../../../../config/constants";
 import type { PositionedNode } from "../layout/types";
 import { connectorPath } from "./connectors";
 
@@ -17,6 +22,11 @@ function node(id: string, x: number, y: number, width: number, height: number): 
 }
 
 describe("connectorPath", () => {
+  it("branches at the collapse control and keeps children past the add control", () => {
+    expect(CONNECTOR_LEAD).toBe(NODE_CONTROL_CENTER);
+    expect(CONNECTOR_CLEARANCE).toBeGreaterThan(NODE_CONTROL_EXTENT);
+  });
+
   it("walks out of the parent before branching on horizontal sides", () => {
     const parent = node("p", 0, 0, 100, 40);
     const child = node("c", 160, 80, 100, 40);

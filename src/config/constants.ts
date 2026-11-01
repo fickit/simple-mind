@@ -38,11 +38,17 @@ export const NODE_CONTROL_GAP = 8;
 /** Gap between the collapse and add controls. */
 export const NODE_CONTROL_SPACING = 4;
 
+/** Distance from a node edge to the center of its collapse control. */
+export const NODE_CONTROL_CENTER = NODE_CONTROL_GAP + NODE_CONTROL_SIZE / 2;
+
+/** Distance from a node edge to the outer edge of its farthest floating control. */
+export const NODE_CONTROL_EXTENT = NODE_CONTROL_GAP + NODE_CONTROL_SIZE * 2 + NODE_CONTROL_SPACING;
+
 /** Distance a connector travels before branching toward its children. */
-export const CONNECTOR_LEAD = NODE_CONTROL_GAP + NODE_CONTROL_SIZE * 2 + NODE_CONTROL_SPACING;
+export const CONNECTOR_LEAD = NODE_CONTROL_CENTER;
 
 /** Minimum parent-child gap that keeps node controls clear. */
-export const CONNECTOR_CLEARANCE = CONNECTOR_LEAD + 10;
+export const CONNECTOR_CLEARANCE = NODE_CONTROL_EXTENT + NODE_CONTROL_GAP + 2;
 
 /** Numeric bounds for per-file layout and style settings. */
 export const LIMITS = {
