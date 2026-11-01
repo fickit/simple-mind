@@ -117,6 +117,7 @@ export class MapCanvas {
     rect: { x: number; y: number; width: number; height: number };
   } | null = null;
   private editorLayoutFrame: number | null = null;
+  private renderFrame: number | null = null;
 
   /**
    * @param container Element that receives the map UI.
@@ -761,7 +762,7 @@ export class MapCanvas {
     const controller = this.controller;
     if (!controller || !controller.updateMeta(patch)) return;
     this.applyCurrentTheme();
-    this.rerender(false);
+    this.rerenderSoon();
     this.syncSidebar();
     this.updateToolbar();
   }
@@ -776,7 +777,7 @@ export class MapCanvas {
       return;
     }
 
-    this.rerender(false);
+    this.rerenderSoon();
     this.syncSidebar();
     this.updateToolbar();
   }
@@ -811,6 +812,7 @@ export class MapCanvas {
   /** Reapplies the theme after Obsidian changes its light/dark mode. */
   refreshTheme(): void {
     this.applyCurrentTheme();
+    this.rerender(false);
     this.updateToolbar();
   }
 
@@ -822,6 +824,7 @@ export class MapCanvas {
   /** Removes the renderer and map DOM. */
   destroy(): void {
     this.cancelEditorLayout();
+    this.cancelRender();
     this.drag.destroy();
     this.editor.close();
     this.renderer.setEditingNode(null);
@@ -1397,6 +1400,30 @@ export class MapCanvas {
     if (document) this.renderer.render(document, { fit });
     else this.renderer.clear();
     this.updateToolbar();
+  }
+
+  /**
+   * Redraws once per animation frame with whatever the source says by then.
+   * Used by continuous input such as color pickers and number fields.
+   */
+  private rerenderSoon(): void {
+    if (this.renderFrame !== null) return;
+    const view = this.rootEl.ownerDocument.defaultView;
+    if (!view || typeof view.requestAnimationFrame !== "function") {
+      this.rerender(false);
+      return;
+    }
+    this.renderFrame = view.requestAnimationFrame(() => {
+      this.renderFrame = null;
+      this.rerender(false);
+    });
+  }
+
+  /** Cancels a queued frame draw. */
+  private cancelRender(): void {
+    if (this.renderFrame === null) return;
+    this.rootEl.ownerDocument.defaultView?.cancelAnimationFrame?.(this.renderFrame);
+    this.renderFrame = null;
   }
 
   /**

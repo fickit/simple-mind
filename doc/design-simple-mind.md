@@ -696,7 +696,7 @@ exact budget is confirmed by the first benchmark run rather than assumed.
 - No full DOM rebuild on edits.
 - Node and edge maps keyed by id.
 - Measurement cache with theme/font invalidation.
-- `requestAnimationFrame` batching for layout and render.
+- `requestAnimationFrame` batching for redraws driven by continuous input.
 - One transform for pan/zoom.
 - CSS containment on nodes and the world layer.
 - Culling above a configurable threshold.

@@ -39,6 +39,13 @@ function selectNode(host: HTMLElement, nodeId: string): void {
   node?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 }
 
+/** Lets queued frame draws run. */
+function nextFrame(): Promise<void> {
+  return new Promise((resolve) => {
+    window.requestAnimationFrame(() => resolve());
+  });
+}
+
 function clickButton(host: HTMLElement, label: string): void {
   const button = Array.from(host.querySelectorAll("button")).find(
     (candidate) => candidate.textContent === label,
@@ -538,7 +545,7 @@ describe("MapCanvas", () => {
     host.remove();
   });
 
-  it("writes node and text overrides to the selected node", () => {
+  it("writes node and text overrides to the selected node", async () => {
     const { host, canvas } = createCanvas("# Root\n- A\n- B\n");
     selectNode(host, "n2");
     const change = (selector: string, value: string): void => {
@@ -577,6 +584,7 @@ describe("MapCanvas", () => {
     expect(source).toContain("- B\n");
     expect(source).not.toContain("- B <!-- sm:");
 
+    await nextFrame();
     const node = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n2"]')!;
     expect(node.classList.contains("shape-pill")).toBe(true);
     expect(node.style.getPropertyValue("--sm-node-bg")).toBe("#112233");
@@ -594,7 +602,7 @@ describe("MapCanvas", () => {
     host.remove();
   });
 
-  it("styles the root through the H1 line", () => {
+  it("styles the root through the H1 line", async () => {
     const { host, canvas } = createCanvas("# Root\n- A\n");
     selectNode(host, "n1");
     const fill = host.querySelector<HTMLInputElement>(".simple-mind-sidebar-node-fill")!;
@@ -602,9 +610,38 @@ describe("MapCanvas", () => {
     fill.dispatchEvent(new Event("change", { bubbles: true }));
 
     expect(canvas.getSource()).toContain('# Root <!-- sm:{"fill":"#ff0000"} -->');
+    await nextFrame();
     const root = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n1"]')!;
     expect(root.style.getPropertyValue("--sm-root-bg")).toBe("#ff0000");
 
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("draws continuous style input once per frame", async () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    selectNode(host, "n2");
+    const renderer = (
+      canvas as unknown as { renderer: { render: (doc: unknown, options?: unknown) => void } }
+    ).renderer;
+    const renderSpy = vi.spyOn(renderer, "render");
+    const fill = host.querySelector<HTMLInputElement>(".simple-mind-sidebar-node-fill")!;
+
+    renderSpy.mockClear();
+    for (const value of ["#111111", "#222222", "#333333"]) {
+      fill.value = value;
+      fill.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    expect(canvas.getSource()).toContain('<!-- sm:{"fill":"#333333"} -->');
+    expect(renderSpy).not.toHaveBeenCalled();
+
+    await nextFrame();
+    expect(renderSpy).toHaveBeenCalledTimes(1);
+    const node = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n2"]')!;
+    expect(node.style.getPropertyValue("--sm-node-bg")).toBe("#333333");
+
+    renderSpy.mockRestore();
     canvas.destroy();
     host.remove();
   });

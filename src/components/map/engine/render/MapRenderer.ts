@@ -113,7 +113,7 @@ export class MapRenderer {
   }
 
   /**
-   * Applies a new theme and redraws the current document.
+   * Applies a new theme and invalidates its caches; the caller redraws.
    *
    * @param theme Active theme.
    * @param dark Whether Obsidian is in dark mode.
@@ -125,9 +125,6 @@ export class MapRenderer {
     }
     this.theme = theme;
     this.dark = dark;
-    if (this.document) {
-      this.render(this.document, { fit: false });
-    }
   }
 
   /**
