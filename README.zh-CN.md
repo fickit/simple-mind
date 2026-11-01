@@ -76,6 +76,7 @@ npm run build      # 生产构建
 npm run typecheck  # TypeScript 检查
 npm run lint       # Biome 检查
 npm run test       # 单元测试
+node scripts/benchmark.mjs  # 合成性能报告
 ```
 
 ## 架构
@@ -94,6 +95,7 @@ npm run test       # 单元测试
 - `doc/prd.md`
 - `doc/design-simple-mind.md`
 - `doc/plan-simple-mind.md`
+- `doc/benchmark-simple-mind.md`
 
 ## 许可证
 

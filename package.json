@@ -7,7 +7,7 @@
     "dev": "node esbuild.config.mjs",
     "build": "node esbuild.config.mjs production",
     "typecheck": "tsc --noEmit",
-    "lint": "biome check src",
+    "lint": "biome check src scripts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

@@ -690,10 +690,11 @@ Obsidian view state. Internal calls trust the document invariants.
 
 ### 14.1 Budgets
 
-The benchmark script measures parse, layout, first render, and incremental edit latency for synthetic
-trees of 100, 500, and 1,000 nodes. Budgets are recorded in the benchmark output and compared across
-changes. The target is interactive response (under 100 ms for a single edit) on a desktop machine; the
-exact budget is confirmed by the first benchmark run rather than assumed.
+The benchmark script measures parse, layout, connector paths, first render, and incremental edit
+latency for synthetic trees of 100, 500, and 1,000 nodes, and writes its table to
+`doc/benchmark-simple-mind.md`. Budgets confirmed by the first run: a single edit stays under 100 ms
+(33 ms at 1,000 nodes in Chromium) and the first render of 1,000 nodes stays under 200 ms. Later runs
+are compared against those numbers rather than against a new guess.
 
 ### 14.2 Techniques
 

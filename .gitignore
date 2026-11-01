@@ -13,5 +13,6 @@ test-vault/.obsidian/appearance.json
 test-vault/.obsidian/core-plugins.json
 test-vault/.obsidian/plugins/*/data.json
 .tmp-demo/
+.tmp-bench/
 
 nul

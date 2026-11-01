@@ -79,6 +79,7 @@ npm run build      # production bundle
 npm run typecheck  # TypeScript check
 npm run lint       # Biome check
 npm run test       # unit tests
+node scripts/benchmark.mjs  # synthetic performance report
 ```
 
 ## Architecture
@@ -98,6 +99,7 @@ without a mind-map runtime dependency.
 - `doc/prd.md`
 - `doc/design-simple-mind.md`
 - `doc/plan-simple-mind.md`
+- `doc/benchmark-simple-mind.md`
 
 ## License
 

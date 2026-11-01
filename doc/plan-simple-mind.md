@@ -294,9 +294,9 @@ npm run test
 
 Branch: `feat/release`
 
-- `-` Add `scripts/benchmark.mjs` to generate 100, 500, and 1,000 node maps and time parse, layout,
-  first render, and incremental edit.
-- `-` Record benchmark output in `doc/benchmark-simple-mind.md`.
+- `√` Add `scripts/benchmark.mjs` to generate 100, 500, and 1,000 node maps and time parse, layout,
+  paths, first render, incremental edit, and serialize (landed on `feat/core`).
+- `√` Record benchmark output in `doc/benchmark-simple-mind.md`, including the Chromium check.
 - `-` Complete the manual checklist in `test-vault`.
 - `-` Verify parse-error, invalid-frontmatter, unknown-theme, save-failure, and root-protection paths.
 - `-` Run the full verification suite.
@@ -353,6 +353,6 @@ node scripts/benchmark.mjs
 - Phase 8 settings/i18n: settings tab (including global font and connector defaults), custom theme
   management, language switching, command re-registration, and English/Chinese UI are implemented;
   manual verification remains.
-- Next: manual verification in Obsidian, then performance benchmark, README polish, and release assets.
+- Next: manual verification in Obsidian, then README polish and release assets.
 - Test vault: created with a sample map.
 - Author metadata: `fickit`; repository URL still pending.
