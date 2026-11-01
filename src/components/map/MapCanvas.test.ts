@@ -270,6 +270,17 @@ describe("MapCanvas", () => {
     host.remove();
   });
 
+  it("applies the theme selected in frontmatter", () => {
+    const { host, canvas } = createCanvas("---\nmindmap:\n  theme: nord\n---\n# Root\n- A\n");
+
+    expect(host.querySelector(".simple-mind-map")?.getAttribute("data-simple-mind-theme")).toBe(
+      "nord",
+    );
+
+    canvas.destroy();
+    host.remove();
+  });
+
   it("does not collapse a node on Space", () => {
     const { host, canvas } = createCanvas("# Root\n- A\n  - A1\n- B\n");
     selectNode(host, "n2");

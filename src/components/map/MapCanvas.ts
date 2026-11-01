@@ -1,5 +1,6 @@
 import { NEW_NODE_EDITOR_WIDTH } from "../../config/constants";
 import type { MindNode } from "../../types/mindmap";
+import type { ThemeDefinition } from "../../types/theme";
 import { DragController, type DropPosition } from "./engine/interaction/DragController";
 import { type CommitAction, InlineEditor } from "./engine/interaction/InlineEditor";
 import {
@@ -12,7 +13,7 @@ import type { PositionedNode } from "./engine/layout/types";
 import { parseSource } from "./engine/parser/parser";
 import { MapRenderer } from "./engine/render/MapRenderer";
 import { applyTheme } from "./themes/applyTheme";
-import { OBSIDIAN_THEME } from "./themes/presets";
+import { getBuiltInTheme, OBSIDIAN_THEME } from "./themes/presets";
 
 /** Callbacks supplied by the host view. */
 export interface MapCanvasOptions {
@@ -31,7 +32,7 @@ export class MapCanvas {
   private readonly renderer: MapRenderer;
   private readonly editor: InlineEditor;
   private readonly drag: DragController;
-  private readonly theme = OBSIDIAN_THEME;
+  private theme: ThemeDefinition = OBSIDIAN_THEME;
   private readonly onSource: () => void;
   private readonly onChangeSource: (source: string) => void;
   private readonly onNotice: (message: string) => void;
@@ -155,6 +156,10 @@ export class MapCanvas {
     }
 
     if (result.document) {
+      this.theme = getBuiltInTheme(result.document.meta.theme);
+      this.dark = isDarkDocument(this.rootEl.ownerDocument);
+      applyTheme(this.rootEl, this.theme, this.dark);
+      this.renderer.setTheme(this.theme, this.dark);
       this.controller = new MapController(result.document, source, (next) => {
         this.sourceText = next;
         this.onChangeSource(next);

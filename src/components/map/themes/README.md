@@ -12,9 +12,14 @@ Obsidian's global styles and make light/dark switching and custom themes determi
 ## Files
 
 - `applyTheme.ts`: compiles a token set into `--sm-*` variables.
-- `presets.ts`: built-in theme definitions and fallback resolution.
+- `presets.ts`: eight built-in themes with light and dark variants, plus fallback resolution.
+
+## Built-in themes
+
+Obsidian Native, Paper, Graphite, Nord, Solarized, Forest, Ocean, and Sakura.
 
 ## Call flow
 
-`MapCanvas` applies the active theme to its root and passes the tokens to `MapRenderer` for
-measurement and connector styling.
+`MapCanvas` resolves the selected theme from the file frontmatter, applies it to its root, and passes
+the tokens to `MapRenderer` for measurement and connector styling. Obsidian's `css-change` event
+reapplies the active light or dark variant.

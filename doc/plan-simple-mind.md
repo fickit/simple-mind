@@ -188,20 +188,21 @@ Manual: open a sample map in Obsidian and exercise every shortcut.
 
 ## Phase 6 — Themes
 
-Branch: `feat/themes`
+Branch: `feat/core`
 
-- `-` Define `ThemeTokens`, `ThemeDefinition`, `NodeShape`, and `ConnectorStyle`.
-- `-` Implement the eight built-in themes with light and dark variants.
-- `-` Implement theme resolution: built-in, custom, default fallback, and unknown-id notice.
-- `-` Implement CSS variable compilation scoped to the view root.
-- `-` Implement automatic light/dark switching on `workspace.on('css-change')`.
+- `√` Define `ThemeTokens`, `ThemeDefinition`, `NodeShape`, and `ConnectorStyle`.
+- `√` Implement the eight built-in themes with light and dark variants.
+- `√` Implement built-in theme resolution with native-theme fallback and per-file frontmatter
+  selection.
+- `√` Implement CSS variable compilation scoped to the view root.
+- `√` Implement automatic light/dark switching on `workspace.on('css-change')`.
 - `-` Implement custom theme validation, clone, rename, delete, import, and export.
 - `-` Implement the theme editor modal with light/dark tabs and a live preview.
-- `-` Add `README.md` for the theme module.
-- `-` Unit tests: token resolution, light/dark selection, import validation, fallback behavior.
-- `-` Verify: `npm run typecheck && npm run test -- theme`.
-- `-` Manual test: all eight themes, custom theme reload, import/export.
-- `-` Commit `feat/themes`.
+- `√` Add `README.md` for the theme module.
+- `√` Unit tests: built-in theme count, token completeness, fallback behavior, frontmatter selection.
+- `√` Verify: `npm run typecheck && npm run test`.
+- `-` Manual test: all eight themes and custom theme reload.
+- `√` Commit the built-in theme checkpoint.
 
 Verification:
 
@@ -308,7 +309,9 @@ node scripts/benchmark.mjs
 - Phase 4 renderer: canvas, themes, pan/zoom, collapse, and inline Markdown complete; visual demo
   passed in light and dark mode. rAF batching and culling remain performance tasks.
 - Phase 5 interaction: selection, inline editing, live reflow, add/delete, drag-and-drop, clipboard,
-  undo/redo, and source serialization are implemented and tested; themes and settings are next.
+  undo/redo, and source serialization are implemented and tested.
+- Phase 6 themes: eight built-in themes, per-file selection, and automatic light/dark switching are
+  complete; custom themes, the theme editor, and settings are next.
 - Next: manual editing verification, then drag/clipboard and commands on `feat/core`.
 - Test vault: created with a sample map.
 - Author metadata: `fickit`; repository URL still pending.
