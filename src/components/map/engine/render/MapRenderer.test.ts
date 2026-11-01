@@ -45,3 +45,63 @@ describe("MapRenderer live editing", () => {
     host.remove();
   });
 });
+
+/** Builds a right-growing chain so nodes spread along one axis. */
+function chain(depth: number): string {
+  const lines = ["---", "mindmap:", "  layout: tree-right", "---", "# R0"];
+  for (let level = 1; level <= depth; level += 1) {
+    lines.push(`${"  ".repeat(level - 1)}- R${level}`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+describe("MapRenderer culling", () => {
+  it("mounts only the viewport plus a margin and remounts on pan", () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    host.getBoundingClientRect = () =>
+      ({
+        x: 0,
+        y: 0,
+        left: 0,
+        top: 0,
+        right: 300,
+        bottom: 200,
+        width: 300,
+        height: 200,
+        toJSON: () => ({}),
+      }) as DOMRect;
+    const renderer = new MapRenderer(host, OBSIDIAN_THEME, false, { cullingThreshold: 2 });
+    const depth = 24;
+    const mapDocument = parseSource(chain(depth)).document;
+    expect(mapDocument).not.toBeNull();
+
+    renderer.render(mapDocument!, { fit: false });
+
+    const mounted = () => host.querySelectorAll<HTMLElement>(".simple-mind-node").length;
+    expect(mounted()).toBeLessThan(depth + 1);
+    expect(renderer.getNodeElement("n1")).not.toBeNull();
+
+    const deep = renderer.getNodePosition("n25")!;
+    expect(deep.x).toBeGreaterThan(0);
+    renderer.panBy(100 - deep.x, 0);
+    expect(mounted()).toBeLessThan(depth + 1);
+    expect(renderer.getNodeElement("n1")).toBeNull();
+    expect(renderer.getNodeElement("n25")).not.toBeNull();
+
+    renderer.destroy();
+    host.remove();
+  });
+
+  it("keeps every node mounted below the threshold", () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const renderer = new MapRenderer(host, OBSIDIAN_THEME, false, { cullingThreshold: 100 });
+    renderer.render(parseSource("# Root\n- A\n- B\n").document!);
+
+    expect(host.querySelectorAll<HTMLElement>(".simple-mind-node")).toHaveLength(3);
+
+    renderer.destroy();
+    host.remove();
+  });
+});

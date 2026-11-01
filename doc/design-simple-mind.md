@@ -369,10 +369,14 @@ measurement cache, then trigger a re-layout.
 
 ### 7.4 Culling
 
-At or below 1,000 nodes, all visible nodes are mounted. A `cullingThreshold` option exists for larger
-maps: above the threshold, only nodes and edges intersecting the viewport plus a margin are mounted.
-The interaction layer must still be able to select a node by id and reveal it. Culling is a performance
-lever, not a v1 requirement for the target size.
+Maps up to `CULLING_THRESHOLD` (1,200 mounted nodes) keep every visible node mounted. Above it, the
+renderer mounts only the nodes inside the viewport widened by `CULLING_MARGIN` (400 world pixels), and
+an edge while either of its endpoints is inside that rectangle. The viewport comes from
+`visibleWorldRect`, so panning and zooming re-run the keyed update and mount what is revealed.
+
+Culling changes the mounted set only: colors, collapse counts, selection, and the inline editor are
+resolved against the layout, so a culled node keeps its id, its state, and its place in the map.
+`cullingThreshold` is a renderer option, which also lets tests force the behavior on small maps.
 
 ### 7.5 Selection and focus
 

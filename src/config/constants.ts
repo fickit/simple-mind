@@ -23,8 +23,11 @@ export const HISTORY_LIMIT = 100;
 export const ZOOM_MIN = 0.2;
 export const ZOOM_MAX = 2.5;
 
-/** Node count above which the renderer may enable viewport culling. */
+/** Node count above which the renderer mounts only what the viewport shows. */
 export const CULLING_THRESHOLD = 1200;
+
+/** World distance kept mounted around the viewport while culling is active. */
+export const CULLING_MARGIN = 400;
 
 /** Initial inline-editor width for a new, empty node. */
 export const NEW_NODE_EDITOR_WIDTH = 120;

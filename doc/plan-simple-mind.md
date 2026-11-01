@@ -140,7 +140,7 @@ Branch: `feat/core`
 - `√` Implement the measurement cache integration and invalidation on theme/font changes.
 - `√` Batch continuous sidebar input into one frame draw and stop theme changes from drawing twice.
 - `√` Implement the world transform, pan, wheel, zoom, zoom controls, and fit.
-- `-` Implement viewport culling above a threshold; the engine keeps a hook for the performance phase.
+- `√` Mount only the viewport plus a margin above the culling threshold, and remount on pan and zoom.
 - `√` Implement selection classes and accessibility roles.
 - `√` Add `README.md` for the renderer module.
 - `√` DOM tests: node diff, edge diff, no duplicates, inline Markdown safety, pan/zoom math, culling.
@@ -336,7 +336,7 @@ node scripts/benchmark.mjs
 - Phase 2 core document: parser, serializer, and history complete; command controller is next.
 - Phase 3 layout: complete for mindmap, tree left/right, and org.
 - Phase 4 renderer: canvas, themes, pan/zoom, collapse, and inline Markdown complete; visual demo
-  passed in light and dark mode. Viewport culling remains a performance task.
+  passed in light and dark mode. Continuous input redraws are frame-batched and large maps culled.
 - Phase 5 interaction: selection, inline editing, live reflow, add/delete, drag-and-drop, clipboard,
   undo/redo, and source serialization are implemented and tested. The Style/Text panel edits the
   selected node through inline metadata; connector shape stays per file, while connector color and

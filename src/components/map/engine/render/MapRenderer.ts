@@ -1,4 +1,9 @@
-import { ZOOM_MAX, ZOOM_MIN } from "../../../../config/constants";
+import {
+  CULLING_MARGIN,
+  CULLING_THRESHOLD,
+  ZOOM_MAX,
+  ZOOM_MIN,
+} from "../../../../config/constants";
 import { DEFAULT_MINDMAP_META } from "../../../../config/defaults";
 import { t } from "../../../../config/i18n";
 import type { MindMapDocument, MindNode, NodeStyle } from "../../../../types/mindmap";
@@ -9,6 +14,7 @@ import { toHexColor } from "../../themes/theme-utils";
 import { layoutDocument, treeSideOf } from "../layout/layout";
 import type { LayoutBounds, LayoutResult, NodeMeasurer, PositionedNode } from "../layout/types";
 import { connectorPath } from "./connectors";
+import { intersectsWorldRect, visibleWorldRect, type WorldRect } from "./culling";
 import { renderInlineMarkdown } from "./inlineMarkdown";
 import { DomNodeMeasurer } from "./measure";
 
@@ -25,6 +31,8 @@ export interface MapRendererOptions {
   onAddRequest?: (nodeId: string, side: AddSide) => void;
   onEditRequest?: (nodeId: string) => void;
   onSelectionChange?: (nodeId: string | null) => void;
+  /** Node count above which only the viewport and its margin stay mounted. */
+  cullingThreshold?: number;
 }
 
 /** Renders a document as HTML nodes and SVG connectors. */
@@ -46,6 +54,7 @@ export class MapRenderer {
   private readonly onAddRequest?: (nodeId: string, side: AddSide) => void;
   private readonly onEditRequest?: (nodeId: string) => void;
   private readonly onSelectionChange?: (nodeId: string | null) => void;
+  private readonly cullingThreshold: number;
   private measurer: DomNodeMeasurer;
   private theme: ThemeDefinition;
   private dark: boolean;
@@ -85,6 +94,7 @@ export class MapRenderer {
     this.onAddRequest = options.onAddRequest;
     this.onEditRequest = options.onEditRequest;
     this.onSelectionChange = options.onSelectionChange;
+    this.cullingThreshold = options.cullingThreshold ?? CULLING_THRESHOLD;
 
     this.canvas.classList.add("simple-mind-canvas");
     this.canvas.tabIndex = 0;
@@ -139,8 +149,9 @@ export class MapRenderer {
     this.measurer.update(document.meta, tokens);
     this.layout = layoutDocument(document.root, document.meta, this.createLayoutMeasurer(document));
     this.updateSvgBounds(this.layout.bounds);
-    this.updateNodes(document, this.layout, tokens);
-    this.updateEdges(this.layout, tokens);
+    const view = this.cullingView();
+    this.updateNodes(document, this.layout, tokens, view);
+    this.updateEdges(this.layout, tokens, view);
     if (options.fit ?? this.pendingFit) {
       this.fit();
     }
@@ -166,8 +177,9 @@ export class MapRenderer {
       this.createLayoutMeasurer(this.document),
     );
     this.updateSvgBounds(this.layout.bounds);
-    this.updateNodes(this.document, this.layout, tokens);
-    this.updateEdges(this.layout, tokens);
+    const view = this.cullingView();
+    this.updateNodes(this.document, this.layout, tokens, view);
+    this.updateEdges(this.layout, tokens, view);
   }
 
   /** Removes all rendered content. */
@@ -325,9 +337,34 @@ export class MapRenderer {
     this.relayout();
   }
 
-  /** Applies the world transform. */
+  /** Applies the world transform and remounts what it brings into view. */
   private applyTransform(): void {
     this.world.style.transform = `translate3d(${this.translateX}px, ${this.translateY}px, 0) scale(${this.scale})`;
+    this.refreshCulling();
+  }
+
+  /** Repaints the mounted set for the current viewport when culling is active. */
+  private refreshCulling(): void {
+    if (!this.document || !this.layout) return;
+    const view = this.cullingView();
+    if (!view) return;
+    const tokens = this.themeTokens();
+    this.updateNodes(this.document, this.layout, tokens, view);
+    this.updateEdges(this.layout, tokens, view);
+  }
+
+  /** Returns the world rectangle to mount, or null while the map stays fully mounted. */
+  private cullingView(): WorldRect | null {
+    if (!this.layout || this.layout.nodes.length <= this.cullingThreshold) return null;
+    const rect = this.canvas.getBoundingClientRect();
+    return visibleWorldRect(
+      rect.width,
+      rect.height,
+      this.scale,
+      this.translateX,
+      this.translateY,
+      CULLING_MARGIN,
+    );
   }
 
   /** Updates the SVG coordinate space to cover the current layout. */
@@ -344,7 +381,12 @@ export class MapRenderer {
   }
 
   /** Updates the keyed node elements. */
-  private updateNodes(document: MindMapDocument, layout: LayoutResult, tokens: ThemeTokens): void {
+  private updateNodes(
+    document: MindMapDocument,
+    layout: LayoutResult,
+    tokens: ThemeTokens,
+    view: WorldRect | null,
+  ): void {
     this.assignColors(document);
     const visibleSideColors = new Map<string, string>();
     for (const positioned of layout.nodes) {
@@ -366,11 +408,12 @@ export class MapRenderer {
       }
       for (const [key, count] of visibleSideCounts) this.sideCounts.set(key, count);
     }
-    const seen = new Set<string>();
+    const mounted = new Set<string>();
 
     for (const positioned of layout.nodes) {
+      if (view && !intersectsWorldRect(positioned, view)) continue;
       const nodeId = positioned.node.id;
-      seen.add(nodeId);
+      mounted.add(nodeId);
       const element = this.ensureNodeElement(nodeId);
       this.updateNodeElement(
         element,
@@ -381,34 +424,36 @@ export class MapRenderer {
     }
 
     for (const [nodeId, element] of this.nodeEls) {
-      if (!seen.has(nodeId)) {
-        element.remove();
-        this.nodeEls.delete(nodeId);
-        this.renderedText.delete(nodeId);
-      }
+      if (mounted.has(nodeId)) continue;
+      element.remove();
+      this.nodeEls.delete(nodeId);
+      this.renderedText.delete(nodeId);
     }
 
-    if (this.selectedId && !seen.has(this.selectedId)) {
+    if (this.selectedId && !layout.nodes.some((node) => node.node.id === this.selectedId)) {
       this.selectedId = null;
       this.onSelectionChange?.(null);
     }
-    if (this.editingNodeId && !seen.has(this.editingNodeId)) {
+    if (this.editingNodeId && !layout.nodes.some((node) => node.node.id === this.editingNodeId)) {
       this.editingNodeId = null;
       this.editingRect = null;
     }
   }
 
   /** Updates the keyed edge elements. */
-  private updateEdges(layout: LayoutResult, tokens: ThemeTokens): void {
+  private updateEdges(layout: LayoutResult, tokens: ThemeTokens, view: WorldRect | null): void {
     const positions = new Map(layout.nodes.map((node) => [node.node.id, node]));
-    const seen = new Set<string>();
+    const mounted = new Set<string>();
 
     for (const edge of layout.edges) {
       const parent = positions.get(edge.parentId);
       const child = positions.get(edge.childId);
       if (!parent || !child) continue;
+      if (view && !intersectsWorldRect(parent, view) && !intersectsWorldRect(child, view)) {
+        continue;
+      }
 
-      seen.add(edge.childId);
+      mounted.add(edge.childId);
       const path = this.ensureEdgeElement(edge.childId);
       path.setAttribute("d", connectorPath(parent, child, edge.side, tokens.branch.style));
       path.setAttribute("stroke", this.colors.get(edge.childId) ?? tokens.selection.outline);
@@ -417,10 +462,9 @@ export class MapRenderer {
     }
 
     for (const [childId, path] of this.edgeEls) {
-      if (!seen.has(childId)) {
-        path.remove();
-        this.edgeEls.delete(childId);
-      }
+      if (mounted.has(childId)) continue;
+      path.remove();
+      this.edgeEls.delete(childId);
     }
   }
 
