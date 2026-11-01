@@ -163,7 +163,7 @@ export class MapCanvas {
 
     applyTheme(this.rootEl, this.theme, this.dark);
     this.renderer = new MapRenderer(this.canvasEl, this.theme, this.dark, {
-      onToggleCollapse: (nodeId) => this.toggleCollapse(nodeId),
+      onToggleCollapse: (nodeId, side) => this.toggleCollapse(nodeId, side),
       onAddRequest: (nodeId, side) => this.addChildFrom(nodeId, side),
       onEditRequest: (nodeId) => this.startEdit(nodeId),
       onSelectionChange: (nodeId) => {
@@ -1249,9 +1249,9 @@ export class MapCanvas {
     this.updateToolbar();
   }
 
-  /** Toggles collapse for one node. */
-  private toggleCollapse(nodeId: string): void {
-    if (!this.controller || !this.controller.toggleCollapse(nodeId)) return;
+  /** Toggles collapse for one node or one side of a mind-map root. */
+  private toggleCollapse(nodeId: string, side: AddSide): void {
+    if (!this.controller || !this.controller.toggleCollapse(nodeId, side)) return;
     this.rerender(false);
     this.updateToolbar();
   }

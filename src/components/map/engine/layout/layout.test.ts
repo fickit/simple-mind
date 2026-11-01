@@ -94,13 +94,22 @@ describe("layoutDocument", () => {
     expect(result.edges.every((edge) => edge.side === "down")).toBe(true);
   });
 
-  it("omits children of collapsed nodes", () => {
+  it("omits children of collapsed single-sided nodes", () => {
     const root = node("r", "R", [node("a", "A", [node("a1", "A1")])]);
     root.collapsed = true;
-    const result = layoutDocument(root, meta(), measure);
+    const result = layoutDocument(root, meta({ layout: "tree" }), measure);
 
     expect(result.nodes.map((item) => item.node.id)).toEqual(["r"]);
     expect(result.edges).toEqual([]);
+  });
+
+  it("hides only the collapsed side of a mind-map root", () => {
+    const root = node("r", "R", [node("a", "A"), node("b", "B")]);
+    root.collapsedLeft = true;
+    const result = layoutDocument(root, meta({ layout: "mindmap" }), measure);
+
+    expect(result.nodes.map((item) => item.node.id)).toEqual(["r", "b"]);
+    expect(result.edges).toEqual([{ parentId: "r", childId: "b", side: "right" }]);
   });
 
   it("applies compact spacing", () => {

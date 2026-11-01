@@ -47,7 +47,12 @@ export interface MindNode {
   id: string;
   text: string;
   children: MindNode[];
+  /** Runtime collapse state for single-sided nodes and tree/org roots. */
   collapsed: boolean;
+  /** Runtime collapse state for the left branch group of a mind-map root. */
+  collapsedLeft?: boolean;
+  /** Runtime collapse state for the right branch group of a mind-map root. */
+  collapsedRight?: boolean;
   style?: NodeStyle;
   side?: BranchSide;
 }

@@ -285,10 +285,10 @@ export function layoutDocument(
   const sides: Array<{ side: "left" | "right"; children: MindNode[] }> =
     meta.layout === "mindmap"
       ? (() => {
-          const split = splitMindMapSides(context, visibleChildren(root));
+          const split = splitMindMapSides(context, root.children);
           return [
-            { side: "left", children: split.left },
-            { side: "right", children: split.right },
+            { side: "left", children: root.collapsedLeft ? [] : split.left },
+            { side: "right", children: root.collapsedRight ? [] : split.right },
           ];
         })()
       : [{ side: meta.direction, children: visibleChildren(root) }];

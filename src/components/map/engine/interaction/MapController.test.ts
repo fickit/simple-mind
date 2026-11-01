@@ -134,6 +134,22 @@ describe("MapController", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it("toggles mind-map root sides independently", () => {
+    const { controller, document } = setup();
+    const root = document.root;
+
+    expect(controller.toggleCollapse(root.id, "left")).toBe(true);
+    expect(root.collapsedLeft).toBe(true);
+    expect(root.collapsedRight).toBeFalsy();
+
+    expect(controller.toggleCollapse(root.id, "right")).toBe(true);
+    expect(root.collapsedLeft).toBe(true);
+    expect(root.collapsedRight).toBe(true);
+
+    expect(controller.toggleCollapse(root.id, "left")).toBe(true);
+    expect(root.collapsedLeft).toBe(false);
+  });
+
   it("expands a collapsed target when adding a child", () => {
     const { controller, document } = setup();
     const a = document.root.children[0];
@@ -212,8 +228,10 @@ describe("MapController", () => {
   it("places a root child on the requested side", () => {
     const { controller, document } = setup();
     const root = document.root;
+    root.collapsedLeft = true;
 
     const left = controller.beginAdd("child", root.id, "left")!;
+    expect(root.collapsedLeft).toBe(false);
     controller.commitAdd(left.node.id, "Left", left.previousSource);
     expect(left.node.side).toBe("left");
     expect(controller.getSource()).toContain('- Left <!-- sm:{"side":"left"} -->');

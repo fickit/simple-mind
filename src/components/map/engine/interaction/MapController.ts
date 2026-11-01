@@ -172,7 +172,7 @@ export class MapController {
     if (!parent || nodes.length === 0) return [];
 
     const previousSource = this.source;
-    parent.collapsed = false;
+    this.revealParent(parent);
     const ids: string[] = [];
     for (const source of nodes) {
       const node = this.cloneCopiedNode(source);
@@ -197,7 +197,6 @@ export class MapController {
     let parent: MindNode;
     let index: number;
     if (kind === "child" || this.isRoot(targetId)) {
-      target.collapsed = false;
       parent = target;
       index = parent.children.length;
     } else {
@@ -208,10 +207,18 @@ export class MapController {
     }
 
     const node = createNode();
+    const inheritedSide = kind === "sibling" && !this.isRoot(targetId) ? target.side : undefined;
+    const side = preferredSide ?? inheritedSide;
     if (parent.id === this.document.root.id && this.document.meta.layout === "mindmap") {
-      const inheritedSide = kind === "sibling" && !this.isRoot(targetId) ? target.side : undefined;
-      const side = preferredSide ?? inheritedSide;
+      if (side === "left") parent.collapsedLeft = false;
+      else if (side === "right") parent.collapsedRight = false;
+      else {
+        parent.collapsedLeft = false;
+        parent.collapsedRight = false;
+      }
       if (side) node.side = side;
+    } else {
+      parent.collapsed = false;
     }
     parent.children.splice(index, 0, node);
     return {
@@ -322,12 +329,30 @@ export class MapController {
    * Toggles runtime collapse state. This does not change source.
    *
    * @param nodeId Node to toggle.
+   * @param side Side control that was clicked for a mind-map root.
    */
-  toggleCollapse(nodeId: string): boolean {
+  toggleCollapse(nodeId: string, side?: "left" | "right" | "down"): boolean {
     const node = this.findNode(nodeId);
     if (!node || node.children.length === 0) return false;
-    node.collapsed = !node.collapsed;
+
+    if (this.isRoot(nodeId) && this.document.meta.layout === "mindmap") {
+      if (side === "left") node.collapsedLeft = !node.collapsedLeft;
+      else if (side === "right") node.collapsedRight = !node.collapsedRight;
+      else return false;
+    } else {
+      node.collapsed = !node.collapsed;
+    }
     return true;
+  }
+
+  /** Clears the collapse state that would hide newly added children. */
+  private revealParent(parent: MindNode): void {
+    if (parent.id === this.document.root.id && this.document.meta.layout === "mindmap") {
+      parent.collapsedLeft = false;
+      parent.collapsedRight = false;
+      return;
+    }
+    parent.collapsed = false;
   }
 
   /** Restores the previous source snapshot. */

@@ -66,14 +66,24 @@ describe("MapCanvas", () => {
     host.remove();
   });
 
-  it("toggles collapse without changing the source", () => {
+  it("collapses each mind-map root side independently without changing the source", () => {
     const { host, canvas } = createCanvas("# Root\n- A\n- B\n");
-    const rootButton = host.querySelector<HTMLButtonElement>(
-      '.simple-mind-node[data-node-id="n1"] .simple-mind-collapse',
-    );
+    const root = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n1"]')!;
+    const leftControl = root.querySelector<HTMLButtonElement>(
+      ".simple-mind-collapse.collapse-left",
+    )!;
+    const rightControl = root.querySelector<HTMLButtonElement>(
+      ".simple-mind-collapse.collapse-right",
+    )!;
 
-    expect(rootButton?.hidden).toBe(false);
-    rootButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    leftControl.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(leftControl.textContent).toBe("‹");
+    expect(host.querySelectorAll(".simple-mind-node")).toHaveLength(2);
+    expect(host.querySelector('.simple-mind-node[data-node-id="n2"]')).toBeNull();
+    expect(host.querySelectorAll(".simple-mind-edge")).toHaveLength(1);
+
+    rightControl.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(rightControl.textContent).toBe("›");
     expect(host.querySelectorAll(".simple-mind-node")).toHaveLength(1);
     expect(host.querySelectorAll(".simple-mind-edge")).toHaveLength(0);
     expect(canvas.getSource()).toBe("# Root\n- A\n- B\n");
@@ -96,8 +106,17 @@ describe("MapCanvas", () => {
 
     expect(mindmapRoot.querySelector(".simple-mind-add.add-left")).not.toBeNull();
     expect(mindmapRoot.querySelector(".simple-mind-add.add-right")).not.toBeNull();
+    expect(
+      mindmapRoot.querySelector(".simple-mind-add.add-left")?.classList.contains("has-collapse"),
+    ).toBe(true);
+    expect(
+      mindmapRoot.querySelector(".simple-mind-add.add-right")?.classList.contains("has-collapse"),
+    ).toBe(true);
     expect(leftBranch.querySelector(".simple-mind-add.add-left")).not.toBeNull();
     expect(leftBranch.querySelector(".simple-mind-add.add-right")).toBeNull();
+    expect(
+      leftBranch.querySelector(".simple-mind-add.add-left")?.classList.contains("has-collapse"),
+    ).toBe(false);
     expect(rightBranch.querySelector(".simple-mind-add.add-right")).not.toBeNull();
     expect(rightBranch.querySelector(".simple-mind-add.add-left")).toBeNull();
     mindmap.canvas.destroy();
@@ -122,17 +141,21 @@ describe("MapCanvas", () => {
     org.host.remove();
   });
 
-  it("uses side-aware arrows for collapse and expand", () => {
+  it("uses rounded chevrons for collapse and expand", () => {
     const { host, canvas } = createCanvas("# Root\n- A\n  - A1\n- B\n");
     const root = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n1"]')!;
     const branch = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n2"]')!;
-    const rootCollapse = root.querySelector<HTMLButtonElement>(".simple-mind-collapse")!;
+    const rootLeft = root.querySelector<HTMLButtonElement>(".simple-mind-collapse.collapse-left")!;
+    const rootRight = root.querySelector<HTMLButtonElement>(
+      ".simple-mind-collapse.collapse-right",
+    )!;
     const branchCollapse = branch.querySelector<HTMLButtonElement>(".simple-mind-collapse")!;
 
-    expect(rootCollapse.textContent).toBe("←");
-    expect(branchCollapse.textContent).toBe("→");
+    expect(rootLeft.textContent).toBe("›");
+    expect(rootRight.textContent).toBe("‹");
+    expect(branchCollapse.textContent).toBe("›");
     branchCollapse.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    expect(branchCollapse.textContent).toBe("←");
+    expect(branchCollapse.textContent).toBe("‹");
     expect(branchCollapse.dataset.collapsed).toBe("true");
 
     canvas.destroy();
@@ -141,10 +164,41 @@ describe("MapCanvas", () => {
     const org = createCanvas("---\nmindmap:\n  layout: org\n---\n# Root\n- A\n- B\n");
     const orgRoot = org.host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n1"]')!;
     expect(orgRoot.querySelector<HTMLButtonElement>(".simple-mind-collapse")?.textContent).toBe(
-      "↑",
+      "⌃",
     );
     org.canvas.destroy();
     org.host.remove();
+  });
+
+  it("colors node controls with their connector colors", () => {
+    const settings = { ...DEFAULT_SETTINGS, defaultTheme: PAPER_THEME.id };
+    const { host, canvas } = createCanvas("# Root\n- A\n- B\n", settings);
+    const root = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n1"]')!;
+    const leftCollapse = root.querySelector<HTMLButtonElement>(
+      ".simple-mind-collapse.collapse-left",
+    )!;
+    const rightCollapse = root.querySelector<HTMLButtonElement>(
+      ".simple-mind-collapse.collapse-right",
+    )!;
+    const leftAdd = root.querySelector<HTMLButtonElement>(".simple-mind-add.add-left")!;
+    const rightAdd = root.querySelector<HTMLButtonElement>(".simple-mind-add.add-right")!;
+
+    expect(leftCollapse.style.getPropertyValue("--sm-control-bg")).toBe(
+      PAPER_THEME.light.branch.palette[0],
+    );
+    expect(rightCollapse.style.getPropertyValue("--sm-control-bg")).toBe(
+      PAPER_THEME.light.branch.palette[1],
+    );
+    expect(leftAdd.style.getPropertyValue("--sm-control-bg")).toBe(
+      PAPER_THEME.light.branch.palette[0],
+    );
+    expect(rightAdd.style.getPropertyValue("--sm-control-bg")).toBe(
+      PAPER_THEME.light.branch.palette[1],
+    );
+    expect(leftCollapse.style.getPropertyValue("--sm-control-text")).toMatch(/^#(111111|ffffff)$/);
+
+    canvas.destroy();
+    host.remove();
   });
 
   it("adds a child on the side of the clicked floating button", () => {

@@ -5,6 +5,7 @@ import type { MindMapDocument, MindNode, NodeStyle } from "../../../../types/min
 import type { ThemeDefinition, ThemeTokens } from "../../../../types/theme";
 import { tokensForMode } from "../../themes/applyTheme";
 import { type NodeVisual, nodeVisual } from "../../themes/nodeVisual";
+import { toHexColor } from "../../themes/theme-utils";
 import { layoutDocument } from "../layout/layout";
 import type { LayoutBounds, LayoutResult, NodeMeasurer, PositionedNode } from "../layout/types";
 import { connectorPath } from "./connectors";
@@ -20,7 +21,7 @@ export type AddSide = "left" | "right" | "down";
 
 /** Optional callbacks supplied by the canvas component. */
 export interface MapRendererOptions {
-  onToggleCollapse?: (nodeId: string) => void;
+  onToggleCollapse?: (nodeId: string, side: AddSide) => void;
   onAddRequest?: (nodeId: string, side: AddSide) => void;
   onEditRequest?: (nodeId: string) => void;
   onSelectionChange?: (nodeId: string | null) => void;
@@ -36,9 +37,11 @@ export class MapRenderer {
   private readonly edgeEls = new Map<string, SVGPathElement>();
   private readonly renderedText = new Map<string, string>();
   private readonly colors = new Map<string, string>();
+  private readonly sideColors = new Map<string, string>();
+  private readonly contrastCache = new Map<string, string>();
   private readonly disposers: Array<() => void> = [];
   private readonly resizeObserver: ResizeObserver;
-  private readonly onToggleCollapse?: (nodeId: string) => void;
+  private readonly onToggleCollapse?: (nodeId: string, side: AddSide) => void;
   private readonly onAddRequest?: (nodeId: string, side: AddSide) => void;
   private readonly onEditRequest?: (nodeId: string) => void;
   private readonly onSelectionChange?: (nodeId: string | null) => void;
@@ -115,6 +118,10 @@ export class MapRenderer {
    * @param dark Whether Obsidian is in dark mode.
    */
   setTheme(theme: ThemeDefinition, dark: boolean): void {
+    if (this.theme.id !== theme.id) {
+      this.sideColors.clear();
+      this.contrastCache.clear();
+    }
     this.theme = theme;
     this.dark = dark;
     if (this.document) {
@@ -174,6 +181,7 @@ export class MapRenderer {
     this.edgeEls.clear();
     this.renderedText.clear();
     this.colors.clear();
+    this.sideColors.clear();
     this.nodesLayer.replaceChildren();
     this.svg.replaceChildren();
   }
@@ -339,6 +347,14 @@ export class MapRenderer {
   /** Updates the keyed node elements. */
   private updateNodes(document: MindMapDocument, layout: LayoutResult, tokens: ThemeTokens): void {
     this.assignColors(document);
+    const visibleSideColors = new Map<string, string>();
+    for (const positioned of layout.nodes) {
+      if (!positioned.parentId) continue;
+      const key = `${positioned.parentId}:${positioned.side}`;
+      const color = this.colors.get(positioned.node.id);
+      if (color && !visibleSideColors.has(key)) visibleSideColors.set(key, color);
+    }
+    for (const [key, color] of visibleSideColors) this.sideColors.set(key, color);
     const seen = new Set<string>();
 
     for (const positioned of layout.nodes) {
@@ -413,15 +429,6 @@ export class MapRenderer {
     label.className = "simple-mind-node-label";
     element.appendChild(label);
 
-    const collapse = doc.createElement("button");
-    collapse.type = "button";
-    collapse.className = "simple-mind-collapse";
-    collapse.addEventListener("click", (event) => {
-      event.stopPropagation();
-      this.onToggleCollapse?.(nodeId);
-    });
-    element.appendChild(collapse);
-
     element.addEventListener("click", (event) => {
       const target = event.target as HTMLElement;
       if (target.closest("a")) return;
@@ -468,13 +475,20 @@ export class MapRenderer {
     element.style.transform = `translate3d(${positioned.x}px, ${positioned.y}px, 0)`;
     element.style.setProperty("--sm-branch-color", color);
     this.applyNodeVisual(element, visual, node.style, isRoot, color);
-    const controlSide = this.controlSideFor(positioned, isRoot);
-    this.syncAddButtons(element, node.id, this.addSidesFor(positioned, isRoot));
+    const collapseSides = this.collapseSidesFor(node, isRoot, positioned);
+    this.syncCollapseButtons(element, node, collapseSides, color, isRoot);
+    this.syncAddButtons(
+      element,
+      node.id,
+      this.addSidesFor(positioned, isRoot),
+      collapseSides,
+      color,
+    );
     element.setAttribute("aria-level", String(positioned.depth + 1));
     element.setAttribute("aria-label", node.text);
     element.setAttribute("aria-selected", String(selected));
     if (node.children.length > 0) {
-      element.setAttribute("aria-expanded", String(!node.collapsed));
+      element.setAttribute("aria-expanded", String(this.hasVisibleChildren(node, isRoot)));
     } else {
       element.removeAttribute("aria-expanded");
     }
@@ -484,17 +498,47 @@ export class MapRenderer {
       label.replaceChildren(renderInlineMarkdown(node.text, this.canvas.ownerDocument));
       this.renderedText.set(node.id, node.text);
     }
+  }
 
-    const collapse = element.querySelector<HTMLButtonElement>(".simple-mind-collapse");
-    if (collapse) {
-      const hasChildren = node.children.length > 0;
-      collapse.hidden = !hasChildren;
-      collapse.className = `simple-mind-collapse collapse-${controlSide}`;
-      collapse.dataset.collapsed = String(node.collapsed);
-      collapse.textContent = this.collapseGlyph(controlSide, node.collapsed);
-      collapse.setAttribute("aria-label", node.collapsed ? t("node.expand") : t("node.collapse"));
-      collapse.setAttribute("aria-expanded", String(!node.collapsed && hasChildren));
+  /** Returns true when at least one child group is expanded. */
+  private hasVisibleChildren(node: MindNode, isRoot: boolean): boolean {
+    if (!isRoot || this.document?.meta.layout !== "mindmap") return !node.collapsed;
+    return !(node.collapsedLeft && node.collapsedRight);
+  }
+
+  /** Returns the child-facing sides that need a collapse control. */
+  private collapseSidesFor(node: MindNode, isRoot: boolean, positioned: PositionedNode): AddSide[] {
+    if (!isRoot) {
+      if (node.children.length === 0) return [];
+      if (positioned.side === "down") return ["down"];
+      return [positioned.side === "left" ? "left" : "right"];
     }
+
+    const meta = this.document?.meta ?? DEFAULT_MINDMAP_META;
+    if (meta.layout === "mindmap") {
+      const sides: AddSide[] = [];
+      const leftVisible =
+        this.layout?.nodes.some((item) => item.parentId === node.id && item.side === "left") ??
+        false;
+      const rightVisible =
+        this.layout?.nodes.some((item) => item.parentId === node.id && item.side === "right") ??
+        false;
+      if (leftVisible || node.collapsedLeft) sides.push("left");
+      if (rightVisible || node.collapsedRight) sides.push("right");
+      return sides;
+    }
+
+    if (node.children.length === 0) return [];
+    if (meta.layout === "org") return ["down"];
+    return [meta.direction];
+  }
+
+  /** Returns whether one collapse control is in its collapsed state. */
+  private sideCollapsed(node: MindNode, side: AddSide, isRoot: boolean): boolean {
+    if (isRoot && this.document?.meta.layout === "mindmap") {
+      return side === "left" ? !!node.collapsedLeft : !!node.collapsedRight;
+    }
+    return node.collapsed;
   }
 
   /** Returns the add-button sides allowed for a node. */
@@ -509,42 +553,95 @@ export class MapRenderer {
     return [positioned.side === "left" ? "left" : "right"];
   }
 
-  /** Returns the side used to place a node's collapse control. */
-  private controlSideFor(positioned: PositionedNode, isRoot: boolean): "left" | "right" | "down" {
-    if (!isRoot) {
-      if (positioned.side === "down") return "down";
-      return positioned.side === "left" ? "left" : "right";
-    }
-    const meta = this.document?.meta ?? DEFAULT_MINDMAP_META;
-    if (meta.layout === "org") return "down";
-    if (meta.layout === "tree") return meta.direction;
-    return "right";
+  /** Returns the rounded chevron for the current collapse state. */
+  private collapseGlyph(side: AddSide, collapsed: boolean): string {
+    if (side === "down") return collapsed ? "⌄" : "⌃";
+    if (side === "left") return collapsed ? "‹" : "›";
+    return collapsed ? "›" : "‹";
   }
 
-  /** Returns the action arrow for the current collapse state. */
-  private collapseGlyph(side: "left" | "right" | "down", collapsed: boolean): string {
-    if (side === "down") return collapsed ? "↓" : "↑";
-    if (side === "left") return collapsed ? "←" : "→";
-    return collapsed ? "→" : "←";
-  }
-
-  /** Creates, removes, and positions the floating add buttons on one node. */
-  private syncAddButtons(element: HTMLElement, nodeId: string, sides: AddSide[]): void {
+  /** Creates, removes, and updates the collapse controls on one node. */
+  private syncCollapseButtons(
+    element: HTMLElement,
+    node: MindNode,
+    sides: AddSide[],
+    fallbackColor: string,
+    isRoot: boolean,
+  ): void {
     const wanted = new Set(sides);
+    for (const button of element.querySelectorAll<HTMLButtonElement>(".simple-mind-collapse")) {
+      const side = button.dataset.side as AddSide | undefined;
+      if (!side || !wanted.has(side)) {
+        button.remove();
+        continue;
+      }
+      this.updateCollapseButton(button, node, side, fallbackColor, isRoot);
+    }
+
+    for (const side of sides) {
+      if (element.querySelector(`.simple-mind-collapse[data-side="${side}"]`)) continue;
+      const button = this.canvas.ownerDocument.createElement("button");
+      button.type = "button";
+      button.className = `simple-mind-collapse collapse-${side}`;
+      button.dataset.side = side;
+      button.addEventListener("click", (event) => {
+        event.stopPropagation();
+        this.onToggleCollapse?.(node.id, side);
+      });
+      element.appendChild(button);
+      this.updateCollapseButton(button, node, side, fallbackColor, isRoot);
+    }
+  }
+
+  /** Updates the glyph, state, and color of one collapse control. */
+  private updateCollapseButton(
+    button: HTMLButtonElement,
+    node: MindNode,
+    side: AddSide,
+    fallbackColor: string,
+    isRoot: boolean,
+  ): void {
+    const collapsed = this.sideCollapsed(node, side, isRoot);
+    button.className = `simple-mind-collapse collapse-${side}`;
+    button.dataset.collapsed = String(collapsed);
+    button.textContent = this.collapseGlyph(side, collapsed);
+    button.setAttribute("aria-label", collapsed ? t("node.expand") : t("node.collapse"));
+    button.setAttribute("aria-expanded", String(!collapsed));
+    this.styleControl(button, node.id, side, fallbackColor);
+  }
+
+  /** Creates, removes, and updates the floating add buttons on one node. */
+  private syncAddButtons(
+    element: HTMLElement,
+    nodeId: string,
+    sides: AddSide[],
+    collapseSides: AddSide[],
+    fallbackColor: string,
+  ): void {
+    const wanted = new Set(sides);
+    const collapsedControls = new Set(collapseSides);
     for (const button of element.querySelectorAll<HTMLButtonElement>(".simple-mind-add")) {
       const side = button.dataset.side as AddSide | undefined;
       if (!side || !wanted.has(side)) {
         button.remove();
         continue;
       }
+      button.classList.toggle("has-collapse", collapsedControls.has(side));
       button.setAttribute("aria-label", t("command.addChild"));
+      this.styleControl(button, nodeId, side, fallbackColor);
     }
 
     for (const side of sides) {
       if (element.querySelector(`.simple-mind-add[data-side="${side}"]`)) continue;
       const button = this.canvas.ownerDocument.createElement("button");
       button.type = "button";
-      button.className = `simple-mind-add add-${side}`;
+      button.className = [
+        "simple-mind-add",
+        `add-${side}`,
+        collapsedControls.has(side) ? "has-collapse" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
       button.dataset.side = side;
       button.textContent = "+";
       button.setAttribute("aria-label", t("command.addChild"));
@@ -554,7 +651,36 @@ export class MapRenderer {
         this.onAddRequest?.(nodeId, side);
       });
       element.appendChild(button);
+      this.styleControl(button, nodeId, side, fallbackColor);
     }
+  }
+
+  /** Applies the connector color and a contrasting glyph color to a control. */
+  private styleControl(
+    button: HTMLButtonElement,
+    nodeId: string,
+    side: AddSide,
+    fallbackColor: string,
+  ): void {
+    const background = this.sideColors.get(`${nodeId}:${side}`) ?? fallbackColor;
+    button.style.setProperty("--sm-control-bg", background);
+    button.style.setProperty("--sm-control-text", this.contrastText(background));
+  }
+
+  /** Returns black or white, whichever contrasts with the background. */
+  private contrastText(background: string): string {
+    const key = `${this.dark ? "dark" : "light"}\u0000${background}`;
+    const cached = this.contrastCache.get(key);
+    if (cached) return cached;
+
+    const hex = toHexColor(background);
+    const red = Number.parseInt(hex.slice(1, 3), 16);
+    const green = Number.parseInt(hex.slice(3, 5), 16);
+    const blue = Number.parseInt(hex.slice(5, 7), 16);
+    const luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+    const text = luminance > 150 ? "#111111" : "#ffffff";
+    this.contrastCache.set(key, text);
+    return text;
   }
 
   /** Applies per-node colors and typography as inline variables. */

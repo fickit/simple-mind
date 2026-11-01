@@ -209,6 +209,8 @@ interface MindNode {
   text: string;
   children: MindNode[];
   collapsed: boolean;
+  collapsedLeft?: boolean;
+  collapsedRight?: boolean;
   style?: NodeStyle;
   side?: 'left' | 'right';
 }
@@ -638,10 +640,17 @@ beneath per-node overrides and per-file connector shape.
 
 ### 11.2.3 Node controls
 
-- Collapse and add controls stay invisible until a node is hovered or selected. A collapsed node keeps
-  its expand arrow visible so the collapsed state is discoverable.
-- The collapse arrow reflects the action: a right-side node shows `←` to collapse and `→` to expand;
-  a left-side node is mirrored. Organization charts use `↑` and `↓`.
+- Collapse and add controls stay invisible until a node is hovered or selected. A collapsed group
+  keeps its expand chevron visible so the collapsed state is discoverable.
+- Collapse controls sit where the branch connector meets the node. Add buttons sit outside them; when
+  a side has no collapse control, the add button takes that junction position. In the organization
+  layout the add button sits beside the downward chevron so both fit inside the vertical gap.
+- Controls use rounded chevrons: a right-side node shows `‹` to collapse and `›` to expand; a
+  left-side node is mirrored. Organization charts use `⌃` and `⌄`.
+- Each control background uses the connector color of its branch, with black or white glyphs chosen
+  for contrast. When a side has several branches, the first one supplies the color.
+- A mind-map root gets one collapse control per side, and each control toggles only that side's
+  children. Other nodes have a single collapse control.
 - Floating `+` buttons follow the layout: a tree uses its direction, an organization chart adds
   downward, the mind-map root shows both left and right, and a branch node shows only its own side.
 - Clicking a root-side `+` pins the new branch to that side by writing `side` into the node marker.
