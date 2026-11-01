@@ -214,10 +214,9 @@ export class MapCanvas {
    * @param settings Updated plugin settings.
    */
   updateSettings(settings: SimpleMindSettings): void {
-    const languageChanged = this.settings.language !== settings.language;
     this.settings = settings;
     this.dark = isDarkDocument(this.rootEl.ownerDocument);
-    if (languageChanged) this.refreshLanguage();
+    this.refreshLanguage();
     if (this.sourceText) {
       this.setSource(this.getSource());
     } else {
