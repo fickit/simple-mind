@@ -10,6 +10,12 @@ export type AddKind = "child" | "sibling";
 /** Drop position for a move command. */
 export type MovePosition = "child" | "before" | "after";
 
+/** Clipboard-friendly subtree without runtime ids. */
+export interface CopiedNode {
+  text: string;
+  children: CopiedNode[];
+}
+
 /** State captured while a new node is being edited. */
 export interface PendingAdd {
   node: MindNode;
@@ -27,10 +33,10 @@ function createNodeId(): string {
 }
 
 /** Creates an empty node for inline editing. */
-function createNode(): MindNode {
+function createNode(text = ""): MindNode {
   return {
     id: createNodeId(),
-    text: "",
+    text,
     children: [],
     collapsed: false,
   };
@@ -87,6 +93,44 @@ export class MapController {
   /** Finds a node's parent and index. */
   findParent(nodeId: string): ParentMatch | null {
     return findParentById(this.document.root, nodeId);
+  }
+
+  /** Returns true when a node can move to the target. */
+  canMove(nodeId: string, targetId: string): boolean {
+    if (nodeId === targetId || this.isRoot(nodeId)) return false;
+    const node = this.findNode(nodeId);
+    const target = this.findNode(targetId);
+    return !!node && !!target && !containsNode(node, targetId);
+  }
+
+  /** Copies a subtree without runtime ids. */
+  copySubtree(nodeId: string): CopiedNode | null {
+    const node = this.findNode(nodeId);
+    if (!node) return null;
+    return this.copyNode(node);
+  }
+
+  /**
+   * Pastes copied subtrees under a parent.
+   *
+   * @param parentId Destination parent.
+   * @param nodes Copied subtrees.
+   * @returns New root ids in insertion order.
+   */
+  pasteSubtree(parentId: string, nodes: CopiedNode[]): string[] {
+    const parent = this.findNode(parentId);
+    if (!parent || nodes.length === 0) return [];
+
+    const previousSource = this.source;
+    parent.collapsed = false;
+    const ids: string[] = [];
+    for (const source of nodes) {
+      const node = this.cloneCopiedNode(source);
+      parent.children.push(node);
+      ids.push(node.id);
+    }
+    this.serializeAndCommit(previousSource);
+    return ids;
   }
 
   /**
@@ -262,6 +306,21 @@ export class MapController {
     if (!match) return false;
     match.parent.children.splice(match.index, 1);
     return true;
+  }
+
+  /** Copies a live node into clipboard data. */
+  private copyNode(node: MindNode): CopiedNode {
+    return {
+      text: node.text,
+      children: node.children.map((child) => this.copyNode(child)),
+    };
+  }
+
+  /** Clones clipboard data into live nodes with new ids. */
+  private cloneCopiedNode(source: CopiedNode): MindNode {
+    const node = createNode(source.text);
+    node.children = source.children.map((child) => this.cloneCopiedNode(child));
+    return node;
   }
 
   /** Serializes the document and records one history entry. */

@@ -167,6 +167,7 @@
   white-space: normal;
   overflow-wrap: anywhere;
   cursor: pointer;
+  user-select: none;
   contain: layout style;
 }
 
@@ -187,6 +188,40 @@
 
 .simple-mind-node.is-editing {
   visibility: hidden;
+}
+
+.simple-mind-node.is-dragging {
+  opacity: 0.55;
+}
+
+.simple-mind-canvas.is-dragging-node,
+.simple-mind-canvas.is-dragging-node .simple-mind-node {
+  cursor: grabbing;
+}
+
+.simple-mind-node.is-drop-target {
+  outline: 2px dashed var(--sm-selection-outline);
+  outline-offset: 4px;
+}
+
+.simple-mind-node.is-drop-before::before,
+.simple-mind-node.is-drop-after::before {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  right: -6px;
+  left: -6px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--sm-selection-outline);
+}
+
+.simple-mind-node.is-drop-before::before {
+  top: -9px;
+}
+
+.simple-mind-node.is-drop-after::before {
+  bottom: -9px;
 }
 
 .simple-mind-node.shape-pill {

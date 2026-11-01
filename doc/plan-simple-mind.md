@@ -165,15 +165,16 @@ Branch: `feat/core`
 - `√` Implement Tab/Shift+Tab/Enter/Delete/F2 shortcuts; Enter/Tab in the editor commit and continue
   with a sibling/child; Space is reserved for text input and the collapse shortcut is deferred.
 - `√` New nodes open as empty single-line editors with a default width and no placeholder.
-- `-` Implement drag start threshold, reparent, reorder, drop indicators, and hover-to-expand.
-- `-` Implement internal clipboard, cut, copy, and paste.
+- `√` Implement drag start threshold, reparent, reorder, drop indicators, and hover-to-expand.
+- `√` Implement internal clipboard, cut, copy, and paste, plus system-clipboard text fallback.
 - `√` Wire add, rename, delete, move, collapse, undo, and redo through `MapController` and history.
-- `√` Implement root protection for delete.
+- `√` Implement root protection for delete and cut; the root cannot be dragged.
 - `√` Implement read-only mode when parse errors exist.
 - `√` Add `README.md` for the interaction module.
-- `√` DOM tests: editing lifecycle, shortcuts, add/delete, undo, read-only mode, IME guard.
+- `√` DOM tests: editing lifecycle, shortcuts, add/delete, undo, read-only mode, IME guard,
+  copy/paste, and drop-position resolution.
 - `√` Verify: `npm run typecheck && npm run test -- interaction`.
-- `-` Manual test in the test vault: edit, add, delete, collapse, drag, copy/paste, undo/redo.
+- `-` Manual test in the test vault: drag every direction, auto-expand, copy/paste, undo/redo.
 - `√` Commit the interaction checkpoint after the view save path is wired.
 
 Verification:
@@ -306,8 +307,8 @@ node scripts/benchmark.mjs
 - Phase 3 layout: complete for mindmap, tree, and org.
 - Phase 4 renderer: canvas, themes, pan/zoom, collapse, and inline Markdown complete; visual demo
   passed in light and dark mode. rAF batching and culling remain performance tasks.
-- Phase 5 interaction: selection, inline editing, live reflow, add/delete, undo/redo, and source
-  serialization are implemented and tested; drag and clipboard are next.
+- Phase 5 interaction: selection, inline editing, live reflow, add/delete, drag-and-drop, clipboard,
+  undo/redo, and source serialization are implemented and tested; themes and settings are next.
 - Next: manual editing verification, then drag/clipboard and commands on `feat/core`.
 - Test vault: created with a sample map.
 - Author metadata: `fickit`; repository URL still pending.

@@ -41,8 +41,8 @@ function clickButton(host: HTMLElement, label: string): void {
   button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 }
 
-function pressKey(target: Element | null, key: string): void {
-  target?.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
+function pressKey(target: Element | null, key: string, init: KeyboardEventInit = {}): void {
+  target?.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, ...init }));
 }
 
 describe("MapCanvas", () => {
@@ -218,6 +218,39 @@ describe("MapCanvas", () => {
     undoButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 
     expect(canvas.getSource()).toContain("- A");
+    expect(onChange).toHaveBeenCalledTimes(2);
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("copies and pastes a subtree with keyboard shortcuts", () => {
+    const { host, canvas, onChange } = createCanvas("# Root\n- A\n  - A1\n- B\n");
+    const canvasEl = host.querySelector(".simple-mind-canvas");
+
+    selectNode(host, "n2");
+    pressKey(canvasEl, "c", { ctrlKey: true });
+    selectNode(host, "n4");
+    pressKey(canvasEl, "v", { ctrlKey: true });
+
+    expect(onChange).toHaveBeenCalledOnce();
+    expect(canvas.getSource()).toContain("- B\n  - A\n    - A1");
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("cuts a subtree and pastes it under another node", () => {
+    const { host, canvas, onChange } = createCanvas("# Root\n- A\n  - A1\n- B\n");
+    const canvasEl = host.querySelector(".simple-mind-canvas");
+
+    selectNode(host, "n2");
+    pressKey(canvasEl, "x", { ctrlKey: true });
+    expect(canvas.getSource()).not.toContain("- A\n  - A1");
+    selectNode(host, "n4");
+    pressKey(canvasEl, "v", { ctrlKey: true });
+
+    expect(canvas.getSource()).toContain("- B\n  - A\n    - A1");
     expect(onChange).toHaveBeenCalledTimes(2);
 
     canvas.destroy();

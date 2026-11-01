@@ -1,6 +1,13 @@
 import { NEW_NODE_EDITOR_WIDTH } from "../../config/constants";
+import type { MindNode } from "../../types/mindmap";
+import { DragController, type DropPosition } from "./engine/interaction/DragController";
 import { type CommitAction, InlineEditor } from "./engine/interaction/InlineEditor";
-import { type AddKind, MapController, type PendingAdd } from "./engine/interaction/MapController";
+import {
+  type AddKind,
+  type CopiedNode,
+  MapController,
+  type PendingAdd,
+} from "./engine/interaction/MapController";
 import type { PositionedNode } from "./engine/layout/types";
 import { parseSource } from "./engine/parser/parser";
 import { MapRenderer } from "./engine/render/MapRenderer";
@@ -23,6 +30,7 @@ export class MapCanvas {
   private readonly bannerEl: HTMLElement;
   private readonly renderer: MapRenderer;
   private readonly editor: InlineEditor;
+  private readonly drag: DragController;
   private readonly theme = OBSIDIAN_THEME;
   private readonly onSource: () => void;
   private readonly onChangeSource: (source: string) => void;
@@ -36,6 +44,7 @@ export class MapCanvas {
   private controller: MapController | null = null;
   private pendingAdd: PendingAdd | null = null;
   private selectedId: string | null = null;
+  private clipboard: CopiedNode[] = [];
   private sourceText = "";
   private readOnly = false;
   private dark = false;
@@ -84,6 +93,14 @@ export class MapCanvas {
       },
     });
     this.editor = new InlineEditor(this.renderer.getWorldElement());
+    this.drag = new DragController(this.canvasEl, {
+      isDraggable: (nodeId) => this.canEdit() && this.controller?.isRoot(nodeId) === false,
+      canDrop: (sourceId, targetId) => this.controller?.canMove(sourceId, targetId) ?? false,
+      isRoot: (nodeId) => this.controller?.isRoot(nodeId) ?? true,
+      isCollapsed: (nodeId) => this.controller?.findNode(nodeId)?.collapsed ?? false,
+      expand: (nodeId) => this.expandNode(nodeId),
+      drop: (sourceId, targetId, position) => this.dropNode(sourceId, targetId, position),
+    });
 
     this.createToolbarButton(toolbar, "Fit", () => this.renderer.fit());
     this.createToolbarButton(toolbar, "−", () => this.renderer.zoomBy(0.8));
@@ -112,6 +129,7 @@ export class MapCanvas {
    */
   setSource(source: string): void {
     this.cancelEditorLayout();
+    this.drag.cancel();
     this.editor.close();
     this.renderer.setEditingNode(null);
     this.pendingAdd = null;
@@ -171,6 +189,7 @@ export class MapCanvas {
   /** Removes the renderer and map DOM. */
   destroy(): void {
     this.cancelEditorLayout();
+    this.drag.destroy();
     this.editor.close();
     this.renderer.setEditingNode(null);
     this.canvasEl.removeEventListener("keydown", this.keydownHandler);
@@ -207,6 +226,109 @@ export class MapCanvas {
   /** Edits the selected node. */
   editSelected(): void {
     if (this.selectedId) this.startEdit(this.selectedId);
+  }
+
+  /** Copies the selected subtree into the internal and system clipboards. */
+  private copySelected(): void {
+    if (!this.controller || !this.selectedId) return;
+    const copied = this.controller.copySubtree(this.selectedId);
+    if (!copied) return;
+
+    this.clipboard = [copied];
+    const text = this.serializeCopiedText(copied);
+    const clipboard = this.rootEl.ownerDocument.defaultView?.navigator.clipboard;
+    if (clipboard && typeof clipboard.writeText === "function") {
+      void clipboard.writeText(text).catch(() => {});
+    }
+  }
+
+  /** Cuts the selected subtree. The root is protected. */
+  private cutSelected(): void {
+    if (!this.controller || !this.selectedId) return;
+    if (this.controller.isRoot(this.selectedId)) {
+      this.onNotice("The root node cannot be cut.");
+      return;
+    }
+    this.copySelected();
+    this.deleteSelected();
+  }
+
+  /**
+   * Pastes the internal subtree, or parses system clipboard text as an outline.
+   */
+  private async pasteSelected(): Promise<void> {
+    const controller = this.controller;
+    if (!controller || this.editor.isOpen() || this.readOnly) return;
+
+    const parentId = this.selectedId ?? controller.getDocument().root.id;
+    let subtrees = this.clipboard;
+    if (subtrees.length === 0) {
+      subtrees = await this.readSystemClipboard();
+    }
+    if (subtrees.length === 0) {
+      this.onNotice("The clipboard is empty or unavailable.");
+      return;
+    }
+
+    const ids = controller.pasteSubtree(parentId, subtrees);
+    if (ids.length === 0) return;
+
+    this.rerender(false);
+    this.renderer.selectNode(ids[0]);
+    this.renderer.focus();
+    this.updateToolbar();
+  }
+
+  /** Reads and parses text from the system clipboard. */
+  private async readSystemClipboard(): Promise<CopiedNode[]> {
+    const clipboard = this.rootEl.ownerDocument.defaultView?.navigator.clipboard;
+    if (!clipboard) return [];
+    try {
+      return this.parseClipboardText(await clipboard.readText());
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Parses clipboard text as a full outline, an indented list, or a single label.
+   *
+   * @param text Clipboard text.
+   */
+  private parseClipboardText(text: string): CopiedNode[] {
+    const trimmed = text.trim();
+    if (!trimmed) return [];
+
+    const full = parseSource(trimmed);
+    if (full.document && full.errors.length === 0) {
+      return [this.copyNodeData(full.document.root)];
+    }
+
+    const list = parseSource(`# Pasted\n${trimmed}`);
+    if (list.document && list.errors.length === 0 && list.document.root.children.length > 0) {
+      return list.document.root.children.map((child) => this.copyNodeData(child));
+    }
+
+    return [{ text: trimmed.replace(/\s*\n\s*/g, " "), children: [] }];
+  }
+
+  /** Converts a live node into clipboard data. */
+  private copyNodeData(node: MindNode): CopiedNode {
+    return {
+      text: node.text,
+      children: node.children.map((child) => this.copyNodeData(child)),
+    };
+  }
+
+  /** Serializes clipboard data as a nested bullet list. */
+  private serializeCopiedText(node: CopiedNode): string {
+    const lines: string[] = [];
+    const walk = (item: CopiedNode, depth: number): void => {
+      lines.push(`${" ".repeat(depth * 2)}- ${item.text}`);
+      for (const child of item.children) walk(child, depth + 1);
+    };
+    walk(node, 0);
+    return lines.join("\n");
   }
 
   /** Undoes the last map command. */
@@ -287,6 +409,7 @@ export class MapCanvas {
 
   /** Positions the input over a node and wires commit/cancel. */
   private openEditor(nodeId: string, text: string, isNew: boolean): void {
+    this.drag.cancel();
     this.renderer.selectNode(nodeId);
     this.renderer.setEditingNode(nodeId);
     const position = this.renderer.getNodePosition(nodeId);
@@ -436,6 +559,27 @@ export class MapCanvas {
     this.updateToolbar();
   }
 
+  /** Expands a collapsed drop target without changing source. */
+  private expandNode(nodeId: string): void {
+    const controller = this.controller;
+    const node = controller?.findNode(nodeId);
+    if (!controller || !node || !node.collapsed || node.children.length === 0) return;
+    controller.toggleCollapse(nodeId);
+    this.rerender(false);
+  }
+
+  /** Applies a drag-and-drop move through the controller. */
+  private dropNode(sourceId: string, targetId: string, position: DropPosition): void {
+    const controller = this.controller;
+    if (!controller || !controller.canMove(sourceId, targetId)) return;
+    if (!controller.moveNode(sourceId, targetId, position)) return;
+
+    this.rerender(false);
+    this.renderer.selectNode(sourceId);
+    this.renderer.focus();
+    this.updateToolbar();
+  }
+
   /** Selects the parent of the selected node. */
   private selectParent(): void {
     if (!this.controller || !this.selectedId) return;
@@ -501,6 +645,21 @@ export class MapCanvas {
     if (mod && event.key.toLowerCase() === "y") {
       event.preventDefault();
       this.redo();
+      return;
+    }
+    if (mod && event.key.toLowerCase() === "c") {
+      event.preventDefault();
+      this.copySelected();
+      return;
+    }
+    if (mod && event.key.toLowerCase() === "x") {
+      event.preventDefault();
+      this.cutSelected();
+      return;
+    }
+    if (mod && event.key.toLowerCase() === "v") {
+      event.preventDefault();
+      void this.pasteSelected();
       return;
     }
     if (mod) return;

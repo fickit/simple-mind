@@ -11,7 +11,10 @@ every change pass through one validation, serialization, and history path.
 
 ## Files
 
-- `MapController.ts`: add, rename, delete, move, collapse, undo, and redo over a document.
+- `MapController.ts`: add, rename, delete, move, collapse, copy, paste, undo, and redo over a
+  document.
+- `DragController.ts`: pointer dragging, drop-position resolution, target highlighting, and
+  hover-to-expand for collapsed drop targets.
 - `InlineEditor.ts`: single-line input overlay with Enter, Tab, Escape, blur, and IME composition
   handling. It mirrors the node's computed styles, grows with content up to `maxWidth`, wraps into more
   height, and hides the underlying node while open so the old label cannot show through. Every resize
@@ -24,5 +27,6 @@ every change pass through one validation, serialization, and history path.
 `MapCanvas` forwards keyboard and toolbar actions to `MapController`. Inline commits become
 controller commands, which serialize the document and notify the view to save. While the editor is
 open, `MapCanvas` throttles live rectangles with `requestAnimationFrame`; `MapRenderer` reflows the
-tree with the editor size so children move and connectors follow. Collapse remains runtime-only and
-does not change source.
+tree with the editor size so children move and connectors follow. `DragController` reports drops to
+`MapCanvas`, which calls `MapController.moveNode`. Collapse remains runtime-only and does not change
+source.

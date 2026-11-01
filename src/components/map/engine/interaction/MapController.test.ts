@@ -156,4 +156,30 @@ describe("MapController", () => {
     expect(controller.getSource()).toContain("theme: paper");
     expect(controller.getSource()).toContain("custom: keep");
   });
+
+  it("validates move targets", () => {
+    const { controller, document } = setup();
+    const a = document.root.children[0];
+    const a1 = a.children[0];
+    const b = document.root.children[1];
+
+    expect(controller.canMove(a.id, b.id)).toBe(true);
+    expect(controller.canMove(a.id, a1.id)).toBe(false);
+    expect(controller.canMove(document.root.id, b.id)).toBe(false);
+    expect(controller.canMove(a.id, a.id)).toBe(false);
+  });
+
+  it("copies and pastes a subtree with new ids", () => {
+    const { controller, document, onChange } = setup();
+    const a = document.root.children[0];
+    const b = document.root.children[1];
+    const copied = controller.copySubtree(a.id)!;
+
+    expect(controller.pasteSubtree(b.id, [copied])).toHaveLength(1);
+    expect(controller.getSource()).toContain("- B\n  - A\n    - A1");
+    expect(onChange).toHaveBeenCalledOnce();
+    expect(controller.canUndo()).toBe(true);
+    expect(controller.undo()).toBe(true);
+    expect(controller.getSource()).toBe(BASE);
+  });
 });
