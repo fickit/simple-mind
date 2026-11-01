@@ -109,7 +109,8 @@ mindmap:
   and organization chart (root on top, branches downward).
 - Adjustable horizontal gap, vertical gap, alignment, and maximum node width.
 - Global defaults live in settings; each file can override them in frontmatter.
-- Collapsed nodes hide their descendants behind a count bubble and expand on click.
+- Collapsed nodes hide their descendants behind a count bubble and expand on click; the add button
+  is hidden while the group is collapsed.
 
 ### 5.5 Themes
 

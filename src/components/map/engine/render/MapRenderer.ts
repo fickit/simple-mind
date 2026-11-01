@@ -491,13 +491,10 @@ export class MapRenderer {
     this.applyNodeVisual(element, visual, node.style, isRoot, color);
     const collapseSides = this.collapseSidesFor(node, isRoot, positioned);
     this.syncCollapseButtons(element, node, collapseSides, color, isRoot);
-    this.syncAddButtons(
-      element,
-      node.id,
-      this.addSidesFor(positioned, isRoot),
-      collapseSides,
-      color,
+    const addSides = this.addSidesFor(positioned, isRoot).filter(
+      (side) => !(collapseSides.includes(side) && this.sideCollapsed(node, side, isRoot)),
     );
+    this.syncAddButtons(element, node.id, addSides, collapseSides, color);
     element.setAttribute("aria-level", String(positioned.depth + 1));
     element.setAttribute("aria-label", node.text);
     element.setAttribute("aria-selected", String(selected));

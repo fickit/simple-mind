@@ -324,9 +324,9 @@ The theme selects a connector style:
 - `curve`: leaves the parent along a straight lead, then uses a cubic Bezier to the child.
 - `orthogonal`: leaves the parent along the same lead, then uses elbows to the child.
 
-The lead is long enough to hold the collapse and add controls, so the line visibly walks out of the
-node before branching. Parent-child gaps are clamped to the control clearance; sibling gaps keep using
-the configured spacing.
+The lead ends at a fork close to the parent. Collapse and add controls flank the connector on opposite
+sides at that fork, so the line visibly walks out before branching without the controls blocking it.
+Parent-child gaps are clamped to the fork clearance; sibling gaps keep using the configured spacing.
 
 ### 6.5 Parameters
 
@@ -637,16 +637,14 @@ beneath per-node overrides and per-file connector shape.
 
 ### 11.2.3 Node controls
 
-- Collapse and add controls stay invisible until a node is hovered or selected. A collapsed group
-  keeps its count bubble visible so the collapsed state is discoverable.
-- Controls sit on the connector lead, starting 8 px away from the node. The collapse control is
-  nearest the node, the add button is outside it, and the connector branches after both.
-- In the organization layout the add button sits below the downward chevron. Parent-child gaps are
-  clamped so the vertical control stack always fits before the children.
+- Collapse and add controls stay invisible until a node is hovered or selected.
+- At the fork, the collapse chevron and the add button sit on opposite sides of the connector, 8 px
+  away from the node along the line. For a horizontal connector the chevron is above and the add
+  button below; for a downward connector the chevron is left and the add button right.
 - Controls use rounded chevrons: a right-side node shows `‹` to collapse and `›` to expand; a
   left-side node is mirrored. Organization charts use `⌃` and `⌄`.
-- When a group is collapsed, its control becomes a circular count bubble showing how many descendants
-  are hidden. Clicking the bubble expands the group again.
+- When a group is collapsed, its control becomes a centered circular count bubble showing how many
+  descendants are hidden, and the add button disappears. Clicking the bubble expands the group again.
 - Each control background uses the connector color of its branch, with black or white glyphs chosen
   for contrast. When a side has several branches, the first one supplies the color.
 - A mind-map root gets one collapse control per side, and each control toggles only that side's

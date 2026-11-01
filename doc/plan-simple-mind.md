@@ -178,14 +178,14 @@ Branch: `feat/core`
   the effective color in each color control and let reset remove the override.
 - `√` Keep connector shape per file, and disable node/text controls until a node is selected.
 - `√` Drop legacy file-level node/text style keys with a warning.
-- `√` Hide collapse and add controls until hover or selection; align controls to connector junctions
-  with an 8 px gap and use rounded chevrons.
+- `√` Hide collapse and add controls until hover or selection; place them on opposite sides of the
+  connector at the fork, 8 px from the node, and use rounded chevrons.
 - `√` Color control backgrounds from the branch connector color with a contrasting glyph.
-- `√` Add floating `+` buttons outside the collapse controls per layout side: tree direction,
-  organization downward, mind-map root both sides, and branch nodes only their own side. In the
-  organization layout the add button sits below the chevron.
+- `√` Add floating `+` buttons per layout side: tree direction, organization downward, mind-map root
+  both sides, and branch nodes only their own side.
 - `√` Let each mind-map root collapse control toggle only its side's children.
-- `√` Replace a collapsed chevron with a circular count bubble for hidden descendants.
+- `√` Replace a collapsed chevron with a centered circular count bubble and hide the add button
+  while the group is collapsed.
 - `√` Persist the chosen root side in the node marker so a left `+` adds to the left and a right `+`
   adds to the right, and group explicitly sided branches during layout.
 - `√` Add a connector lead before branching and clamp parent-child gaps to the control clearance.
@@ -337,9 +337,9 @@ node scripts/benchmark.mjs
 - Phase 5 interaction: selection, inline editing, live reflow, add/delete, drag-and-drop, clipboard,
   undo/redo, and source serialization are implemented and tested. The Style/Text panel edits the
   selected node through inline metadata; connector shape stays per file, while connector color and
-  thickness are global settings. Connectors leave a lead before branching, controls sit on that lead
-  with breathing room and connector-colored backgrounds, each mind-map root side collapses
-  independently into a hidden-node count bubble, and side-aware add buttons persist a branch's root
+  thickness are global settings. Connectors leave a short lead before branching, the collapse and add
+  controls flank the connector at the fork with connector-colored backgrounds, collapsed groups
+  become count bubbles and lose the add button, and side-aware add buttons persist a branch's root
   side. Compact spacing and the straight connector style are removed.
 - Phase 6 themes: eight built-in themes, per-file selection, automatic light/dark switching, custom
   theme editing, import/export, and live preview are implemented.

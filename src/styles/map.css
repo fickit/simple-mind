@@ -523,46 +523,6 @@
   letter-spacing: -0.02em;
 }
 
-.simple-mind-collapse::before,
-.simple-mind-add::before {
-  content: "";
-  position: absolute;
-  pointer-events: inherit;
-}
-
-.simple-mind-collapse::before,
-.simple-mind-add:not(.has-collapse)::before {
-  --sm-bridge-size: var(--sm-control-gap, 6px);
-}
-
-.simple-mind-add.has-collapse::before {
-  --sm-bridge-size: var(--sm-control-spacing, 4px);
-}
-
-.collapse-right::before,
-.add-right::before {
-  top: 0;
-  right: 100%;
-  bottom: 0;
-  width: var(--sm-bridge-size);
-}
-
-.collapse-left::before,
-.add-left::before {
-  top: 0;
-  left: 100%;
-  bottom: 0;
-  width: var(--sm-bridge-size);
-}
-
-.collapse-down::before,
-.add-down::before {
-  right: 0;
-  bottom: 100%;
-  left: 0;
-  height: var(--sm-bridge-size);
-}
-
 .simple-mind-collapse[hidden] {
   display: none;
 }
@@ -592,57 +552,60 @@
 }
 
 .collapse-right {
-  top: 50%;
-  right: calc(-1 * (var(--sm-control-gap) + var(--sm-control-size)));
+  top: calc(50% - var(--sm-control-offset));
+  right: calc(-1 * (var(--sm-control-lead) + var(--sm-control-size) / 2));
   transform: translateY(-50%);
 }
 
 .collapse-left {
-  top: 50%;
-  left: calc(-1 * (var(--sm-control-gap) + var(--sm-control-size)));
+  top: calc(50% - var(--sm-control-offset));
+  left: calc(-1 * (var(--sm-control-lead) + var(--sm-control-size) / 2));
   transform: translateY(-50%);
 }
 
 .collapse-down {
-  bottom: calc(-1 * (var(--sm-control-gap) + var(--sm-control-size)));
-  left: 50%;
+  bottom: calc(-1 * (var(--sm-control-lead) + var(--sm-control-size) / 2));
+  left: calc(50% - var(--sm-control-offset));
   transform: translateX(-50%);
+}
+
+.collapse-right.is-count,
+.collapse-left.is-count {
+  top: 50%;
+}
+
+.collapse-down.is-count {
+  left: 50%;
 }
 
 .add-right {
   top: 50%;
-  right: calc(-1 * (var(--sm-control-gap) + var(--sm-control-size)));
+  right: calc(-1 * (var(--sm-control-lead) + var(--sm-control-size) / 2));
   transform: translateY(-50%);
 }
 
 .add-right.has-collapse {
-  right: calc(
-    -1 *
-    (var(--sm-control-gap) + var(--sm-control-size) * 2 + var(--sm-control-spacing))
-  );
+  top: calc(50% + var(--sm-control-offset));
 }
 
 .add-left {
   top: 50%;
-  left: calc(-1 * (var(--sm-control-gap) + var(--sm-control-size)));
+  left: calc(-1 * (var(--sm-control-lead) + var(--sm-control-size) / 2));
   transform: translateY(-50%);
 }
 
 .add-left.has-collapse {
-  left: calc(-1 * (var(--sm-control-gap) + var(--sm-control-size) * 2 + var(--sm-control-spacing)));
+  top: calc(50% + var(--sm-control-offset));
 }
 
 .add-down {
-  bottom: calc(-1 * (var(--sm-control-gap) + var(--sm-control-size)));
+  bottom: calc(-1 * (var(--sm-control-lead) + var(--sm-control-size) / 2));
   left: 50%;
   transform: translateX(-50%);
 }
 
 .add-down.has-collapse {
-  bottom: calc(
-    -1 *
-    (var(--sm-control-gap) + var(--sm-control-size) * 2 + var(--sm-control-spacing))
-  );
+  left: calc(50% + var(--sm-control-offset));
 }
 
 .simple-mind-measure {

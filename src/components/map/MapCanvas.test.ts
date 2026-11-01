@@ -79,6 +79,8 @@ describe("MapCanvas", () => {
     leftControl.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     expect(leftControl.textContent).toBe("1");
     expect(leftControl.classList.contains("is-count")).toBe(true);
+    expect(root.querySelector(".simple-mind-add.add-left")).toBeNull();
+    expect(root.querySelector(".simple-mind-add.add-right")).not.toBeNull();
     expect(host.querySelectorAll(".simple-mind-node")).toHaveLength(2);
     expect(host.querySelector('.simple-mind-node[data-node-id="n2"]')).toBeNull();
     expect(host.querySelectorAll(".simple-mind-edge")).toHaveLength(1);
@@ -86,9 +88,15 @@ describe("MapCanvas", () => {
     rightControl.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     expect(rightControl.textContent).toBe("1");
     expect(rightControl.classList.contains("is-count")).toBe(true);
+    expect(root.querySelector(".simple-mind-add.add-right")).toBeNull();
     expect(host.querySelectorAll(".simple-mind-node")).toHaveLength(1);
     expect(host.querySelectorAll(".simple-mind-edge")).toHaveLength(0);
     expect(canvas.getSource()).toBe("# Root\n- A\n- B\n");
+
+    leftControl.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(leftControl.textContent).toBe("›");
+    expect(root.querySelector(".simple-mind-add.add-left")).not.toBeNull();
+    expect(root.querySelector(".simple-mind-add.add-right")).toBeNull();
 
     canvas.destroy();
     host.remove();
@@ -160,6 +168,7 @@ describe("MapCanvas", () => {
     expect(branchCollapse.textContent).toBe("2");
     expect(branchCollapse.classList.contains("is-count")).toBe(true);
     expect(branchCollapse.dataset.collapsed).toBe("true");
+    expect(branch.querySelector(".simple-mind-add")).toBeNull();
 
     canvas.destroy();
     host.remove();
