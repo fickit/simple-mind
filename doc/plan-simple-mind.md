@@ -89,7 +89,7 @@ Branch: `feat/core`
 - `√` Implement document validation: non-empty labels, single root, enum values, numeric clamps.
 - `√` Implement the tree lookup used by the renderer.
 - `√` Implement bounded source-snapshot history with undo and redo.
-- `-` Implement the full command controller (add, delete, move, edit, paste); deferred to the
+- `√` Implement the full command controller (add, delete, move, edit, paste); delivered in the
   interaction phase.
 - `√` Add `README.md` for the parser, history, and model modules.
 - `√` Unit tests: parser, serializer, roundtrip, frontmatter, errors, history.

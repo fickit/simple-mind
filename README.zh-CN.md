@@ -85,7 +85,7 @@ npm run test       # 单元测试
 - `src/types`：共享 TypeScript 类型。
 - `src/styles`：CSS 源码，打包为 `styles.css`。
 - `src/api`：Obsidian 适配层。
-- `src/config`：常量、默认值、i18n 和主题预设。
+- `src/config`：常量、默认值和 i18n。
 
 导图使用 HTML 节点和 SVG 连线；布局、渲染和编辑均为本地实现，不依赖思维导图运行时库。
 

@@ -88,7 +88,7 @@ npm run test       # unit tests
 - `src/types`: shared TypeScript types.
 - `src/styles`: CSS source, bundled to `styles.css`.
 - `src/api`: Obsidian adapters.
-- `src/config`: constants, defaults, i18n, and theme presets.
+- `src/config`: constants, defaults, and i18n.
 
 The map uses HTML nodes and SVG connectors. Layout, rendering, and editing are implemented locally
 without a mind-map runtime dependency.
