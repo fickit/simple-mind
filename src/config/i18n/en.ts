@@ -1,5 +1,6 @@
 export const en = {
   "toolbar.fit": "Fit",
+  "toolbar.theme": "Theme",
   "toolbar.zoomOut": "Zoom out",
   "toolbar.zoomIn": "Zoom in",
   "toolbar.addChild": "+ Child",

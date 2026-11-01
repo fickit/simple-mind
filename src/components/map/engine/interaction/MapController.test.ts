@@ -182,4 +182,12 @@ describe("MapController", () => {
     expect(controller.undo()).toBe(true);
     expect(controller.getSource()).toBe(BASE);
   });
+
+  it("updates metadata and writes frontmatter", () => {
+    const { controller, onChange } = setup();
+
+    expect(controller.updateMeta({ theme: "nord" })).toBe(true);
+    expect(controller.getSource()).toContain("theme: nord");
+    expect(onChange).toHaveBeenCalledOnce();
+  });
 });

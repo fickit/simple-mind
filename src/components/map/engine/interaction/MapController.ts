@@ -1,4 +1,4 @@
-import type { MindMapDocument, MindNode } from "../../../../types/mindmap";
+import type { MindMapDocument, MindMapMeta, MindNode } from "../../../../types/mindmap";
 import { SourceHistory } from "../history/SourceHistory";
 import { containsNode, findNodeById, findParentById, type ParentMatch } from "../model/tree";
 import { parseSource } from "../parser/parser";
@@ -101,6 +101,17 @@ export class MapController {
     const node = this.findNode(nodeId);
     const target = this.findNode(targetId);
     return !!node && !!target && !containsNode(node, targetId);
+  }
+
+  /**
+   * Updates per-file metadata and writes it to frontmatter.
+   *
+   * @param patch Metadata fields to replace.
+   */
+  updateMeta(patch: Partial<MindMapMeta>): boolean {
+    const previousSource = this.source;
+    Object.assign(this.document.meta, patch);
+    return this.serializeAndCommit(previousSource);
   }
 
   /** Copies a subtree without runtime ids. */

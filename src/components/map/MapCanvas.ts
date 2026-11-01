@@ -16,7 +16,7 @@ import type { PositionedNode } from "./engine/layout/types";
 import { parseSource } from "./engine/parser/parser";
 import { MapRenderer } from "./engine/render/MapRenderer";
 import { applyTheme } from "./themes/applyTheme";
-import { OBSIDIAN_THEME, resolveTheme } from "./themes/presets";
+import { BUILT_IN_THEMES, OBSIDIAN_THEME, resolveTheme } from "./themes/presets";
 
 /** Callbacks supplied by the host view. */
 export interface MapCanvasOptions {
@@ -50,6 +50,7 @@ export class MapCanvas {
   private readonly sourceButton: HTMLButtonElement;
   private readonly zoomInButton: HTMLButtonElement;
   private readonly zoomOutButton: HTMLButtonElement;
+  private readonly themeSelect: HTMLSelectElement;
   private readonly keydownHandler: (event: KeyboardEvent) => void;
   private controller: MapController | null = null;
   private pendingAdd: PendingAdd | null = null;
@@ -131,6 +132,14 @@ export class MapCanvas {
     this.createToolbarDivider(toolbar);
     this.undoButton = this.createToolbarButton(toolbar, t("toolbar.undo"), () => this.undo());
     this.redoButton = this.createToolbarButton(toolbar, t("toolbar.redo"), () => this.redo());
+    this.createToolbarDivider(toolbar);
+    this.themeSelect = doc.createElement("select");
+    this.themeSelect.className = "simple-mind-toolbar-select";
+    this.themeSelect.setAttribute("aria-label", t("toolbar.theme"));
+    this.themeSelect.addEventListener("change", () => {
+      this.changeTheme(this.themeSelect.value);
+    });
+    toolbar.appendChild(this.themeSelect);
     const spacer = doc.createElement("span");
     spacer.className = "simple-mind-toolbar-spacer";
     toolbar.appendChild(spacer);
@@ -138,6 +147,7 @@ export class MapCanvas {
 
     this.keydownHandler = (event) => this.handleKeydown(event);
     this.canvasEl.addEventListener("keydown", this.keydownHandler);
+    this.syncThemeOptions();
     this.updateToolbar();
   }
 
@@ -191,6 +201,7 @@ export class MapCanvas {
       });
       this.renderer.render(result.document, { fit: true });
       this.renderer.selectNode(null);
+      this.syncThemeOptions();
     } else {
       this.controller = null;
       this.renderer.clear();
@@ -217,6 +228,7 @@ export class MapCanvas {
     this.settings = settings;
     this.dark = isDarkDocument(this.rootEl.ownerDocument);
     this.refreshLanguage();
+    this.syncThemeOptions();
     if (this.sourceText) {
       this.setSource(this.getSource());
     } else {
@@ -235,6 +247,35 @@ export class MapCanvas {
     this.undoButton.textContent = t("toolbar.undo");
     this.redoButton.textContent = t("toolbar.redo");
     this.sourceButton.textContent = t("toolbar.source");
+    this.themeSelect.setAttribute("aria-label", t("toolbar.theme"));
+  }
+
+  /** Rebuilds the per-file theme selector. */
+  private syncThemeOptions(): void {
+    const options = [...BUILT_IN_THEMES, ...this.settings.customThemes];
+    const current = this.controller?.getDocument().meta.theme ?? this.settings.defaultTheme;
+    this.themeSelect.replaceChildren();
+    for (const theme of options) {
+      const option = this.themeSelect.ownerDocument.createElement("option");
+      option.value = theme.id;
+      option.textContent = theme.name;
+      this.themeSelect.appendChild(option);
+    }
+    this.themeSelect.value = options.some((theme) => theme.id === current) ? current : "obsidian";
+  }
+
+  /** Switches the file theme and saves the new frontmatter. */
+  private changeTheme(themeId: string): void {
+    const controller = this.controller;
+    if (!controller || !controller.updateMeta({ theme: themeId })) return;
+
+    this.theme = resolveTheme(themeId, this.settings.customThemes);
+    this.dark = isDarkDocument(this.rootEl.ownerDocument);
+    applyTheme(this.rootEl, this.theme, this.dark);
+    this.renderer.setTheme(this.theme, this.dark);
+    this.rerender(false);
+    this.renderer.focus();
+    this.updateToolbar();
   }
 
   /** Reapplies the theme after Obsidian changes its light/dark mode. */

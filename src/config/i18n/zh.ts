@@ -2,6 +2,7 @@ import type { MessageKey } from "./en";
 
 export const zh: Record<MessageKey, string> = {
   "toolbar.fit": "适应画布",
+  "toolbar.theme": "主题",
   "toolbar.zoomOut": "缩小",
   "toolbar.zoomIn": "放大",
   "toolbar.addChild": "+ 子节点",

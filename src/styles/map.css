@@ -42,6 +42,17 @@
   background: var(--background-modifier-hover);
 }
 
+.simple-mind-toolbar-select {
+  max-width: 150px;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: var(--font-ui-smaller);
+}
+
 .simple-mind-toolbar-button:disabled,
 .simple-mind-toolbar-button:disabled:hover {
   opacity: 0.45;

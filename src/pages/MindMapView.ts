@@ -55,6 +55,28 @@ export class MindMapView extends TextFileView {
       this.canvas.setSource(this.data);
     }
     this.registerEvent(this.app.workspace.on("css-change", () => this.canvas?.refreshTheme()));
+
+    let frame: number | null = null;
+    const body = this.contentEl.ownerDocument.body;
+    let lastDark = body.classList.contains("theme-dark");
+    const observer = new MutationObserver(() => {
+      const dark = body.classList.contains("theme-dark");
+      if (dark === lastDark) return;
+      lastDark = dark;
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        this.canvas?.refreshTheme();
+      });
+    });
+    observer.observe(body, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    this.register(() => {
+      observer.disconnect();
+      if (frame !== null) window.cancelAnimationFrame(frame);
+    });
   }
 
   /** Releases the renderer and DOM. */

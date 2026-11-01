@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { beforeAll, describe, expect, it, vi } from "vitest";
+import { DEFAULT_SETTINGS } from "../../config/defaults";
 import { MapCanvas } from "./MapCanvas";
+import { PAPER_THEME } from "./themes/presets";
 
 class ResizeObserverMock {
   observe(): void {}
@@ -12,7 +14,10 @@ beforeAll(() => {
   globalThis.ResizeObserver = ResizeObserverMock as unknown as typeof ResizeObserver;
 });
 
-function createCanvas(source: string): {
+function createCanvas(
+  source: string,
+  settings = DEFAULT_SETTINGS,
+): {
   host: HTMLElement;
   canvas: MapCanvas;
   onSource: ReturnType<typeof vi.fn>;
@@ -24,7 +29,7 @@ function createCanvas(source: string): {
   const onSource = vi.fn();
   const onChange = vi.fn();
   const onNotice = vi.fn();
-  const canvas = new MapCanvas(host, { onSource, onChange, onNotice });
+  const canvas = new MapCanvas(host, { onSource, onChange, onNotice, settings });
   canvas.setSource(source);
   return { host, canvas, onSource, onChange, onNotice };
 }
@@ -276,6 +281,41 @@ describe("MapCanvas", () => {
     expect(host.querySelector(".simple-mind-map")?.getAttribute("data-simple-mind-theme")).toBe(
       "nord",
     );
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("switches theme from the toolbar and writes frontmatter", () => {
+    const { host, canvas, onChange } = createCanvas("# Root\n- A\n");
+    const select = host.querySelector<HTMLSelectElement>(".simple-mind-toolbar-select");
+
+    expect(select).not.toBeNull();
+    select!.value = "nord";
+    select!.dispatchEvent(new Event("change", { bubbles: true }));
+
+    expect(onChange).toHaveBeenCalledOnce();
+    expect(canvas.getSource()).toContain("theme: nord");
+    expect(host.querySelector(".simple-mind-map")?.getAttribute("data-simple-mind-theme")).toBe(
+      "nord",
+    );
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("refreshes the light and dark variants of a custom theme", () => {
+    const settings = { ...DEFAULT_SETTINGS, defaultTheme: PAPER_THEME.id };
+    const { host, canvas } = createCanvas("# Root\n- A\n", settings);
+    const root = host.querySelector<HTMLElement>(".simple-mind-map");
+
+    document.body.classList.add("theme-dark");
+    canvas.refreshTheme();
+    expect(root?.style.getPropertyValue("--sm-canvas-bg")).toBe(PAPER_THEME.dark.canvasBackground);
+
+    document.body.classList.remove("theme-dark");
+    canvas.refreshTheme();
+    expect(root?.style.getPropertyValue("--sm-canvas-bg")).toBe(PAPER_THEME.light.canvasBackground);
 
     canvas.destroy();
     host.remove();
