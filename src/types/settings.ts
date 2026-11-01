@@ -13,7 +13,6 @@ export interface SimpleMindSettings {
   defaultSpacingX: number;
   defaultSpacingY: number;
   defaultAlign: NodeAlignment;
-  defaultCompact: boolean;
   defaultMaxWidth: number;
   defaultFontFamily: string;
   defaultConnectorColor: string;

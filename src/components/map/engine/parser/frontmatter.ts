@@ -127,21 +127,6 @@ function readEnum<T extends string>(
   return parsed;
 }
 
-/** Reads a boolean scalar. */
-function readBoolean(
-  value: string,
-  fallback: boolean,
-  line: number,
-  name: string,
-  warnings: ParseWarning[],
-): boolean {
-  const parsed = readScalar(value).toLowerCase();
-  if (parsed === "true") return true;
-  if (parsed === "false") return false;
-  warnings.push({ line, message: `${name} must be true or false; using ${fallback}.` });
-  return fallback;
-}
-
 /**
  * Parses the `mindmap` frontmatter block and preserves unknown lines.
  *
@@ -271,9 +256,13 @@ export function parseMeta(
           warnings,
         );
         break;
-      case "compact":
-        meta.compact = readBoolean(value, meta.compact, lineNumber, "compact", warnings);
+      case "compact": {
+        warnings.push({
+          line: lineNumber,
+          message: "compact is no longer supported; this file-level value is ignored.",
+        });
         break;
+      }
       case "maxWidth":
         meta.maxWidth = readNumber(
           value,
@@ -287,12 +276,12 @@ export function parseMeta(
         break;
       case "connectorStyle": {
         const style = readScalar(value);
-        if (["curve", "orthogonal", "straight"].includes(style)) {
+        if (["curve", "orthogonal"].includes(style)) {
           meta.connectorStyle = style as ConnectorStyle;
         } else {
           warnings.push({
             line: lineNumber,
-            message: "connectorStyle must be curve, orthogonal, or straight.",
+            message: "connectorStyle must be curve or orthogonal.",
           });
         }
         break;
@@ -367,7 +356,6 @@ export function renderFrontmatter(
     `  spacingX: ${meta.spacingX}`,
     `  spacingY: ${meta.spacingY}`,
     `  align: ${meta.align}`,
-    `  compact: ${meta.compact}`,
     `  maxWidth: ${meta.maxWidth}`,
     ...optionalLines,
     ...extraLines,

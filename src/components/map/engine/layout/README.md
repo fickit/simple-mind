@@ -13,7 +13,7 @@ the three map modes share the same block-placement rules.
 
 - `types.ts`: node sizes, measurer contract, positioned nodes, edges, and bounds.
 - `layout.ts`: horizontal mindmap/tree layout, vertical organization layout, collapse handling,
-  side balancing, compact spacing, and alignment.
+  side balancing, control clearance, and alignment.
 
 ## Call flow
 

@@ -176,7 +176,6 @@ export class ThemeEditorModal extends Modal {
       dropdown
         .addOption("curve", t("themeEditor.connector.curve"))
         .addOption("orthogonal", t("themeEditor.connector.orthogonal"))
-        .addOption("straight", t("themeEditor.connector.straight"))
         .setValue(this.tokens.branch.style)
         .onChange((value) => {
           this.tokens.branch.style = value as ConnectorStyle;

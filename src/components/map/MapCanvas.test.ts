@@ -77,13 +77,15 @@ describe("MapCanvas", () => {
     )!;
 
     leftControl.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    expect(leftControl.textContent).toBe("‹");
+    expect(leftControl.textContent).toBe("1");
+    expect(leftControl.classList.contains("is-count")).toBe(true);
     expect(host.querySelectorAll(".simple-mind-node")).toHaveLength(2);
     expect(host.querySelector('.simple-mind-node[data-node-id="n2"]')).toBeNull();
     expect(host.querySelectorAll(".simple-mind-edge")).toHaveLength(1);
 
     rightControl.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    expect(rightControl.textContent).toBe("›");
+    expect(rightControl.textContent).toBe("1");
+    expect(rightControl.classList.contains("is-count")).toBe(true);
     expect(host.querySelectorAll(".simple-mind-node")).toHaveLength(1);
     expect(host.querySelectorAll(".simple-mind-edge")).toHaveLength(0);
     expect(canvas.getSource()).toBe("# Root\n- A\n- B\n");
@@ -141,8 +143,8 @@ describe("MapCanvas", () => {
     org.host.remove();
   });
 
-  it("uses rounded chevrons for collapse and expand", () => {
-    const { host, canvas } = createCanvas("# Root\n- A\n  - A1\n- B\n");
+  it("uses rounded chevrons and hides a node count when collapsed", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n  - A1\n  - A2\n- B\n");
     const root = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n1"]')!;
     const branch = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n2"]')!;
     const rootLeft = root.querySelector<HTMLButtonElement>(".simple-mind-collapse.collapse-left")!;
@@ -155,7 +157,8 @@ describe("MapCanvas", () => {
     expect(rootRight.textContent).toBe("‹");
     expect(branchCollapse.textContent).toBe("›");
     branchCollapse.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    expect(branchCollapse.textContent).toBe("‹");
+    expect(branchCollapse.textContent).toBe("2");
+    expect(branchCollapse.classList.contains("is-count")).toBe(true);
     expect(branchCollapse.dataset.collapsed).toBe("true");
 
     canvas.destroy();

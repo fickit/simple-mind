@@ -64,7 +64,6 @@ mindmap:
   spacingX: 64
   spacingY: 18
   align: center
-  compact: false
   maxWidth: 280
 ```
 
@@ -75,9 +74,8 @@ mindmap:
 - `spacingX`: horizontal gap in CSS pixels; clamped to 8-240.
 - `spacingY`: vertical gap in CSS pixels; clamped to 4-120.
 - `align`: `center` or `start`; controls parent alignment relative to its child block.
-- `compact`: boolean; reduces gaps.
 - `maxWidth`: maximum node width; clamped to 120-600.
-- Optional `connectorStyle` (`curve`, `orthogonal`, `straight`) for the whole map.
+- Optional `connectorStyle` (`curve` or `orthogonal`) for the whole map.
 
 Themes own complete style designs: colors, typography, node shape and border, and connector geometry
 and width. Node and text styles are not stored in frontmatter; they are per-node overrides written
@@ -184,7 +182,6 @@ interface MindMapMeta {
   spacingX: number;
   spacingY: number;
   align: NodeAlignment;
-  compact: boolean;
   maxWidth: number;
   connectorStyle?: ConnectorStyle;
 }
@@ -324,18 +321,18 @@ depend on layout and side:
 
 The theme selects a connector style:
 
-- `curve`: cubic Bezier with horizontal control points.
-- `orthogonal`: rounded elbow with a midpoint turn.
-- `straight`: a straight line.
+- `curve`: leaves the parent along a straight lead, then uses a cubic Bezier to the child.
+- `orthogonal`: leaves the parent along the same lead, then uses elbows to the child.
 
-For org layout, the default is `orthogonal`; for mind map and tree, the default is `curve`.
+The lead is long enough to hold the collapse and add controls, so the line visibly walks out of the
+node before branching. Parent-child gaps are clamped to the control clearance; sibling gaps keep using
+the configured spacing.
 
 ### 6.5 Parameters
 
-- `spacingX`: horizontal gap.
-- `spacingY`: vertical gap.
+- `spacingX`: horizontal gap; parent-child horizontal gaps are clamped to the control clearance.
+- `spacingY`: vertical gap; parent-child vertical gaps are clamped to the control clearance.
 - `align`: parent alignment relative to its child block.
-- `compact`: multiply gaps by 0.6 and reduce the root's outer margin.
 - `maxWidth`: node wrapping width.
 
 ## 7. Renderer
@@ -507,7 +504,7 @@ changed. Parse errors after an external change enter the same read-only mode as 
 
 ```ts
 type NodeShape = 'rounded' | 'pill' | 'underline' | 'plain';
-type ConnectorStyle = 'curve' | 'orthogonal' | 'straight';
+type ConnectorStyle = 'curve' | 'orthogonal';
 
 interface ThemeTokens {
   canvasBackground: string;
@@ -614,8 +611,8 @@ Each theme provides both light and dark tokens. The active variant is selected b
 
 The map view includes a right-side style panel with two tabs:
 
-- **Style**: theme, layout type, tree direction, parent alignment, compact mode, and connector
-  shape for the file; node shape, fill, border color, and border width for the selected node.
+- **Style**: theme, layout type, tree direction, parent alignment, and connector shape for the file;
+  node shape, fill, border color, and border width for the selected node.
 - **Text**: font family and size; text color, bold, italic, underline, text alignment, and line
   height for the selected node.
 
@@ -641,12 +638,15 @@ beneath per-node overrides and per-file connector shape.
 ### 11.2.3 Node controls
 
 - Collapse and add controls stay invisible until a node is hovered or selected. A collapsed group
-  keeps its expand chevron visible so the collapsed state is discoverable.
-- Collapse controls sit where the branch connector meets the node. Add buttons sit outside them; when
-  a side has no collapse control, the add button takes that junction position. In the organization
-  layout the add button sits beside the downward chevron so both fit inside the vertical gap.
+  keeps its count bubble visible so the collapsed state is discoverable.
+- Controls sit on the connector lead, starting 8 px away from the node. The collapse control is
+  nearest the node, the add button is outside it, and the connector branches after both.
+- In the organization layout the add button sits below the downward chevron. Parent-child gaps are
+  clamped so the vertical control stack always fits before the children.
 - Controls use rounded chevrons: a right-side node shows `‹` to collapse and `›` to expand; a
   left-side node is mirrored. Organization charts use `⌃` and `⌄`.
+- When a group is collapsed, its control becomes a circular count bubble showing how many descendants
+  are hidden. Clicking the bubble expands the group again.
 - Each control background uses the connector color of its branch, with black or white glyphs chosen
   for contrast. When a side has several branches, the first one supplies the color.
 - A mind-map root gets one collapse control per side, and each control toggles only that side's

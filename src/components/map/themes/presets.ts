@@ -212,7 +212,7 @@ export const GRAPHITE_THEME: ThemeDefinition = {
       "#999999",
       "#b0b0b0",
     ],
-    connector: "straight",
+    connector: "orthogonal",
   }),
   dark: buildTokens({
     canvas: "#181818",
@@ -231,7 +231,7 @@ export const GRAPHITE_THEME: ThemeDefinition = {
       "#808080",
       "#b8b8b8",
     ],
-    connector: "straight",
+    connector: "orthogonal",
   }),
 };
 

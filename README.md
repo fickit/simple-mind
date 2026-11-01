@@ -19,7 +19,6 @@ mindmap:
   spacingX: 64
   spacingY: 18
   align: center
-  compact: false
   maxWidth: 280
 ---
 # Product plan
@@ -40,7 +39,8 @@ The file opens as a map. The Source action switches the same tab to Obsidian's n
 - Eight built-in themes with automatic light/dark switching and a custom theme editor.
 - A Style/Text panel that styles the selected node; connector shape per map, connector color and
   thickness in settings.
-- Hover controls: connector-colored collapse chevrons and side-aware floating add buttons.
+- Hover controls: connector-colored collapse chevrons, hidden-node count bubbles, and side-aware
+  floating add buttons.
 - English and Chinese UI.
 - Desktop-first performance target of 1,000 nodes per map.
 

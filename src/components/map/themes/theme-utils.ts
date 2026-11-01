@@ -1,7 +1,7 @@
 import type { ConnectorStyle, NodeShape, ThemeDefinition, ThemeTokens } from "../../../types/theme";
 
 const NODE_SHAPES: NodeShape[] = ["rounded", "pill", "underline", "plain"];
-const CONNECTOR_STYLES: ConnectorStyle[] = ["curve", "orthogonal", "straight"];
+const CONNECTOR_STYLES: ConnectorStyle[] = ["curve", "orthogonal"];
 const CUSTOM_PREFIX = "custom-";
 
 /** Converts rgb()/rgba() or a CSS variable into a hex color for color inputs. */

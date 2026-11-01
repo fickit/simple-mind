@@ -15,7 +15,7 @@ separate from the parser and layout lets each layer be tested on its own.
 - `MapRenderer.ts`: keyed node/edge updates, world transform, fit, pan, zoom, and selection.
 - `measure.ts`: hidden DOM measurement with a text/theme cache.
 - `inlineMarkdown.ts`: safe inline Markdown rendering.
-- `connectors.ts`: curve, orthogonal, and straight SVG paths.
+- `connectors.ts`: curve and orthogonal SVG paths with a lead before branching.
 
 ## Call flow
 

@@ -2,7 +2,7 @@
 export type NodeShape = "rounded" | "pill" | "underline" | "plain";
 
 /** Connector geometry. */
-export type ConnectorStyle = "curve" | "orthogonal" | "straight";
+export type ConnectorStyle = "curve" | "orthogonal";
 
 /** Horizontal text alignment. */
 export type TextAlign = "left" | "center" | "right";

@@ -38,6 +38,7 @@ export class MapRenderer {
   private readonly renderedText = new Map<string, string>();
   private readonly colors = new Map<string, string>();
   private readonly sideColors = new Map<string, string>();
+  private readonly sideCounts = new Map<string, number>();
   private readonly contrastCache = new Map<string, string>();
   private readonly disposers: Array<() => void> = [];
   private readonly resizeObserver: ResizeObserver;
@@ -182,6 +183,7 @@ export class MapRenderer {
     this.renderedText.clear();
     this.colors.clear();
     this.sideColors.clear();
+    this.sideCounts.clear();
     this.nodesLayer.replaceChildren();
     this.svg.replaceChildren();
   }
@@ -355,6 +357,18 @@ export class MapRenderer {
       if (color && !visibleSideColors.has(key)) visibleSideColors.set(key, color);
     }
     for (const [key, color] of visibleSideColors) this.sideColors.set(key, color);
+    if (document.meta.layout === "mindmap") {
+      const visibleSideCounts = new Map<string, number>();
+      for (const positioned of layout.nodes) {
+        if (positioned.parentId !== document.root.id) continue;
+        const key = `${document.root.id}:${positioned.side}`;
+        visibleSideCounts.set(
+          key,
+          (visibleSideCounts.get(key) ?? 0) + countSubtree(positioned.node),
+        );
+      }
+      for (const [key, count] of visibleSideCounts) this.sideCounts.set(key, count);
+    }
     const seen = new Set<string>();
 
     for (const positioned of layout.nodes) {
@@ -602,12 +616,37 @@ export class MapRenderer {
     isRoot: boolean,
   ): void {
     const collapsed = this.sideCollapsed(node, side, isRoot);
-    button.className = `simple-mind-collapse collapse-${side}`;
+    const count = collapsed ? this.collapsedCount(node, side, isRoot) : 0;
+    const showsCount = collapsed && count > 0;
+    button.className = ["simple-mind-collapse", `collapse-${side}`, showsCount ? "is-count" : ""]
+      .filter(Boolean)
+      .join(" ");
     button.dataset.collapsed = String(collapsed);
-    button.textContent = this.collapseGlyph(side, collapsed);
-    button.setAttribute("aria-label", collapsed ? t("node.expand") : t("node.collapse"));
+    button.textContent = showsCount
+      ? count > 99
+        ? "99+"
+        : String(count)
+      : this.collapseGlyph(side, collapsed);
+    const label = collapsed
+      ? showsCount
+        ? t("node.expandCount", { count: String(count) })
+        : t("node.expand")
+      : t("node.collapse");
+    button.setAttribute("aria-label", label);
     button.setAttribute("aria-expanded", String(!collapsed));
     this.styleControl(button, node.id, side, fallbackColor);
+  }
+
+  /** Returns how many nodes are hidden behind one collapse control. */
+  private collapsedCount(node: MindNode, side: AddSide, isRoot: boolean): number {
+    if (isRoot && this.document?.meta.layout === "mindmap") {
+      const cached = this.sideCounts.get(`${node.id}:${side}`);
+      if (cached !== undefined) return cached;
+      return node.children
+        .filter((child) => child.side === side)
+        .reduce((sum, child) => sum + countSubtree(child), 0);
+    }
+    return countSubtree(node) - 1;
   }
 
   /** Creates, removes, and updates the floating add buttons on one node. */
@@ -832,4 +871,11 @@ export class MapRenderer {
 /** Clamps a number into a range. */
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
+}
+
+/** Counts a node and all of its descendants. */
+function countSubtree(node: MindNode): number {
+  let total = 1;
+  for (const child of node.children) total += countSubtree(child);
+  return total;
 }

@@ -68,7 +68,6 @@ mindmap:
   spacingX: 64
   spacingY: 18
   align: center
-  compact: false
   maxWidth: 280
 ---
 # Product plan
@@ -108,9 +107,9 @@ mindmap:
 
 - Three modes: mind map (root centered, branches on both sides), tree (all branches left or right),
   and organization chart (root on top, branches downward).
-- Adjustable horizontal gap, vertical gap, alignment, compact mode, and maximum node width.
+- Adjustable horizontal gap, vertical gap, alignment, and maximum node width.
 - Global defaults live in settings; each file can override them in frontmatter.
-- Collapsed nodes hide their descendants but remain selectable and expandable.
+- Collapsed nodes hide their descendants behind a count bubble and expand on click.
 
 ### 5.5 Themes
 

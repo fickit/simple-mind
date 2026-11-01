@@ -21,7 +21,6 @@ export interface MindMapMeta {
   spacingX: number;
   spacingY: number;
   align: NodeAlignment;
-  compact: boolean;
   maxWidth: number;
   connectorStyle?: ConnectorStyle;
 }

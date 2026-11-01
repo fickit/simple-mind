@@ -9,7 +9,6 @@ mindmap:
   spacingX: 72
   spacingY: 20
   align: start
-  compact: true
   maxWidth: 300
   customKey: keep-me
 ---

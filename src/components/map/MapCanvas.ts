@@ -1,4 +1,11 @@
-import { COLOR_INPUT_FALLBACK, LIMITS, NEW_NODE_EDITOR_WIDTH } from "../../config/constants";
+import {
+  COLOR_INPUT_FALLBACK,
+  LIMITS,
+  NEW_NODE_EDITOR_WIDTH,
+  NODE_CONTROL_GAP,
+  NODE_CONTROL_SIZE,
+  NODE_CONTROL_SPACING,
+} from "../../config/constants";
 import { DEFAULT_SETTINGS, metaFromSettings } from "../../config/defaults";
 import { t } from "../../config/i18n";
 import type {
@@ -92,7 +99,6 @@ export class MapCanvas {
   private sidebarLayoutSelect!: HTMLSelectElement;
   private sidebarDirectionSelect!: HTMLSelectElement;
   private sidebarAlignSelect!: HTMLSelectElement;
-  private sidebarCompactInput!: HTMLInputElement;
   private sidebarNodeHint!: HTMLElement;
   private sidebarTextHint!: HTMLElement;
   private sidebarNodeShapeSelect!: HTMLSelectElement;
@@ -137,6 +143,9 @@ export class MapCanvas {
 
     this.rootEl = doc.createElement("div");
     this.rootEl.className = "simple-mind-map";
+    this.rootEl.style.setProperty("--sm-control-size", `${NODE_CONTROL_SIZE}px`);
+    this.rootEl.style.setProperty("--sm-control-gap", `${NODE_CONTROL_GAP}px`);
+    this.rootEl.style.setProperty("--sm-control-spacing", `${NODE_CONTROL_SPACING}px`);
     container.replaceChildren(this.rootEl);
 
     const toolbar = doc.createElement("div");
@@ -403,11 +412,6 @@ export class MapCanvas {
       ],
       (value) => this.updateMetaAndRender({ align: value as NodeAlignment }),
     );
-    this.sidebarCompactInput = this.createSidebarCheckbox(
-      layoutSection,
-      t("settings.compact"),
-      (value) => this.updateMetaAndRender({ compact: value }),
-    );
 
     const nodeSection = this.createSidebarSection(this.sidebarStylePane, t("sidebar.node"));
     this.sidebarNodeHint = this.createSidebarHint(nodeSection, t("sidebar.selectNode"));
@@ -457,7 +461,6 @@ export class MapCanvas {
         { value: "", label: t("sidebar.themeDefault") },
         { value: "curve", label: t("themeEditor.connector.curve") },
         { value: "orthogonal", label: t("themeEditor.connector.orthogonal") },
-        { value: "straight", label: t("themeEditor.connector.straight") },
       ],
       (value) =>
         this.updateMetaAndRender({
@@ -728,7 +731,6 @@ export class MapCanvas {
     this.sidebarLayoutSelect.value = meta?.layout ?? this.settings.defaultLayout;
     this.sidebarDirectionSelect.value = meta?.direction ?? this.settings.defaultDirection;
     this.sidebarAlignSelect.value = meta?.align ?? this.settings.defaultAlign;
-    this.sidebarCompactInput.checked = meta?.compact ?? this.settings.defaultCompact;
     this.sidebarConnectorSelect.value = meta?.connectorStyle ?? "";
 
     this.sidebarNodeShapeSelect.value = style.shape ?? "";

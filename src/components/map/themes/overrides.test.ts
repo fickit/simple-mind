@@ -6,7 +6,7 @@ import { PAPER_THEME } from "./presets";
 
 const META: MindMapMeta = {
   ...DEFAULT_MINDMAP_META,
-  connectorStyle: "straight",
+  connectorStyle: "orthogonal",
 };
 
 const DEFAULTS: MapStyleDefaults = {
@@ -22,7 +22,7 @@ describe("applyMetaOverrides", () => {
     for (const variant of ["light", "dark"] as const) {
       const tokens = theme[variant];
       const base = PAPER_THEME[variant];
-      expect(tokens.branch.style).toBe("straight");
+      expect(tokens.branch.style).toBe("orthogonal");
       expect(tokens.branch.lineWidth).toBe(5);
       expect(tokens.branch.overrideColor).toBe("#123456");
       expect(tokens.typography.family).toBe("Georgia, serif");

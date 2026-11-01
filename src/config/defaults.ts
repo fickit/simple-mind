@@ -10,7 +10,6 @@ export const DEFAULT_MINDMAP_META: MindMapMeta = {
   spacingX: 64,
   spacingY: 18,
   align: "center",
-  compact: false,
   maxWidth: 280,
 };
 
@@ -23,7 +22,6 @@ export const DEFAULT_SETTINGS: SimpleMindSettings = {
   defaultSpacingX: DEFAULT_MINDMAP_META.spacingX,
   defaultSpacingY: DEFAULT_MINDMAP_META.spacingY,
   defaultAlign: DEFAULT_MINDMAP_META.align,
-  defaultCompact: DEFAULT_MINDMAP_META.compact,
   defaultMaxWidth: DEFAULT_MINDMAP_META.maxWidth,
   defaultFontFamily: "",
   defaultConnectorColor: "",
@@ -46,7 +44,6 @@ export function metaFromSettings(settings: SimpleMindSettings): MindMapMeta {
     spacingX: settings.defaultSpacingX,
     spacingY: settings.defaultSpacingY,
     align: settings.defaultAlign,
-    compact: settings.defaultCompact,
     maxWidth: settings.defaultMaxWidth,
   };
 }

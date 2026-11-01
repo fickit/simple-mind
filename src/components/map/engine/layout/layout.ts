@@ -1,3 +1,4 @@
+import { CONNECTOR_CLEARANCE } from "../../../../config/constants";
 import type { MindMapMeta, MindNode } from "../../../../types/mindmap";
 import type {
   EdgeLayout,
@@ -105,10 +106,10 @@ function placeHorizontal(
   });
 
   let childTop = context.meta.align === "center" ? centerY - totalChildrenHeight / 2 : blockTop;
+  const childGap = Math.max(context.gapX, CONNECTOR_CLEARANCE);
   for (const child of children) {
     const childSize = sizeOf(context, child);
-    const childX =
-      side === "right" ? x + size.width + context.gapX : x - context.gapX - childSize.width;
+    const childX = side === "right" ? x + size.width + childGap : x - childGap - childSize.width;
     placeHorizontal(context, child, side, depth + 1, childX, childTop, node.id);
     context.edges.push({ parentId: node.id, childId: child.id, side });
     childTop += blockHeight(context, child) + context.gapY;
@@ -145,7 +146,7 @@ function placeVertical(
   });
 
   let childLeft = context.meta.align === "center" ? centerX - totalChildrenWidth / 2 : blockLeft;
-  const childY = y + size.height + context.gapY;
+  const childY = y + size.height + Math.max(context.gapY, CONNECTOR_CLEARANCE);
   for (const child of children) {
     placeVertical(context, child, depth + 1, childLeft, childY, node.id);
     context.edges.push({ parentId: node.id, childId: child.id, side: "down" });
@@ -233,11 +234,10 @@ export function layoutDocument(
   meta: MindMapMeta,
   measure: NodeMeasurer,
 ): LayoutResult {
-  const compact = meta.compact ? 0.6 : 1;
   const context: LayoutContext = {
     measure,
-    gapX: meta.spacingX * compact,
-    gapY: meta.spacingY * compact,
+    gapX: meta.spacingX,
+    gapY: meta.spacingY,
     meta,
     sizes: new Map(),
     heights: new Map(),
@@ -267,7 +267,7 @@ export function layoutDocument(
       children.reduce((sum, child) => sum + blockWidth(context, child), 0) +
       context.gapX * Math.max(0, children.length - 1);
     let childLeft = meta.align === "center" ? -totalWidth / 2 : rootX;
-    const childY = rootY + rootSize.height + context.gapY;
+    const childY = rootY + rootSize.height + Math.max(context.gapY, CONNECTOR_CLEARANCE);
 
     for (const child of children) {
       placeVertical(context, child, 1, childLeft, childY, root.id);
@@ -293,13 +293,13 @@ export function layoutDocument(
         })()
       : [{ side: meta.direction, children: visibleChildren(root) }];
 
+  const childGap = Math.max(context.gapX, CONNECTOR_CLEARANCE);
   for (const { side, children } of sides) {
     const totalHeight =
       children.reduce((sum, child) => sum + blockHeight(context, child), 0) +
       context.gapY * Math.max(0, children.length - 1);
     let childTop = meta.align === "center" ? -totalHeight / 2 : rootY;
-    const childStartX =
-      side === "right" ? rootX + rootSize.width + context.gapX : rootX - context.gapX;
+    const childStartX = side === "right" ? rootX + rootSize.width + childGap : rootX - childGap;
 
     for (const child of children) {
       const childSize = sizeOf(context, child);

@@ -46,7 +46,6 @@ describe("parseSource", () => {
     expect(document!.meta.spacingX).toBe(72);
     expect(document!.meta.spacingY).toBe(20);
     expect(document!.meta.align).toBe("start");
-    expect(document!.meta.compact).toBe(true);
     expect(document!.meta.maxWidth).toBe(300);
     expect(serializeDocument(document!).trim()).toBe(fixture("basic.expected.mindmap").trim());
   });
@@ -147,11 +146,11 @@ mindmap:
 
   it("drops legacy file-level style keys with warnings", () => {
     const result = parseSource(
-      '---\nmindmap:\n  nodeShape: pill\n  fontFamily: Georgia\n  connectorColor: "#fff"\n  lineWidth: 3\n  connectorStyle: straight\n---\n# Root\n',
+      '---\nmindmap:\n  nodeShape: pill\n  fontFamily: Georgia\n  connectorColor: "#fff"\n  lineWidth: 3\n  connectorStyle: orthogonal\n---\n# Root\n',
     );
     const record = result.document!.meta as unknown as Record<string, unknown>;
 
-    expect(result.document!.meta.connectorStyle).toBe("straight");
+    expect(result.document!.meta.connectorStyle).toBe("orthogonal");
     expect(record.nodeShape).toBeUndefined();
     expect(record.fontFamily).toBeUndefined();
     expect(record.connectorColor).toBeUndefined();
@@ -240,7 +239,7 @@ mindmap:
 
   it("falls back with warnings for invalid metadata", () => {
     const result = parseSource(
-      '---\nmindmap:\n  version: 2\n  theme: ""\n  layout: grid\n  spacingX: 999\n  spacingY: nope\n  align: middle\n  compact: yes\n  maxWidth: 10\n---\n# Root\n',
+      '---\nmindmap:\n  version: 2\n  theme: ""\n  layout: grid\n  spacingX: 999\n  spacingY: nope\n  align: middle\n  maxWidth: 10\n---\n# Root\n',
     );
     const meta = result.document!.meta;
 
@@ -250,7 +249,6 @@ mindmap:
     expect(meta.spacingX).toBe(LIMITS.spacingX.max);
     expect(meta.spacingY).toBe(DEFAULT_MINDMAP_META.spacingY);
     expect(meta.align).toBe("center");
-    expect(meta.compact).toBe(false);
     expect(meta.maxWidth).toBe(LIMITS.maxWidth.min);
   });
 });

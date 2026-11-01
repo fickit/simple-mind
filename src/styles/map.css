@@ -494,8 +494,8 @@
   z-index: 2;
   display: grid;
   place-items: center;
-  width: 20px;
-  height: 20px;
+  width: var(--sm-control-size, 20px);
+  height: var(--sm-control-size, 20px);
   padding: 0;
   border: none;
   border-radius: 50%;
@@ -516,6 +516,51 @@
 .simple-mind-add {
   font-size: 16px;
   font-weight: 500;
+}
+
+.simple-mind-collapse.is-count {
+  font-size: 10px;
+  letter-spacing: -0.02em;
+}
+
+.simple-mind-collapse::before,
+.simple-mind-add::before {
+  content: "";
+  position: absolute;
+  pointer-events: inherit;
+}
+
+.simple-mind-collapse::before,
+.simple-mind-add:not(.has-collapse)::before {
+  --sm-bridge-size: var(--sm-control-gap, 6px);
+}
+
+.simple-mind-add.has-collapse::before {
+  --sm-bridge-size: var(--sm-control-spacing, 4px);
+}
+
+.collapse-right::before,
+.add-right::before {
+  top: 0;
+  right: 100%;
+  bottom: 0;
+  width: var(--sm-bridge-size);
+}
+
+.collapse-left::before,
+.add-left::before {
+  top: 0;
+  left: 100%;
+  bottom: 0;
+  width: var(--sm-bridge-size);
+}
+
+.collapse-down::before,
+.add-down::before {
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  height: var(--sm-bridge-size);
 }
 
 .simple-mind-collapse[hidden] {
@@ -548,50 +593,56 @@
 
 .collapse-right {
   top: 50%;
-  right: -10px;
+  right: calc(-1 * (var(--sm-control-gap) + var(--sm-control-size)));
   transform: translateY(-50%);
 }
 
 .collapse-left {
   top: 50%;
-  left: -10px;
+  left: calc(-1 * (var(--sm-control-gap) + var(--sm-control-size)));
   transform: translateY(-50%);
 }
 
 .collapse-down {
-  bottom: -10px;
+  bottom: calc(-1 * (var(--sm-control-gap) + var(--sm-control-size)));
   left: 50%;
   transform: translateX(-50%);
 }
 
 .add-right {
   top: 50%;
-  right: -10px;
+  right: calc(-1 * (var(--sm-control-gap) + var(--sm-control-size)));
   transform: translateY(-50%);
 }
 
 .add-right.has-collapse {
-  right: -30px;
+  right: calc(
+    -1 *
+    (var(--sm-control-gap) + var(--sm-control-size) * 2 + var(--sm-control-spacing))
+  );
 }
 
 .add-left {
   top: 50%;
-  left: -10px;
+  left: calc(-1 * (var(--sm-control-gap) + var(--sm-control-size)));
   transform: translateY(-50%);
 }
 
 .add-left.has-collapse {
-  left: -30px;
+  left: calc(-1 * (var(--sm-control-gap) + var(--sm-control-size) * 2 + var(--sm-control-spacing)));
 }
 
 .add-down {
-  bottom: -10px;
+  bottom: calc(-1 * (var(--sm-control-gap) + var(--sm-control-size)));
   left: 50%;
   transform: translateX(-50%);
 }
 
 .add-down.has-collapse {
-  left: calc(50% + 25px);
+  bottom: calc(
+    -1 *
+    (var(--sm-control-gap) + var(--sm-control-size) * 2 + var(--sm-control-spacing))
+  );
 }
 
 .simple-mind-measure {

@@ -204,16 +204,6 @@ export class SettingsTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName(t("settings.compact"))
-      .setDesc(t("settings.compactDesc"))
-      .addToggle((toggle) =>
-        toggle.setValue(settings.defaultCompact).onChange((value) => {
-          settings.defaultCompact = value;
-          void this.persist();
-        }),
-      );
-
-    new Setting(containerEl)
       .setName(t("settings.reset"))
       .setDesc(t("settings.resetDesc"))
       .addButton((button) =>
@@ -227,7 +217,6 @@ export class SettingsTab extends PluginSettingTab {
           this.host.settings.defaultSpacingX = DEFAULT_SETTINGS.defaultSpacingX;
           this.host.settings.defaultSpacingY = DEFAULT_SETTINGS.defaultSpacingY;
           this.host.settings.defaultAlign = DEFAULT_SETTINGS.defaultAlign;
-          this.host.settings.defaultCompact = DEFAULT_SETTINGS.defaultCompact;
           this.host.settings.defaultMaxWidth = DEFAULT_SETTINGS.defaultMaxWidth;
           await this.persist();
           this.display();

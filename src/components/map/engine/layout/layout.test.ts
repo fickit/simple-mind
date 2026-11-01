@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { CONNECTOR_CLEARANCE } from "../../../../config/constants";
 import { DEFAULT_MINDMAP_META } from "../../../../config/defaults";
 import type { MindMapMeta, MindNode } from "../../../../types/mindmap";
 import { layoutDocument } from "./layout";
@@ -87,7 +88,7 @@ describe("layoutDocument", () => {
     const b = find(result, "b");
 
     expect(rootPosition.x + rootPosition.width / 2).toBeCloseTo(0);
-    expect(a.y).toBe(rootPosition.y + rootPosition.height + 18);
+    expect(a.y).toBe(rootPosition.y + rootPosition.height + CONNECTOR_CLEARANCE);
     expect(b.y).toBe(a.y);
     expect(a.x).toBeLessThan(b.x);
     expect(a.side).toBe("down");
@@ -112,14 +113,15 @@ describe("layoutDocument", () => {
     expect(result.edges).toEqual([{ parentId: "r", childId: "b", side: "right" }]);
   });
 
-  it("applies compact spacing", () => {
+  it("keeps parent-child gaps clear of node controls", () => {
     const root = node("r", "R", [node("a", "A")]);
-    const normal = layoutDocument(root, meta({ layout: "tree" }), measure);
-    const compact = layoutDocument(root, meta({ layout: "tree", compact: true }), measure);
+    const tree = layoutDocument(root, meta({ layout: "tree", spacingX: 8 }), measure);
+    const org = layoutDocument(root, meta({ layout: "org", spacingY: 4 }), measure);
+    const treeRoot = find(tree, "r");
+    const orgRoot = find(org, "r");
 
-    expect(find(compact, "a").x - find(compact, "r").x).toBeLessThan(
-      find(normal, "a").x - find(normal, "r").x,
-    );
+    expect(find(tree, "a").x - (treeRoot.x + treeRoot.width)).toBe(CONNECTOR_CLEARANCE);
+    expect(find(org, "a").y - (orgRoot.y + orgRoot.height)).toBe(CONNECTOR_CLEARANCE);
   });
 
   it("supports start alignment", () => {

@@ -112,8 +112,9 @@ Branch: `feat/core`
 - `√` Implement horizontal block layout for `tree` and `mindmap`.
 - `√` Implement the mind-map side split with height balancing while preserving order.
 - `√` Implement vertical block layout for `org`.
-- `√` Implement alignment (`center`, `start`) and compact spacing.
-- `√` Implement connector anchors and three path generators: `curve`, `orthogonal`, `straight`.
+- `√` Implement alignment (`center`, `start`) and adjustable spacing.
+- `√` Implement connector anchors and two path generators: `curve` and `orthogonal`, both starting
+  with a straight lead before branching.
 - `√` Implement bounds calculation over nodes.
 - `√` Add `README.md` for the layout module.
 - `√` Unit tests with injected measurements for all modes, collapse, spacing, alignment, and bounds.
@@ -165,8 +166,8 @@ Branch: `feat/core`
 - `√` Implement Tab/Shift+Tab/Enter/Delete/F2 shortcuts; Enter/Tab in the editor commit and continue
   with a sibling/child; Space is reserved for text input and the collapse shortcut is deferred.
 - `√` New nodes open as empty single-line editors with a default width and no placeholder.
-- `√` Add a two-tab style panel. Style: theme, layout, alignment, compact mode, and connector shape
-  for the file; node shape, fill, border color, and border width for the selected node. Text: font
+- `√` Add a two-tab style panel. Style: theme, layout, alignment, and connector shape for the file;
+  node shape, fill, border color, and border width for the selected node. Text: font
   family and size, text color, bold, italic, underline, alignment, and line height for the selected
   node.
 - `√` Keep horizontal gap, vertical gap, and maximum node width in plugin settings. Add global
@@ -177,14 +178,18 @@ Branch: `feat/core`
   the effective color in each color control and let reset remove the override.
 - `√` Keep connector shape per file, and disable node/text controls until a node is selected.
 - `√` Drop legacy file-level node/text style keys with a warning.
-- `√` Hide collapse and add controls until hover or selection; align collapse controls to connector
-  junctions, use rounded chevrons, and keep collapsed chevrons visible.
+- `√` Hide collapse and add controls until hover or selection; align controls to connector junctions
+  with an 8 px gap and use rounded chevrons.
 - `√` Color control backgrounds from the branch connector color with a contrasting glyph.
 - `√` Add floating `+` buttons outside the collapse controls per layout side: tree direction,
-  organization downward, mind-map root both sides, and branch nodes only their own side.
+  organization downward, mind-map root both sides, and branch nodes only their own side. In the
+  organization layout the add button sits below the chevron.
 - `√` Let each mind-map root collapse control toggle only its side's children.
+- `√` Replace a collapsed chevron with a circular count bubble for hidden descendants.
 - `√` Persist the chosen root side in the node marker so a left `+` adds to the left and a right `+`
   adds to the right, and group explicitly sided branches during layout.
+- `√` Add a connector lead before branching and clamp parent-child gaps to the control clearance.
+- `√` Remove compact spacing and the straight connector style.
 - `√` Refresh maps on Obsidian light/dark changes through `css-change` plus a body-class fallback.
 - `√` Implement drag start threshold, reparent, reorder, drop indicators, and hover-to-expand.
 - `√` Implement internal clipboard, cut, copy, and paste, plus system-clipboard text fallback.
@@ -332,9 +337,10 @@ node scripts/benchmark.mjs
 - Phase 5 interaction: selection, inline editing, live reflow, add/delete, drag-and-drop, clipboard,
   undo/redo, and source serialization are implemented and tested. The Style/Text panel edits the
   selected node through inline metadata; connector shape stays per file, while connector color and
-  thickness are global settings. Collapse controls use connector-colored chevrons at the branch
-  junction, add buttons sit outside, each mind-map root side collapses independently, and side-aware
-  add buttons persist a branch's root side.
+  thickness are global settings. Connectors leave a lead before branching, controls sit on that lead
+  with breathing room and connector-colored backgrounds, each mind-map root side collapses
+  independently into a hidden-node count bubble, and side-aware add buttons persist a branch's root
+  side. Compact spacing and the straight connector style are removed.
 - Phase 6 themes: eight built-in themes, per-file selection, automatic light/dark switching, custom
   theme editing, import/export, and live preview are implemented.
 - Phase 7 view integration: TextFileView, source switching, status bar, commands, and new-map creation

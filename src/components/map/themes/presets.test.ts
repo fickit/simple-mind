@@ -21,7 +21,7 @@ describe("built-in themes", () => {
         expect(tokens.branch.palette.length).toBeGreaterThan(0);
         expect(tokens.typography.size).toBeGreaterThan(0);
         expect(["rounded", "pill", "underline", "plain"]).toContain(tokens.node.shape);
-        expect(["curve", "orthogonal", "straight"]).toContain(tokens.branch.style);
+        expect(["curve", "orthogonal"]).toContain(tokens.branch.style);
       }
     }
   });

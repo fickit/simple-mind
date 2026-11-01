@@ -29,6 +29,21 @@ export const CULLING_THRESHOLD = 1200;
 /** Initial inline-editor width for a new, empty node. */
 export const NEW_NODE_EDITOR_WIDTH = 120;
 
+/** Diameter of a floating node control. */
+export const NODE_CONTROL_SIZE = 20;
+
+/** Gap between a node edge and its nearest floating control. */
+export const NODE_CONTROL_GAP = 8;
+
+/** Gap between the collapse and add controls. */
+export const NODE_CONTROL_SPACING = 4;
+
+/** Distance a connector travels before branching toward its children. */
+export const CONNECTOR_LEAD = NODE_CONTROL_GAP + NODE_CONTROL_SIZE * 2 + NODE_CONTROL_SPACING;
+
+/** Minimum parent-child gap that keeps node controls clear. */
+export const CONNECTOR_CLEARANCE = CONNECTOR_LEAD + 10;
+
 /** Numeric bounds for per-file layout and style settings. */
 export const LIMITS = {
   spacingX: { min: 8, max: 240 },
