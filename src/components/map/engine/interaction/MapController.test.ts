@@ -255,7 +255,7 @@ describe("MapController", () => {
   });
 
   it("does not record a side outside the mind-map layout", () => {
-    const source = "---\nmindmap:\n  layout: tree\n---\n# Root\n- A\n";
+    const source = "---\nmindmap:\n  layout: tree-right\n---\n# Root\n- A\n";
     const { controller, document } = setup(source);
 
     const pending = controller.beginAdd("child", document.root.id, "left")!;

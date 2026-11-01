@@ -64,10 +64,8 @@ mindmap:
   version: 1
   theme: obsidian
   layout: mindmap
-  direction: right
   spacingX: 64
   spacingY: 18
-  align: center
   maxWidth: 280
 ---
 # Product plan
@@ -105,9 +103,9 @@ mindmap:
 
 ### 5.4 Layout
 
-- Three modes: mind map (root centered, branches on both sides), tree (all branches left or right),
+- Four modes: mind map (root centered, branches on both sides), tree to the right, tree to the left,
   and organization chart (root on top, branches downward).
-- Adjustable horizontal gap, vertical gap, alignment, and maximum node width.
+- Adjustable horizontal gap, vertical gap, and maximum node width.
 - Global defaults live in settings; each file can override them in frontmatter.
 - Collapsed nodes hide their descendants behind a count bubble and expand on click; the add button
   is hidden while the group is collapsed.

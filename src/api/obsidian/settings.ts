@@ -1,6 +1,9 @@
 import type { Plugin } from "obsidian";
 import { DEFAULT_SETTINGS } from "../../config/defaults";
+import type { LayoutKind } from "../../types/mindmap";
 import type { SimpleMindSettings } from "../../types/settings";
+
+const LAYOUT_KINDS: LayoutKind[] = ["mindmap", "tree-left", "tree-right", "org"];
 
 /**
  * Loads plugin settings and fills missing keys with defaults.
@@ -9,7 +12,11 @@ import type { SimpleMindSettings } from "../../types/settings";
  */
 export async function loadSettings(plugin: Plugin): Promise<SimpleMindSettings> {
   const stored = (await plugin.loadData()) as Partial<SimpleMindSettings> | null;
-  return { ...DEFAULT_SETTINGS, ...(stored ?? {}) };
+  const settings: SimpleMindSettings = { ...DEFAULT_SETTINGS, ...(stored ?? {}) };
+  if (!LAYOUT_KINDS.includes(settings.defaultLayout)) {
+    settings.defaultLayout = DEFAULT_SETTINGS.defaultLayout;
+  }
+  return settings;
 }
 
 /**

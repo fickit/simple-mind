@@ -8,15 +8,7 @@ import {
 } from "../../config/constants";
 import { DEFAULT_SETTINGS, metaFromSettings } from "../../config/defaults";
 import { t } from "../../config/i18n";
-import type {
-  BranchSide,
-  LayoutKind,
-  MindMapMeta,
-  MindNode,
-  NodeAlignment,
-  NodeStyle,
-  TreeDirection,
-} from "../../types/mindmap";
+import type { BranchSide, LayoutKind, MindMapMeta, MindNode, NodeStyle } from "../../types/mindmap";
 import type { SimpleMindSettings } from "../../types/settings";
 import type { ConnectorStyle, NodeShape, TextAlign, ThemeDefinition } from "../../types/theme";
 import { DragController, type DropPosition } from "./engine/interaction/DragController";
@@ -97,8 +89,6 @@ export class MapCanvas {
   private readonly sidebarTabs = new Map<SidebarTab, HTMLButtonElement>();
   private sidebarThemeSelect!: HTMLSelectElement;
   private sidebarLayoutSelect!: HTMLSelectElement;
-  private sidebarDirectionSelect!: HTMLSelectElement;
-  private sidebarAlignSelect!: HTMLSelectElement;
   private sidebarNodeHint!: HTMLElement;
   private sidebarTextHint!: HTMLElement;
   private sidebarNodeShapeSelect!: HTMLSelectElement;
@@ -388,30 +378,13 @@ export class MapCanvas {
       t("sidebar.layoutType"),
       [
         { value: "mindmap", label: t("settings.layout.mindmap") },
-        { value: "tree", label: t("settings.layout.tree") },
+        { value: "tree-right", label: t("settings.layout.treeRight") },
+        { value: "tree-left", label: t("settings.layout.treeLeft") },
         { value: "org", label: t("settings.layout.org") },
       ],
       (value) => this.updateMetaAndRender({ layout: value as LayoutKind }),
     );
     this.sidebarLayoutSelect.classList.add("simple-mind-sidebar-layout");
-    this.sidebarDirectionSelect = this.createSidebarSelect(
-      layoutSection,
-      t("settings.direction"),
-      [
-        { value: "right", label: t("settings.direction.right") },
-        { value: "left", label: t("settings.direction.left") },
-      ],
-      (value) => this.updateMetaAndRender({ direction: value as TreeDirection }),
-    );
-    this.sidebarAlignSelect = this.createSidebarSelect(
-      layoutSection,
-      t("settings.align"),
-      [
-        { value: "center", label: t("settings.align.center") },
-        { value: "start", label: t("settings.align.start") },
-      ],
-      (value) => this.updateMetaAndRender({ align: value as NodeAlignment }),
-    );
 
     const nodeSection = this.createSidebarSection(this.sidebarStylePane, t("sidebar.node"));
     this.sidebarNodeHint = this.createSidebarHint(nodeSection, t("sidebar.selectNode"));
@@ -729,8 +702,6 @@ export class MapCanvas {
 
     this.syncThemeOptions();
     this.sidebarLayoutSelect.value = meta?.layout ?? this.settings.defaultLayout;
-    this.sidebarDirectionSelect.value = meta?.direction ?? this.settings.defaultDirection;
-    this.sidebarAlignSelect.value = meta?.align ?? this.settings.defaultAlign;
     this.sidebarConnectorSelect.value = meta?.connectorStyle ?? "";
 
     this.sidebarNodeShapeSelect.value = style.shape ?? "";

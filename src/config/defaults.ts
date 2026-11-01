@@ -6,10 +6,8 @@ export const DEFAULT_MINDMAP_META: MindMapMeta = {
   version: 1,
   theme: "obsidian",
   layout: "mindmap",
-  direction: "right",
   spacingX: 64,
   spacingY: 18,
-  align: "center",
   maxWidth: 280,
 };
 
@@ -18,10 +16,8 @@ export const DEFAULT_SETTINGS: SimpleMindSettings = {
   language: "en",
   defaultTheme: DEFAULT_MINDMAP_META.theme,
   defaultLayout: DEFAULT_MINDMAP_META.layout,
-  defaultDirection: DEFAULT_MINDMAP_META.direction,
   defaultSpacingX: DEFAULT_MINDMAP_META.spacingX,
   defaultSpacingY: DEFAULT_MINDMAP_META.spacingY,
-  defaultAlign: DEFAULT_MINDMAP_META.align,
   defaultMaxWidth: DEFAULT_MINDMAP_META.maxWidth,
   defaultFontFamily: "",
   defaultConnectorColor: "",
@@ -40,10 +36,8 @@ export function metaFromSettings(settings: SimpleMindSettings): MindMapMeta {
     version: 1,
     theme: settings.defaultTheme,
     layout: settings.defaultLayout,
-    direction: settings.defaultDirection,
     spacingX: settings.defaultSpacingX,
     spacingY: settings.defaultSpacingY,
-    align: settings.defaultAlign,
     maxWidth: settings.defaultMaxWidth,
   };
 }

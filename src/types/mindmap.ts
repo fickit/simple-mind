@@ -1,14 +1,8 @@
 /** Supported automatic layout modes. */
-export type LayoutKind = "mindmap" | "tree" | "org";
-
-/** Horizontal direction used by the tree layout. */
-export type TreeDirection = "right" | "left";
+export type LayoutKind = "mindmap" | "tree-left" | "tree-right" | "org";
 
 /** Side of the root that owns a branch in the mind-map layout. */
 export type BranchSide = "left" | "right";
-
-/** Alignment of a parent node relative to its child block. */
-export type NodeAlignment = "center" | "start";
 
 import type { ConnectorStyle, NodeShape, TextAlign } from "./theme";
 
@@ -17,10 +11,8 @@ export interface MindMapMeta {
   version: 1;
   theme: string;
   layout: LayoutKind;
-  direction: TreeDirection;
   spacingX: number;
   spacingY: number;
-  align: NodeAlignment;
   maxWidth: number;
   connectorStyle?: ConnectorStyle;
 }

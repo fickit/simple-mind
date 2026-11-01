@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { LayoutKind } from "../types/mindmap";
 import { LIMITS } from "./constants";
 import { DEFAULT_MINDMAP_META, DEFAULT_SETTINGS, metaFromSettings } from "./defaults";
 
@@ -8,7 +9,8 @@ describe("defaults", () => {
   });
 
   it("uses a supported layout", () => {
-    expect(["mindmap", "tree", "org"]).toContain(DEFAULT_MINDMAP_META.layout);
+    const layouts: LayoutKind[] = ["mindmap", "tree-left", "tree-right", "org"];
+    expect(layouts).toContain(DEFAULT_MINDMAP_META.layout);
   });
 
   it("keeps numeric defaults inside their limits", () => {

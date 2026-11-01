@@ -6,7 +6,7 @@ import type { ThemeDefinition, ThemeTokens } from "../../../../types/theme";
 import { tokensForMode } from "../../themes/applyTheme";
 import { type NodeVisual, nodeVisual } from "../../themes/nodeVisual";
 import { toHexColor } from "../../themes/theme-utils";
-import { layoutDocument } from "../layout/layout";
+import { layoutDocument, treeSideOf } from "../layout/layout";
 import type { LayoutBounds, LayoutResult, NodeMeasurer, PositionedNode } from "../layout/types";
 import { connectorPath } from "./connectors";
 import { renderInlineMarkdown } from "./inlineMarkdown";
@@ -541,7 +541,7 @@ export class MapRenderer {
 
     if (node.children.length === 0) return [];
     if (meta.layout === "org") return ["down"];
-    return [meta.direction];
+    return [treeSideOf(meta.layout)];
   }
 
   /** Returns whether one collapse control is in its collapsed state. */
@@ -557,7 +557,7 @@ export class MapRenderer {
     const meta = this.document?.meta ?? DEFAULT_MINDMAP_META;
     if (isRoot) {
       if (meta.layout === "org") return ["down"];
-      if (meta.layout === "tree") return [meta.direction];
+      if (meta.layout !== "mindmap") return [treeSideOf(meta.layout)];
       return ["left", "right"];
     }
     if (positioned.side === "down") return ["down"];

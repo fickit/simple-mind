@@ -132,9 +132,7 @@ describe("MapCanvas", () => {
     mindmap.canvas.destroy();
     mindmap.host.remove();
 
-    const leftTree = createCanvas(
-      "---\nmindmap:\n  layout: tree\n  direction: left\n---\n# Root\n- A\n",
-    );
+    const leftTree = createCanvas("---\nmindmap:\n  layout: tree-left\n---\n# Root\n- A\n");
     const treeRoot = leftTree.host.querySelector<HTMLElement>(
       '.simple-mind-node[data-node-id="n1"]',
     )!;

@@ -109,15 +109,16 @@ Branch: `feat/core`
 
 - `√` Define the measurement interface and a DOM-based measurer with a cache.
 - `√` Implement collapse-aware tree preparation.
-- `√` Implement horizontal block layout for `tree` and `mindmap`.
+- `√` Implement horizontal block layout for `tree-*` and `mindmap`.
 - `√` Implement the mind-map side split with height balancing while preserving order.
 - `√` Implement vertical block layout for `org`.
-- `√` Implement alignment (`center`, `start`) and adjustable spacing.
+- `√` Implement adjustable spacing.
+- `x` Drop the parent alignment option; a parent always centers on its child block.
 - `√` Implement connector anchors and two path generators: `curve` and `orthogonal`, both starting
   with a straight lead before branching.
 - `√` Implement bounds calculation over nodes.
 - `√` Add `README.md` for the layout module.
-- `√` Unit tests with injected measurements for all modes, collapse, spacing, alignment, and bounds.
+- `√` Unit tests with injected measurements for all modes, collapse, spacing, and bounds.
 - `√` Verify: `npm run typecheck && npm run test -- layout`.
 - `√` Commit the core checkpoint after the renderer is wired.
 
@@ -166,7 +167,7 @@ Branch: `feat/core`
 - `√` Implement Tab/Shift+Tab/Enter/Delete/F2 shortcuts; Enter/Tab in the editor commit and continue
   with a sibling/child; Space is reserved for text input and the collapse shortcut is deferred.
 - `√` New nodes open as empty single-line editors with a default width and no placeholder.
-- `√` Add a two-tab style panel. Style: theme, layout, alignment, and connector shape for the file;
+- `√` Add a two-tab style panel. Style: theme, layout, and connector shape for the file;
   node shape, fill, border color, and border width for the selected node. Text: font
   family and size, text color, bold, italic, underline, alignment, and line height for the selected
   node.
@@ -181,7 +182,7 @@ Branch: `feat/core`
 - `√` Hide collapse and add controls until hover or selection; line them up along the connector with
   the chevron first, 8 px from the node, and the add button outside, using rounded chevrons.
 - `√` Color control backgrounds from the branch connector color with a contrasting glyph.
-- `√` Add floating `+` buttons per layout side: tree direction, organization downward, mind-map root
+- `√` Add floating `+` buttons per layout side: tree side, organization downward, mind-map root
   both sides, and branch nodes only their own side.
 - `√` Let each mind-map root collapse control toggle only its side's children.
 - `√` Replace a collapsed chevron with a centered circular count bubble and hide the add button
@@ -190,6 +191,9 @@ Branch: `feat/core`
   adds to the right, and group explicitly sided branches during layout.
 - `√` Add a connector lead before branching and clamp parent-child gaps to the control clearance.
 - `√` Remove compact spacing and the straight connector style.
+- `√` Draw curved connectors as one sweep so the line leaves the node without a straight stub.
+- `√` Fold the tree direction into the layout type (`tree-left` / `tree-right`) and drop the alignment
+  option from the panel, the settings, and the frontmatter.
 - `√` Refresh maps on Obsidian light/dark changes through `css-change` plus a body-class fallback.
 - `√` Implement drag start threshold, reparent, reorder, drop indicators, and hover-to-expand.
 - `√` Implement internal clipboard, cut, copy, and paste, plus system-clipboard text fallback.
@@ -331,15 +335,17 @@ node scripts/benchmark.mjs
 - Phase 0 scaffold: complete; verification is green.
 - Phase 1 view spike: custom view opens; source switching still needs a manual round-trip check.
 - Phase 2 core document: parser, serializer, and history complete; command controller is next.
-- Phase 3 layout: complete for mindmap, tree, and org.
+- Phase 3 layout: complete for mindmap, tree left/right, and org.
 - Phase 4 renderer: canvas, themes, pan/zoom, collapse, and inline Markdown complete; visual demo
   passed in light and dark mode. rAF batching and culling remain performance tasks.
 - Phase 5 interaction: selection, inline editing, live reflow, add/delete, drag-and-drop, clipboard,
   undo/redo, and source serialization are implemented and tested. The Style/Text panel edits the
   selected node through inline metadata; connector shape stays per file, while connector color and
-  thickness are global settings. Curved connectors sweep out of the parent without a straight stub,
-  the collapse chevron sits on the line bundle and the add button between the child lines, collapsed groups become count
-  bubbles and lose the add button, and side-aware add buttons persist a branch's root side. Compact
+  thickness are global settings. The layout picker offers mind map, tree left, tree right, and
+  organization chart, and no longer exposes a tree direction or an alignment option. Curved
+  connectors sweep out of the parent without a straight stub, the collapse chevron sits on the line
+  bundle and the add button between the child lines, collapsed groups become count bubbles and lose
+  the add button, and side-aware add buttons persist a branch's root side. Compact
   spacing and the straight connector style are removed.
 - Phase 6 themes: eight built-in themes, per-file selection, automatic light/dark switching, custom
   theme editing, import/export, and live preview are implemented.

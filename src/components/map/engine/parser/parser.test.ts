@@ -41,11 +41,9 @@ describe("parseSource", () => {
         },
       ],
     });
-    expect(document!.meta.layout).toBe("tree");
-    expect(document!.meta.direction).toBe("left");
+    expect(document!.meta.layout).toBe("tree-left");
     expect(document!.meta.spacingX).toBe(72);
     expect(document!.meta.spacingY).toBe(20);
-    expect(document!.meta.align).toBe("start");
     expect(document!.meta.maxWidth).toBe(300);
     expect(serializeDocument(document!).trim()).toBe(fixture("basic.expected.mindmap").trim());
   });
@@ -248,7 +246,6 @@ mindmap:
     expect(meta.layout).toBe("mindmap");
     expect(meta.spacingX).toBe(LIMITS.spacingX.max);
     expect(meta.spacingY).toBe(DEFAULT_MINDMAP_META.spacingY);
-    expect(meta.align).toBe("center");
     expect(meta.maxWidth).toBe(LIMITS.maxWidth.min);
   });
 });

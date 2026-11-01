@@ -15,10 +15,8 @@ mindmap:
   version: 1
   theme: obsidian
   layout: mindmap
-  direction: right
   spacingX: 64
   spacingY: 18
-  align: center
   maxWidth: 280
 ---
 # Product plan
@@ -34,7 +32,7 @@ The file opens as a map. The Source action switches the same tab to Obsidian's n
 
 ## Target features
 
-- Three layouts: mind map, tree, and organization chart.
+- Four layouts: mind map, tree to the right, tree to the left, and organization chart.
 - Direct editing: add, edit, delete, collapse, drag, copy/paste, undo, and redo.
 - Eight built-in themes with automatic light/dark switching and a custom theme editor.
 - A Style/Text panel that styles the selected node; connector shape per map, connector color and

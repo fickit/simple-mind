@@ -27,7 +27,7 @@ function meta(overrides: Partial<MindMapMeta> = {}): MindMapMeta {
 describe("layoutDocument", () => {
   it("lays out a right-facing tree with the root centered", () => {
     const root = node("r", "R", [node("a", "A"), node("b", "B"), node("c", "C")]);
-    const result = layoutDocument(root, meta({ layout: "tree" }), measure);
+    const result = layoutDocument(root, meta({ layout: "tree-right" }), measure);
     const rootPosition = find(result, "r");
     const a = find(result, "a");
     const b = find(result, "b");
@@ -43,7 +43,7 @@ describe("layoutDocument", () => {
 
   it("lays out a left-facing tree", () => {
     const root = node("r", "R", [node("a", "A")]);
-    const result = layoutDocument(root, meta({ layout: "tree", direction: "left" }), measure);
+    const result = layoutDocument(root, meta({ layout: "tree-left" }), measure);
     const rootPosition = find(result, "r");
     const a = find(result, "a");
 
@@ -98,7 +98,7 @@ describe("layoutDocument", () => {
   it("omits children of collapsed single-sided nodes", () => {
     const root = node("r", "R", [node("a", "A", [node("a1", "A1")])]);
     root.collapsed = true;
-    const result = layoutDocument(root, meta({ layout: "tree" }), measure);
+    const result = layoutDocument(root, meta({ layout: "tree-right" }), measure);
 
     expect(result.nodes.map((item) => item.node.id)).toEqual(["r"]);
     expect(result.edges).toEqual([]);
@@ -115,22 +115,13 @@ describe("layoutDocument", () => {
 
   it("keeps parent-child gaps clear of node controls", () => {
     const root = node("r", "R", [node("a", "A")]);
-    const tree = layoutDocument(root, meta({ layout: "tree", spacingX: 8 }), measure);
+    const tree = layoutDocument(root, meta({ layout: "tree-right", spacingX: 8 }), measure);
     const org = layoutDocument(root, meta({ layout: "org", spacingY: 4 }), measure);
     const treeRoot = find(tree, "r");
     const orgRoot = find(org, "r");
 
     expect(find(tree, "a").x - (treeRoot.x + treeRoot.width)).toBe(CONNECTOR_CLEARANCE);
     expect(find(org, "a").y - (orgRoot.y + orgRoot.height)).toBe(CONNECTOR_CLEARANCE);
-  });
-
-  it("supports start alignment", () => {
-    const root = node("r", "R", [node("a", "A"), node("b", "B")]);
-    const result = layoutDocument(root, meta({ layout: "tree", align: "start" }), measure);
-    const rootPosition = find(result, "r");
-    const a = find(result, "a");
-
-    expect(a.y).toBe(rootPosition.y);
   });
 
   it("computes bounds over all visible nodes", () => {

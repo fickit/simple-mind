@@ -2,7 +2,7 @@ import { type App, Modal, Notice, type Plugin, PluginSettingTab, Setting } from 
 import { LIMITS } from "../../config/constants";
 import { DEFAULT_SETTINGS } from "../../config/defaults";
 import { setLanguage, t } from "../../config/i18n";
-import type { LayoutKind, NodeAlignment, TreeDirection } from "../../types/mindmap";
+import type { LayoutKind } from "../../types/mindmap";
 import type { Language, SimpleMindSettingsHost } from "../../types/settings";
 import type { ThemeDefinition } from "../../types/theme";
 import { BUILT_IN_THEMES, createObsidianCustomTheme } from "../map/themes/presets";
@@ -127,39 +127,12 @@ export class SettingsTab extends PluginSettingTab {
       .addDropdown((dropdown) =>
         dropdown
           .addOption("mindmap", t("settings.layout.mindmap"))
-          .addOption("tree", t("settings.layout.tree"))
+          .addOption("tree-right", t("settings.layout.treeRight"))
+          .addOption("tree-left", t("settings.layout.treeLeft"))
           .addOption("org", t("settings.layout.org"))
           .setValue(settings.defaultLayout)
           .onChange((value) => {
             settings.defaultLayout = value as LayoutKind;
-            void this.persist();
-          }),
-      );
-
-    new Setting(containerEl)
-      .setName(t("settings.direction"))
-      .setDesc(t("settings.directionDesc"))
-      .addDropdown((dropdown) =>
-        dropdown
-          .addOption("right", t("settings.direction.right"))
-          .addOption("left", t("settings.direction.left"))
-          .setValue(settings.defaultDirection)
-          .onChange((value) => {
-            settings.defaultDirection = value as TreeDirection;
-            void this.persist();
-          }),
-      );
-
-    new Setting(containerEl)
-      .setName(t("settings.align"))
-      .setDesc(t("settings.alignDesc"))
-      .addDropdown((dropdown) =>
-        dropdown
-          .addOption("center", t("settings.align.center"))
-          .addOption("start", t("settings.align.start"))
-          .setValue(settings.defaultAlign)
-          .onChange((value) => {
-            settings.defaultAlign = value as NodeAlignment;
             void this.persist();
           }),
       );
@@ -213,10 +186,8 @@ export class SettingsTab extends PluginSettingTab {
           this.host.settings.defaultConnectorColor = DEFAULT_SETTINGS.defaultConnectorColor;
           this.host.settings.defaultLineWidth = DEFAULT_SETTINGS.defaultLineWidth;
           this.host.settings.defaultLayout = DEFAULT_SETTINGS.defaultLayout;
-          this.host.settings.defaultDirection = DEFAULT_SETTINGS.defaultDirection;
           this.host.settings.defaultSpacingX = DEFAULT_SETTINGS.defaultSpacingX;
           this.host.settings.defaultSpacingY = DEFAULT_SETTINGS.defaultSpacingY;
-          this.host.settings.defaultAlign = DEFAULT_SETTINGS.defaultAlign;
           this.host.settings.defaultMaxWidth = DEFAULT_SETTINGS.defaultMaxWidth;
           await this.persist();
           this.display();

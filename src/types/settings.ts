@@ -1,4 +1,4 @@
-import type { LayoutKind, NodeAlignment, TreeDirection } from "./mindmap";
+import type { LayoutKind } from "./mindmap";
 import type { ThemeDefinition } from "./theme";
 
 /** UI language codes supported by the plugin. */
@@ -9,10 +9,8 @@ export interface SimpleMindSettings {
   language: Language;
   defaultTheme: string;
   defaultLayout: LayoutKind;
-  defaultDirection: TreeDirection;
   defaultSpacingX: number;
   defaultSpacingY: number;
-  defaultAlign: NodeAlignment;
   defaultMaxWidth: number;
   defaultFontFamily: string;
   defaultConnectorColor: string;

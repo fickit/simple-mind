@@ -207,20 +207,10 @@ export function parseMeta(
       case "layout":
         meta.layout = readEnum(
           value,
-          ["mindmap", "tree", "org"] as const,
+          ["mindmap", "tree-left", "tree-right", "org"] as const,
           meta.layout,
           lineNumber,
           "layout",
-          warnings,
-        );
-        break;
-      case "direction":
-        meta.direction = readEnum(
-          value,
-          ["right", "left"] as const,
-          meta.direction,
-          lineNumber,
-          "direction",
           warnings,
         );
         break;
@@ -246,20 +236,12 @@ export function parseMeta(
           warnings,
         );
         break;
+      case "compact":
       case "align":
-        meta.align = readEnum(
-          value,
-          ["center", "start"] as const,
-          meta.align,
-          lineNumber,
-          "align",
-          warnings,
-        );
-        break;
-      case "compact": {
+      case "direction": {
         warnings.push({
           line: lineNumber,
-          message: "compact is no longer supported; this file-level value is ignored.",
+          message: `${key} is no longer supported; this file-level value is ignored.`,
         });
         break;
       }
@@ -352,10 +334,8 @@ export function renderFrontmatter(
     "  version: 1",
     `  theme: ${writeScalar(meta.theme)}`,
     `  layout: ${meta.layout}`,
-    `  direction: ${meta.direction}`,
     `  spacingX: ${meta.spacingX}`,
     `  spacingY: ${meta.spacingY}`,
-    `  align: ${meta.align}`,
     `  maxWidth: ${meta.maxWidth}`,
     ...optionalLines,
     ...extraLines,

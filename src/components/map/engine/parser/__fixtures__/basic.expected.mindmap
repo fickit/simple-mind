@@ -5,11 +5,9 @@ aliases:
 mindmap:
   version: 1
   theme: obsidian
-  layout: tree
-  direction: left
+  layout: tree-left
   spacingX: 72
   spacingY: 20
-  align: start
   maxWidth: 300
   customKey: keep-me
 ---

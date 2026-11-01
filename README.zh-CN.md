@@ -14,10 +14,8 @@ mindmap:
   version: 1
   theme: obsidian
   layout: mindmap
-  direction: right
   spacingX: 64
   spacingY: 18
-  align: center
   maxWidth: 280
 ---
 # 产品计划
@@ -33,7 +31,7 @@ mindmap:
 
 ## 目标功能
 
-- 三种布局：思维导图、树图、组织架构图。
+- 四种布局：思维导图、向右树图、向左树图、组织架构图。
 - 直接编辑：新增、修改、删除、折叠、拖拽、复制粘贴、撤销和重做。
 - 8 套内置主题，跟随 Obsidian 明暗切换，并支持自定义主题编辑器。
 - “样式 / 文本”面板作用于选中节点；连线形状按导图设置，连线的颜色和粗细在设置页配置。

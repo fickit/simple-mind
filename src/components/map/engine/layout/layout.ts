@@ -1,5 +1,5 @@
 import { CONNECTOR_CLEARANCE } from "../../../../config/constants";
-import type { MindMapMeta, MindNode } from "../../../../types/mindmap";
+import type { BranchSide, LayoutKind, MindMapMeta, MindNode } from "../../../../types/mindmap";
 import type {
   EdgeLayout,
   LayoutBounds,
@@ -8,6 +8,11 @@ import type {
   NodeSize,
   PositionedNode,
 } from "./types";
+
+/** Returns the side a tree layout grows toward. */
+export function treeSideOf(layout: LayoutKind): BranchSide {
+  return layout === "tree-left" ? "left" : "right";
+}
 
 interface LayoutContext {
   measure: NodeMeasurer;
@@ -92,7 +97,7 @@ function placeHorizontal(
     children.reduce((sum, child) => sum + blockHeight(context, child), 0) +
     context.gapY * Math.max(0, children.length - 1);
   const centerY = blockTop + height / 2;
-  const nodeY = context.meta.align === "center" ? centerY - size.height / 2 : blockTop;
+  const nodeY = centerY - size.height / 2;
 
   context.nodes.push({
     node,
@@ -105,7 +110,7 @@ function placeHorizontal(
     parentId,
   });
 
-  let childTop = context.meta.align === "center" ? centerY - totalChildrenHeight / 2 : blockTop;
+  let childTop = centerY - totalChildrenHeight / 2;
   const childGap = Math.max(context.gapX, CONNECTOR_CLEARANCE);
   for (const child of children) {
     const childSize = sizeOf(context, child);
@@ -132,7 +137,7 @@ function placeVertical(
     children.reduce((sum, child) => sum + blockWidth(context, child), 0) +
     context.gapX * Math.max(0, children.length - 1);
   const centerX = blockLeft + width / 2;
-  const nodeX = context.meta.align === "center" ? centerX - size.width / 2 : blockLeft;
+  const nodeX = centerX - size.width / 2;
 
   context.nodes.push({
     node,
@@ -145,7 +150,7 @@ function placeVertical(
     parentId,
   });
 
-  let childLeft = context.meta.align === "center" ? centerX - totalChildrenWidth / 2 : blockLeft;
+  let childLeft = centerX - totalChildrenWidth / 2;
   const childY = y + size.height + Math.max(context.gapY, CONNECTOR_CLEARANCE);
   for (const child of children) {
     placeVertical(context, child, depth + 1, childLeft, childY, node.id);
@@ -266,7 +271,7 @@ export function layoutDocument(
     const totalWidth =
       children.reduce((sum, child) => sum + blockWidth(context, child), 0) +
       context.gapX * Math.max(0, children.length - 1);
-    let childLeft = meta.align === "center" ? -totalWidth / 2 : rootX;
+    let childLeft = -totalWidth / 2;
     const childY = rootY + rootSize.height + Math.max(context.gapY, CONNECTOR_CLEARANCE);
 
     for (const child of children) {
@@ -291,14 +296,14 @@ export function layoutDocument(
             { side: "right", children: root.collapsedRight ? [] : split.right },
           ];
         })()
-      : [{ side: meta.direction, children: visibleChildren(root) }];
+      : [{ side: treeSideOf(meta.layout), children: visibleChildren(root) }];
 
   const childGap = Math.max(context.gapX, CONNECTOR_CLEARANCE);
   for (const { side, children } of sides) {
     const totalHeight =
       children.reduce((sum, child) => sum + blockHeight(context, child), 0) +
       context.gapY * Math.max(0, children.length - 1);
-    let childTop = meta.align === "center" ? -totalHeight / 2 : rootY;
+    let childTop = -totalHeight / 2;
     const childStartX = side === "right" ? rootX + rootSize.width + childGap : rootX - childGap;
 
     for (const child of children) {

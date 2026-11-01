@@ -7,13 +7,13 @@ Turns a parsed tree and measured node sizes into world-space positions, connecto
 ## Why it exists
 
 Layout is pure and independent from the DOM renderer. Injected measurements keep it testable and make
-the three map modes share the same block-placement rules.
+the map modes share the same block-placement rules.
 
 ## Files
 
 - `types.ts`: node sizes, measurer contract, positioned nodes, edges, and bounds.
 - `layout.ts`: horizontal mindmap/tree layout, vertical organization layout, collapse handling,
-  side balancing, control clearance, and alignment.
+  side balancing, and control clearance.
 
 ## Call flow
 

@@ -60,20 +60,16 @@ mindmap:
   version: 1
   theme: obsidian
   layout: mindmap
-  direction: right
   spacingX: 64
   spacingY: 18
-  align: center
   maxWidth: 280
 ```
 
 - `version`: format version. v1 only.
 - `theme`: id of a built-in or custom theme.
-- `layout`: `mindmap`, `tree`, or `org`.
-- `direction`: `right` or `left`; used only by `tree`.
+- `layout`: `mindmap`, `tree-right`, `tree-left`, or `org`.
 - `spacingX`: horizontal gap in CSS pixels; clamped to 8-240.
 - `spacingY`: vertical gap in CSS pixels; clamped to 4-120.
-- `align`: `center` or `start`; controls parent alignment relative to its child block.
 - `maxWidth`: maximum node width; clamped to 120-600.
 - Optional `connectorStyle` (`curve` or `orthogonal`) for the whole map.
 
@@ -170,18 +166,14 @@ lines, list marker style, and indentation width is normalized. This is documente
 ## 4. Data model and interfaces
 
 ```ts
-type LayoutKind = 'mindmap' | 'tree' | 'org';
-type TreeDirection = 'right' | 'left';
-type NodeAlignment = 'center' | 'start';
+type LayoutKind = 'mindmap' | 'tree-right' | 'tree-left' | 'org';
 
 interface MindMapMeta {
   version: 1;
   theme: string;
   layout: LayoutKind;
-  direction: TreeDirection;
   spacingX: number;
   spacingY: number;
-  align: NodeAlignment;
   maxWidth: number;
   connectorStyle?: ConnectorStyle;
 }
@@ -286,15 +278,13 @@ does not contribute its children to layout. The layout result contains only visi
 
 ### 6.3 Block layout
 
-For horizontal layouts (`mindmap`, `tree`):
+For horizontal layouts (`mindmap`, `tree-right`, `tree-left`):
 
 - Compute each subtree block height as
   `max(nodeHeight, sum(childBlockHeights) + spacingY * (childCount - 1))`.
 - Place children in a vertical column. Child blocks are stacked with `spacingY`.
-- Place the parent at `parentX`, and align its center to the child block center when
-  `align = center`, or to the block start when `align = start`.
-- Place children at `parentX + parentWidth + spacingX` for right-facing layout, mirrored for
-  left-facing layout.
+- Place the parent at `parentX`, centered on its child block.
+- Place children at `parentX + parentWidth + spacingX` for `tree-right`, mirrored for `tree-left`.
 
 For the vertical layout (`org`):
 
@@ -316,7 +306,7 @@ Each node exposes four anchors: left, right, top, and bottom center. The parent 
 depend on layout and side:
 
 - Mind map: horizontal anchors on the correct side.
-- Tree: right/left anchors.
+- Tree: anchors on the side the layout grows toward.
 - Org: bottom parent anchor to top child anchors.
 
 The theme selects a connector style:
@@ -333,7 +323,6 @@ which keeps the button inside the fan of child lines. Sibling gaps keep using th
 
 - `spacingX`: horizontal gap; parent-child horizontal gaps are clamped to the control clearance.
 - `spacingY`: vertical gap; parent-child vertical gaps are clamped to the control clearance.
-- `align`: parent alignment relative to its child block.
 - `maxWidth`: node wrapping width.
 
 ## 7. Renderer
@@ -612,7 +601,7 @@ Each theme provides both light and dark tokens. The active variant is selected b
 
 The map view includes a right-side style panel with two tabs:
 
-- **Style**: theme, layout type, tree direction, parent alignment, and connector shape for the file;
+- **Style**: theme, layout type, and connector shape for the file;
   node shape, fill, border color, and border width for the selected node.
 - **Text**: font family and size; text color, bold, italic, underline, text alignment, and line
   height for the selected node.
@@ -650,7 +639,7 @@ beneath per-node overrides and per-file connector shape.
   for contrast. When a side has several branches, the first one supplies the color.
 - A mind-map root gets one collapse control per side, and each control toggles only that side's
   children. Other nodes have a single collapse control.
-- Floating `+` buttons follow the layout: a tree uses its direction, an organization chart adds
+- Floating `+` buttons follow the layout: a tree uses its own side, an organization chart adds
   downward, the mind-map root shows both left and right, and a branch node shows only its own side.
 - Clicking a root-side `+` pins the new branch to that side by writing `side` into the node marker.
   Layout groups explicitly sided branches first and balances branches without a side.
@@ -722,7 +711,7 @@ exact budget is confirmed by the first benchmark run rather than assumed.
   labels, line numbers.
 - Serializer: canonical output, roundtrip, frontmatter preservation, unknown keys.
 - Inline Markdown: bold, italic, strikethrough, code, links, escapes, and XSS attempts.
-- Layout: all three modes, side balancing, collapse, spacing, alignment, variable sizes with injected
+- Layout: all four kinds, side balancing, collapse, spacing, variable sizes with injected
   measurements.
 - History: undo/redo, coalescing, bounded stack.
 - Themes: token resolution, light/dark selection, import validation, unknown theme fallback.
