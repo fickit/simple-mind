@@ -44,7 +44,7 @@ export const NODE_CONTROL_CENTER = NODE_CONTROL_GAP + NODE_CONTROL_SIZE / 2;
 /** Distance from a node edge to the outer edge of its farthest floating control. */
 export const NODE_CONTROL_EXTENT = NODE_CONTROL_GAP + NODE_CONTROL_SIZE * 2 + NODE_CONTROL_SPACING;
 
-/** Distance a connector travels before branching toward its children. */
+/** Distance an orthogonal connector travels before elbowing toward its children. */
 export const CONNECTOR_LEAD = NODE_CONTROL_CENTER;
 
 /** Minimum parent-child gap that keeps node controls clear. */

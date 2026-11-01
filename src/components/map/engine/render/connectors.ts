@@ -55,19 +55,22 @@ export function connectorPath(
   const { source, target } = anchors(parent, child, side);
 
   if (side === "down") {
-    const branchY = Math.min(source.y + CONNECTOR_LEAD, target.y - 2);
     if (style === "orthogonal") {
+      const branchY = Math.min(source.y + CONNECTOR_LEAD, target.y - 2);
       return `M ${round(source.x)} ${round(source.y)} V ${round(branchY)} H ${round(target.x)} V ${round(target.y)}`;
     }
-    return `M ${round(source.x)} ${round(source.y)} V ${round(branchY)} C ${round(source.x)} ${round(branchY)} ${round(target.x)} ${round(branchY)} ${round(target.x)} ${round(target.y)}`;
+    const midY = (source.y + target.y) / 2;
+    return `M ${round(source.x)} ${round(source.y)} C ${round(source.x)} ${round(midY)} ${round(target.x)} ${round(midY)} ${round(target.x)} ${round(target.y)}`;
   }
 
-  const branchX =
-    side === "right"
-      ? Math.min(source.x + CONNECTOR_LEAD, target.x - 2)
-      : Math.max(source.x - CONNECTOR_LEAD, target.x + 2);
   if (style === "orthogonal") {
+    const branchX =
+      side === "right"
+        ? Math.min(source.x + CONNECTOR_LEAD, target.x - 2)
+        : Math.max(source.x - CONNECTOR_LEAD, target.x + 2);
     return `M ${round(source.x)} ${round(source.y)} H ${round(branchX)} V ${round(target.y)} H ${round(target.x)}`;
   }
-  return `M ${round(source.x)} ${round(source.y)} H ${round(branchX)} C ${round(branchX)} ${round(source.y)} ${round(branchX)} ${round(target.y)} ${round(target.x)} ${round(target.y)}`;
+
+  const midX = (source.x + target.x) / 2;
+  return `M ${round(source.x)} ${round(source.y)} C ${round(midX)} ${round(source.y)} ${round(midX)} ${round(target.y)} ${round(target.x)} ${round(target.y)}`;
 }

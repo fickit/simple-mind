@@ -337,8 +337,8 @@ node scripts/benchmark.mjs
 - Phase 5 interaction: selection, inline editing, live reflow, add/delete, drag-and-drop, clipboard,
   undo/redo, and source serialization are implemented and tested. The Style/Text panel edits the
   selected node through inline metadata; connector shape stays per file, while connector color and
-  thickness are global settings. Connectors branch at the collapse chevron, the add button sits between
-  the child lines beyond that fork, collapsed groups become count
+  thickness are global settings. Curved connectors sweep out of the parent without a straight stub,
+  the collapse chevron sits on the line bundle and the add button between the child lines, collapsed groups become count
   bubbles and lose the add button, and side-aware add buttons persist a branch's root side. Compact
   spacing and the straight connector style are removed.
 - Phase 6 themes: eight built-in themes, per-file selection, automatic light/dark switching, custom

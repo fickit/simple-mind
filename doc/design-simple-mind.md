@@ -321,13 +321,13 @@ depend on layout and side:
 
 The theme selects a connector style:
 
-- `curve`: leaves the parent along a straight lead, then uses a cubic Bezier to the child.
-- `orthogonal`: leaves the parent along the same lead, then uses elbows to the child.
+- `curve`: one cubic Bezier from parent to child whose handles lie on the exit direction, so the line
+  leaves the node flat and bends without a visible joint.
+- `orthogonal`: walks out along that direction, then elbows to the child.
 
-The lead ends at the collapse control, so the line walks out of the node and branches exactly where the
-chevron sits. The add control is placed beyond that fork and the parent-child gap is clamped so children
-start past it, which keeps the button inside the fan of child lines. Sibling gaps keep using the
-configured spacing.
+The elbow sits at the collapse control, so an orthogonal line branches exactly where the chevron is.
+The add control is placed further out and the parent-child gap is clamped so children start past it,
+which keeps the button inside the fan of child lines. Sibling gaps keep using the configured spacing.
 
 ### 6.5 Parameters
 
@@ -639,9 +639,9 @@ beneath per-node overrides and per-file connector shape.
 ### 11.2.3 Node controls
 
 - Collapse and add controls stay invisible until a node is hovered or selected.
-- Controls line up along the connector: the collapse chevron sits on the fork, 8 px away from the node
-  where the child lines branch, and the add button sits beyond the fork between those lines. In the
-  organization layout the same order runs downward.
+- Controls line up along the connector: the collapse chevron sits 8 px away from the node, on the
+  bundle of child lines and on the orthogonal elbow, and the add button sits beyond it between those
+  lines. In the organization layout the same order runs downward.
 - Controls use rounded chevrons: a right-side node shows `‹` to collapse and `›` to expand; a
   left-side node is mirrored. Organization charts use `⌃` and `⌄`.
 - When a group is collapsed, its control becomes a circular count bubble showing how many descendants

@@ -22,12 +22,12 @@ function node(id: string, x: number, y: number, width: number, height: number): 
 }
 
 describe("connectorPath", () => {
-  it("branches at the collapse control and keeps children past the add control", () => {
+  it("elbows at the collapse control and keeps children past the add control", () => {
     expect(CONNECTOR_LEAD).toBe(NODE_CONTROL_CENTER);
     expect(CONNECTOR_CLEARANCE).toBeGreaterThan(NODE_CONTROL_EXTENT);
   });
 
-  it("walks out of the parent before branching on horizontal sides", () => {
+  it("elbows at the lead on horizontal sides and curves as one sweep", () => {
     const parent = node("p", 0, 0, 100, 40);
     const child = node("c", 160, 80, 100, 40);
 
@@ -36,11 +36,11 @@ describe("connectorPath", () => {
       `M 100 20 H ${branchX} V 100 H 160`,
     );
     expect(connectorPath(parent, child, "right", "curve")).toBe(
-      `M 100 20 H ${branchX} C ${branchX} 20 ${branchX} 100 160 100`,
+      "M 100 20 C 130 20 130 100 160 100",
     );
   });
 
-  it("walks down from the parent before branching in organization charts", () => {
+  it("elbows downward in organization charts and curves as one sweep", () => {
     const parent = node("p", 0, 0, 100, 40);
     const child = node("c", 60, 100, 100, 40);
 
@@ -48,8 +48,6 @@ describe("connectorPath", () => {
     expect(connectorPath(parent, child, "down", "orthogonal")).toBe(
       `M 50 40 V ${branchY} H 110 V 100`,
     );
-    expect(connectorPath(parent, child, "down", "curve")).toBe(
-      `M 50 40 V ${branchY} C 50 ${branchY} 110 ${branchY} 110 100`,
-    );
+    expect(connectorPath(parent, child, "down", "curve")).toBe("M 50 40 C 50 70 110 70 110 100");
   });
 });
