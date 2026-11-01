@@ -160,6 +160,8 @@ Branch: `feat/core`
 
 - `√` Implement selection, canvas focus, and spatial arrow-key navigation.
 - `√` Implement the inline input editor with Enter/Escape/blur behavior and IME composition handling.
+- `√` Reflow the tree with the live editor size on animation frames so children move and connectors
+  stay attached while typing.
 - `√` Implement Tab/Shift+Tab/Enter/Delete/F2/Space shortcuts.
 - `-` Implement drag start threshold, reparent, reorder, drop indicators, and hover-to-expand.
 - `-` Implement internal clipboard, cut, copy, and paste.
@@ -302,8 +304,8 @@ node scripts/benchmark.mjs
 - Phase 3 layout: complete for mindmap, tree, and org.
 - Phase 4 renderer: canvas, themes, pan/zoom, collapse, and inline Markdown complete; visual demo
   passed in light and dark mode. rAF batching and culling remain performance tasks.
-- Phase 5 interaction: selection, inline editing, add/delete, undo/redo, and source serialization are
-  implemented and tested; drag and clipboard are next.
+- Phase 5 interaction: selection, inline editing, live reflow, add/delete, undo/redo, and source
+  serialization are implemented and tested; drag and clipboard are next.
 - Next: manual editing verification, then drag/clipboard and commands on `feat/core`.
 - Test vault: created with a sample map.
 - Author metadata: `fickit`; repository URL still pending.

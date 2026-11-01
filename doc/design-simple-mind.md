@@ -368,11 +368,15 @@ The inline editor is a `textarea` positioned inside the world layer at the node'
 is inside the world layer, it inherits the current zoom transform.
 
 - It uses the raw label text, not the rendered inline Markdown.
-- It auto-sizes to the node width and content.
+- It auto-sizes to the longest content line, capped by `maxWidth`, and grows vertically when the text
+  wraps. The editor's live rectangle temporarily replaces the node's measured size, so the tree
+  reflows and connectors stay attached while typing.
 - Enter commits; Escape cancels; blur commits.
 - Composition events protect Chinese and other IME input.
 - A new empty node is removed if editing is cancelled without committing text.
 - Committing an empty label on an existing node keeps the old label and shows a notice.
+- Source labels remain single-line. The editor provides soft wrapping; hard newline characters are not
+  persisted in v1.
 
 ### 8.3 Drag and drop
 

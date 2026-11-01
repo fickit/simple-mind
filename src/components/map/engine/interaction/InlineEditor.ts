@@ -6,11 +6,20 @@ export interface InlineEditorCallbacks {
   onCancel: () => void;
 }
 
+/** World-space rectangle of the inline editor. */
+export interface EditorRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 /** Optional visual context for the editor. */
 export interface InlineEditorOptions {
   maxWidth?: number;
   placeholder?: string;
   nodeElement?: HTMLElement | null;
+  onResize?: (rect: EditorRect) => void;
 }
 
 const MIRROR_STYLE_PROPS = [
@@ -72,6 +81,7 @@ export class InlineEditor {
   private composing = false;
   private finished = false;
   private firstResize = true;
+  private onResize: ((rect: EditorRect) => void) | null = null;
 
   /**
    * @param world Transformed map world that hosts the input.
@@ -111,6 +121,7 @@ export class InlineEditor {
     this.finished = false;
     this.firstResize = true;
     this.callbacks = callbacks;
+    this.onResize = options.onResize ?? null;
 
     const input = doc.createElement("textarea");
     input.className = "simple-mind-inline-editor";
@@ -213,20 +224,25 @@ export class InlineEditor {
 
     this.input.style.width = `${width}px`;
     this.input.style.height = `${height}px`;
-    this.positionInput(width);
+    this.positionInput(width, height);
   }
 
-  /** Anchors the input so it grows away from the parent. */
-  private positionInput(width: number): void {
+  /** Moves the input to a new node position without changing its size. */
+  reposition(x: number, y: number): void {
     if (!this.input || !this.position) return;
-    let left = this.position.x;
-    if (this.position.side === "left") {
-      left = this.position.x + this.position.width - width;
-    } else if (this.position.side === "down") {
-      left = this.position.x + (this.position.width - width) / 2;
-    }
-    this.input.style.left = `${left}px`;
-    this.input.style.top = `${this.position.y}px`;
+    this.position = { ...this.position, x, y };
+    this.input.style.left = `${x}px`;
+    this.input.style.top = `${y}px`;
+  }
+
+  /** Anchors the input at the node's current position. */
+  private positionInput(width: number, height: number): void {
+    if (!this.input || !this.position) return;
+    const x = this.position.x;
+    const y = this.position.y;
+    this.input.style.left = `${x}px`;
+    this.input.style.top = `${y}px`;
+    this.onResize?.({ x, y, width, height });
   }
 
   /** Removes the input and mirror elements. */
@@ -237,5 +253,6 @@ export class InlineEditor {
     this.mirror = null;
     this.callbacks = null;
     this.position = null;
+    this.onResize = null;
   }
 }

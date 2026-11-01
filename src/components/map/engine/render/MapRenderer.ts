@@ -4,7 +4,7 @@ import type { MindMapDocument, MindNode } from "../../../../types/mindmap";
 import type { ThemeDefinition, ThemeTokens } from "../../../../types/theme";
 import { tokensForMode } from "../../themes/applyTheme";
 import { layoutDocument } from "../layout/layout";
-import type { LayoutBounds, LayoutResult, PositionedNode } from "../layout/types";
+import type { LayoutBounds, LayoutResult, NodeMeasurer, PositionedNode } from "../layout/types";
 import { connectorPath } from "./connectors";
 import { renderInlineMarkdown } from "./inlineMarkdown";
 import { DomNodeMeasurer } from "./measure";
@@ -42,6 +42,13 @@ export class MapRenderer {
   private layout: LayoutResult | null = null;
   private selectedId: string | null = null;
   private editingNodeId: string | null = null;
+  private editingRect: {
+    nodeId: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null = null;
   private scale = 1;
   private translateX = 0;
   private translateY = 0;
@@ -117,17 +124,37 @@ export class MapRenderer {
     this.document = document;
     const tokens = tokensForMode(this.theme, this.dark);
     this.measurer.update(document.meta, tokens);
-    this.layout = layoutDocument(
-      document.root,
-      document.meta,
-      this.measurer.createMeasurer(document.root.id),
-    );
+    this.layout = layoutDocument(document.root, document.meta, this.createLayoutMeasurer(document));
     this.updateSvgBounds(this.layout.bounds);
     this.updateNodes(document, this.layout, tokens);
     this.updateEdges(this.layout, tokens);
     if (options.fit ?? this.pendingFit) {
       this.fit();
     }
+  }
+
+  /** Builds a measurer that substitutes the live editor size for the edited node. */
+  private createLayoutMeasurer(document: MindMapDocument): NodeMeasurer {
+    const base = this.measurer.createMeasurer(document.root.id);
+    const editingId = this.editingNodeId;
+    const rect = this.editingRect;
+    if (!editingId || !rect) return base;
+    return (node) =>
+      node.id === editingId ? { width: rect.width, height: rect.height } : base(node);
+  }
+
+  /** Reflows the map after the editor or its size changes. */
+  private relayout(): void {
+    if (!this.document) return;
+    const tokens = this.themeTokens();
+    this.layout = layoutDocument(
+      this.document.root,
+      this.document.meta,
+      this.createLayoutMeasurer(this.document),
+    );
+    this.updateSvgBounds(this.layout.bounds);
+    this.updateNodes(this.document, this.layout, tokens);
+    this.updateEdges(this.layout, tokens);
   }
 
   /** Removes all rendered content. */
@@ -263,7 +290,24 @@ export class MapRenderer {
       this.nodeEls.get(this.editingNodeId)?.classList.remove("is-editing");
     }
     this.editingNodeId = nodeId;
+    this.editingRect = null;
     if (nodeId) this.nodeEls.get(nodeId)?.classList.add("is-editing");
+    this.relayout();
+  }
+
+  /**
+   * Reflows the tree using the live inline editor size.
+   *
+   * @param nodeId Node being edited.
+   * @param rect Current editor rectangle in world coordinates.
+   */
+  setEditingRect(
+    nodeId: string,
+    rect: { x: number; y: number; width: number; height: number },
+  ): void {
+    if (this.editingNodeId !== nodeId) return;
+    this.editingRect = { nodeId, ...rect };
+    this.relayout();
   }
 
   /** Applies the world transform. */
@@ -315,6 +359,7 @@ export class MapRenderer {
     }
     if (this.editingNodeId && !seen.has(this.editingNodeId)) {
       this.editingNodeId = null;
+      this.editingRect = null;
     }
   }
 

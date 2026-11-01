@@ -38,6 +38,11 @@ export class MapCanvas {
   private sourceText = "";
   private readOnly = false;
   private dark = false;
+  private pendingEditorLayout: {
+    nodeId: string;
+    rect: { x: number; y: number; width: number; height: number };
+  } | null = null;
+  private editorLayoutFrame: number | null = null;
 
   /**
    * @param container Element that receives the map UI.
@@ -105,6 +110,7 @@ export class MapCanvas {
    * @param source `.mindmap` file content.
    */
   setSource(source: string): void {
+    this.cancelEditorLayout();
     this.editor.close();
     this.renderer.setEditingNode(null);
     this.pendingAdd = null;
@@ -163,6 +169,7 @@ export class MapCanvas {
 
   /** Removes the renderer and map DOM. */
   destroy(): void {
+    this.cancelEditorLayout();
     this.editor.close();
     this.renderer.setEditingNode(null);
     this.canvasEl.removeEventListener("keydown", this.keydownHandler);
@@ -279,12 +286,15 @@ export class MapCanvas {
 
   /** Positions the input over a node and wires commit/cancel. */
   private openEditor(nodeId: string, text: string, isNew: boolean, placeholder = ""): void {
-    const position = this.renderer.getNodePosition(nodeId);
-    if (!position) return;
-
-    const meta = this.controller?.getDocument().meta;
     this.renderer.selectNode(nodeId);
     this.renderer.setEditingNode(nodeId);
+    const position = this.renderer.getNodePosition(nodeId);
+    if (!position) {
+      this.renderer.setEditingNode(null);
+      return;
+    }
+
+    const meta = this.controller?.getDocument().meta;
     this.editor.open(
       position,
       text,
@@ -296,26 +306,71 @@ export class MapCanvas {
         maxWidth: meta?.maxWidth ?? 280,
         placeholder,
         nodeElement: this.renderer.getNodeElement(nodeId),
+        onResize: (rect) => this.scheduleEditorLayout(nodeId, rect),
       },
     );
     this.updateToolbar();
   }
 
+  /** Schedules a live reflow with the latest editor rectangle. */
+  private scheduleEditorLayout(
+    nodeId: string,
+    rect: { x: number; y: number; width: number; height: number },
+  ): void {
+    this.pendingEditorLayout = { nodeId, rect };
+    if (this.editorLayoutFrame !== null) return;
+
+    const win = this.rootEl.ownerDocument.defaultView;
+    if (!win || typeof win.requestAnimationFrame !== "function") {
+      this.flushEditorLayout();
+      return;
+    }
+    this.editorLayoutFrame = win.requestAnimationFrame(() => {
+      this.editorLayoutFrame = null;
+      this.flushEditorLayout();
+    });
+  }
+
+  /** Applies the pending editor size and moves the input to the new node position. */
+  private flushEditorLayout(): void {
+    const pending = this.pendingEditorLayout;
+    this.pendingEditorLayout = null;
+    if (!pending || !this.editor.isOpen()) return;
+
+    this.renderer.setEditingRect(pending.nodeId, pending.rect);
+    const position = this.renderer.getNodePosition(pending.nodeId);
+    if (position) this.editor.reposition(position.x, position.y);
+  }
+
+  /** Cancels a pending live reflow. */
+  private cancelEditorLayout(): void {
+    if (this.editorLayoutFrame !== null) {
+      this.rootEl.ownerDocument.defaultView?.cancelAnimationFrame(this.editorLayoutFrame);
+      this.editorLayoutFrame = null;
+    }
+    this.pendingEditorLayout = null;
+  }
+
   /** Commits an inline edit into the controller. */
   private commitEdit(nodeId: string, value: string, isNew: boolean): void {
+    this.cancelEditorLayout();
     const controller = this.controller;
-    if (!controller) return;
-    this.renderer.setEditingNode(null);
+    if (!controller) {
+      this.renderer.setEditingNode(null);
+      return;
+    }
 
     if (isNew && this.pendingAdd?.node.id === nodeId) {
       if (value.trim() === "") {
         controller.cancelAdd(nodeId);
         this.pendingAdd = null;
+        this.renderer.setEditingNode(null);
         this.rerender(false);
         this.renderer.selectNode(null);
       } else {
         controller.commitAdd(nodeId, value, this.pendingAdd.previousSource);
         this.pendingAdd = null;
+        this.renderer.setEditingNode(null);
         this.rerender(false);
         this.renderer.selectNode(nodeId);
       }
@@ -326,6 +381,7 @@ export class MapCanvas {
 
     if (value.trim() === "") {
       this.onNotice("A node label cannot be empty.");
+      this.renderer.setEditingNode(null);
       this.rerender(false);
       this.renderer.selectNode(nodeId);
       this.renderer.focus();
@@ -333,6 +389,7 @@ export class MapCanvas {
     }
 
     controller.rename(nodeId, value);
+    this.renderer.setEditingNode(null);
     this.rerender(false);
     this.renderer.selectNode(nodeId);
     this.renderer.focus();
@@ -341,15 +398,17 @@ export class MapCanvas {
 
   /** Cancels an inline edit. */
   private cancelEdit(nodeId: string, isNew: boolean): void {
+    this.cancelEditorLayout();
     const controller = this.controller;
-    this.renderer.setEditingNode(null);
     if (isNew && this.pendingAdd?.node.id === nodeId) {
       const parentId = this.pendingAdd.parentId;
       controller?.cancelAdd(nodeId);
       this.pendingAdd = null;
+      this.renderer.setEditingNode(null);
       this.rerender(false);
       this.renderer.selectNode(parentId);
     } else {
+      this.renderer.setEditingNode(null);
       this.renderer.selectNode(nodeId);
     }
     this.renderer.focus();
