@@ -71,6 +71,18 @@ export class SettingsTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
+      .setName(t("settings.defaultFont"))
+      .setDesc(t("settings.defaultFontDesc"))
+      .addText((text) => {
+        text.setPlaceholder(t("sidebar.themeDefault"));
+        text.setValue(settings.defaultFontFamily);
+        text.onChange((value) => {
+          settings.defaultFontFamily = value.trim();
+          this.schedulePersist();
+        });
+      });
+
+    new Setting(containerEl)
       .setName(t("settings.defaultLayout"))
       .setDesc(t("settings.defaultLayoutDesc"))
       .addDropdown((dropdown) =>
@@ -168,6 +180,7 @@ export class SettingsTab extends PluginSettingTab {
       .addButton((button) =>
         button.setButtonText(t("settings.resetButton")).onClick(async () => {
           this.host.settings.defaultTheme = DEFAULT_SETTINGS.defaultTheme;
+          this.host.settings.defaultFontFamily = DEFAULT_SETTINGS.defaultFontFamily;
           this.host.settings.defaultLayout = DEFAULT_SETTINGS.defaultLayout;
           this.host.settings.defaultDirection = DEFAULT_SETTINGS.defaultDirection;
           this.host.settings.defaultSpacingX = DEFAULT_SETTINGS.defaultSpacingX;

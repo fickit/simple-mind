@@ -1,6 +1,6 @@
 import { LIMITS } from "../../../../config/constants";
 import type { MindMapMeta, ParseError, ParseWarning } from "../../../../types/mindmap";
-import type { ConnectorStyle, NodeShape } from "../../../../types/theme";
+import type { ConnectorStyle, NodeShape, TextAlign } from "../../../../types/theme";
 
 /** Result of splitting a source file into frontmatter and body. */
 export interface FrontmatterSplit {
@@ -140,6 +140,63 @@ function readBoolean(
   if (parsed === "false") return false;
   warnings.push({ line, message: `${name} must be true or false; using ${fallback}.` });
   return fallback;
+}
+
+/** Reads an optional boolean scalar and leaves the override unset when invalid. */
+function readOptionalBoolean(
+  value: string,
+  line: number,
+  name: string,
+  warnings: ParseWarning[],
+): boolean | undefined {
+  const parsed = readScalar(value).toLowerCase();
+  if (parsed === "true") return true;
+  if (parsed === "false") return false;
+  warnings.push({ line, message: `${name} must be true or false.` });
+  return undefined;
+}
+
+/** Reads an optional finite number and leaves the override unset when invalid. */
+function readOptionalNumber(
+  value: string,
+  min: number,
+  max: number,
+  line: number,
+  name: string,
+  warnings: ParseWarning[],
+): number | undefined {
+  const parsed = Number(readScalar(value));
+  if (!Number.isFinite(parsed)) {
+    warnings.push({ line, message: `${name} must be a number.` });
+    return undefined;
+  }
+  const clamped = Math.min(max, Math.max(min, parsed));
+  if (clamped !== parsed) {
+    warnings.push({
+      line,
+      message: `${name} must be between ${min} and ${max}; using ${clamped}.`,
+    });
+  }
+  return clamped;
+}
+
+/** Reads an optional fixed-set string and leaves the override unset when invalid. */
+function readOptionalEnum<T extends string>(
+  value: string,
+  allowed: readonly T[],
+  line: number,
+  name: string,
+  warnings: ParseWarning[],
+): T | undefined {
+  const parsed = readScalar(value) as T;
+  if (!allowed.includes(parsed)) {
+    warnings.push({
+      line,
+      message: `${name} must be one of ${allowed.join(", ")}.`,
+    });
+    return undefined;
+  }
+  return parsed;
 }
 
 /**
@@ -297,6 +354,28 @@ export function parseMeta(
         }
         break;
       }
+      case "nodeFillColor": {
+        const color = readScalar(value);
+        if (color) meta.nodeFillColor = color;
+        else warnings.push({ line: lineNumber, message: "nodeFillColor must not be empty." });
+        break;
+      }
+      case "nodeBorderColor": {
+        const color = readScalar(value);
+        if (color) meta.nodeBorderColor = color;
+        else warnings.push({ line: lineNumber, message: "nodeBorderColor must not be empty." });
+        break;
+      }
+      case "nodeBorderWidth":
+        meta.nodeBorderWidth = readOptionalNumber(
+          value,
+          LIMITS.nodeBorderWidth.min,
+          LIMITS.nodeBorderWidth.max,
+          lineNumber,
+          "nodeBorderWidth",
+          warnings,
+        );
+        break;
       case "connectorStyle": {
         const style = readScalar(value);
         if (["curve", "orthogonal", "straight"].includes(style)) {
@@ -307,6 +386,12 @@ export function parseMeta(
             message: "connectorStyle must be curve, orthogonal, or straight.",
           });
         }
+        break;
+      }
+      case "connectorColor": {
+        const color = readScalar(value);
+        if (color) meta.connectorColor = color;
+        else warnings.push({ line: lineNumber, message: "connectorColor must not be empty." });
         break;
       }
       case "fontFamily": {
@@ -334,6 +419,40 @@ export function parseMeta(
           LIMITS.lineWidth.max,
           lineNumber,
           "lineWidth",
+          warnings,
+        );
+        break;
+      case "textColor": {
+        const color = readScalar(value);
+        if (color) meta.textColor = color;
+        else warnings.push({ line: lineNumber, message: "textColor must not be empty." });
+        break;
+      }
+      case "bold":
+        meta.bold = readOptionalBoolean(value, lineNumber, "bold", warnings);
+        break;
+      case "italic":
+        meta.italic = readOptionalBoolean(value, lineNumber, "italic", warnings);
+        break;
+      case "underline":
+        meta.underline = readOptionalBoolean(value, lineNumber, "underline", warnings);
+        break;
+      case "textAlign":
+        meta.textAlign = readOptionalEnum<TextAlign>(
+          value,
+          ["left", "center", "right"] as const,
+          lineNumber,
+          "textAlign",
+          warnings,
+        );
+        break;
+      case "lineHeight":
+        meta.lineHeight = readOptionalNumber(
+          value,
+          LIMITS.lineHeight.min,
+          LIMITS.lineHeight.max,
+          lineNumber,
+          "lineHeight",
           warnings,
         );
         break;
@@ -370,10 +489,20 @@ export function renderFrontmatter(
 
   const optionalLines = [
     ...(meta.nodeShape ? [`  nodeShape: ${meta.nodeShape}`] : []),
+    ...(meta.nodeFillColor ? [`  nodeFillColor: ${writeScalar(meta.nodeFillColor)}`] : []),
+    ...(meta.nodeBorderColor ? [`  nodeBorderColor: ${writeScalar(meta.nodeBorderColor)}`] : []),
+    ...(meta.nodeBorderWidth !== undefined ? [`  nodeBorderWidth: ${meta.nodeBorderWidth}`] : []),
     ...(meta.connectorStyle ? [`  connectorStyle: ${meta.connectorStyle}`] : []),
+    ...(meta.connectorColor ? [`  connectorColor: ${writeScalar(meta.connectorColor)}`] : []),
+    ...(meta.lineWidth !== undefined ? [`  lineWidth: ${meta.lineWidth}`] : []),
     ...(meta.fontFamily ? [`  fontFamily: ${writeScalar(meta.fontFamily)}`] : []),
     ...(meta.fontSize !== undefined ? [`  fontSize: ${meta.fontSize}`] : []),
-    ...(meta.lineWidth !== undefined ? [`  lineWidth: ${meta.lineWidth}`] : []),
+    ...(meta.textColor ? [`  textColor: ${writeScalar(meta.textColor)}`] : []),
+    ...(meta.bold !== undefined ? [`  bold: ${meta.bold}`] : []),
+    ...(meta.italic !== undefined ? [`  italic: ${meta.italic}`] : []),
+    ...(meta.underline !== undefined ? [`  underline: ${meta.underline}`] : []),
+    ...(meta.textAlign ? [`  textAlign: ${meta.textAlign}`] : []),
+    ...(meta.lineHeight !== undefined ? [`  lineHeight: ${meta.lineHeight}`] : []),
   ];
 
   lines.push(

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { LIMITS } from "./constants";
-import { DEFAULT_MINDMAP_META, DEFAULT_SETTINGS } from "./defaults";
+import { DEFAULT_MINDMAP_META, DEFAULT_SETTINGS, metaFromSettings } from "./defaults";
 
 describe("defaults", () => {
   it("uses the same theme in settings and per-file metadata", () => {
@@ -18,5 +18,12 @@ describe("defaults", () => {
     expect(DEFAULT_MINDMAP_META.spacingY).toBeLessThanOrEqual(LIMITS.spacingY.max);
     expect(DEFAULT_MINDMAP_META.maxWidth).toBeGreaterThanOrEqual(LIMITS.maxWidth.min);
     expect(DEFAULT_MINDMAP_META.maxWidth).toBeLessThanOrEqual(LIMITS.maxWidth.max);
+  });
+
+  it("uses the global font only when one is set", () => {
+    expect(metaFromSettings(DEFAULT_SETTINGS).fontFamily).toBeUndefined();
+    expect(
+      metaFromSettings({ ...DEFAULT_SETTINGS, defaultFontFamily: "Georgia, serif" }).fontFamily,
+    ).toBe("Georgia, serif");
   });
 });

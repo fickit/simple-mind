@@ -323,6 +323,129 @@ describe("MapCanvas", () => {
     host.remove();
   });
 
+  it("switches between the style and text tabs", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    const stylePane = host.querySelector<HTMLElement>(
+      '.simple-mind-sidebar-pane[data-tab="style"]',
+    )!;
+    const textPane = host.querySelector<HTMLElement>('.simple-mind-sidebar-pane[data-tab="text"]')!;
+
+    expect(stylePane.hidden).toBe(false);
+    expect(textPane.hidden).toBe(true);
+
+    clickButton(host, "Text");
+    expect(stylePane.hidden).toBe(true);
+    expect(textPane.hidden).toBe(false);
+    expect(host.querySelector(".simple-mind-sidebar-font-family")).not.toBeNull();
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("keeps gap and node width out of the sidebar", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    const labels = Array.from(host.querySelectorAll(".simple-mind-sidebar-row > span")).map(
+      (label) => label.textContent,
+    );
+
+    expect(labels).not.toContain("Horizontal gap");
+    expect(labels).not.toContain("Maximum node width");
+    expect(labels).toContain("Thickness");
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("writes node, connector, and text overrides from the sidebar", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    const change = (selector: string, value: string): void => {
+      const input = host.querySelector<HTMLInputElement>(selector)!;
+      input.value = value;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    };
+
+    change(".simple-mind-sidebar-node-fill", "#112233");
+    change(".simple-mind-sidebar-node-border", "#223344");
+    change(".simple-mind-sidebar-node-border-width", "3");
+    change(".simple-mind-sidebar-connector-color", "#445566");
+    change(".simple-mind-sidebar-line-width", "4");
+
+    clickButton(host, "Text");
+    change(".simple-mind-sidebar-font-family", "Georgia");
+    change(".simple-mind-sidebar-font-size", "16");
+    change(".simple-mind-sidebar-text-color", "#778899");
+    for (const selector of [
+      ".simple-mind-sidebar-bold",
+      ".simple-mind-sidebar-italic",
+      ".simple-mind-sidebar-underline",
+    ]) {
+      const input = host.querySelector<HTMLInputElement>(selector)!;
+      input.checked = true;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    change(".simple-mind-sidebar-text-align", "right");
+    change(".simple-mind-sidebar-line-height", "1.8");
+
+    const source = canvas.getSource();
+    expect(source).toContain('nodeFillColor: "#112233"');
+    expect(source).toContain('nodeBorderColor: "#223344"');
+    expect(source).toContain("nodeBorderWidth: 3");
+    expect(source).toContain('connectorColor: "#445566"');
+    expect(source).toContain("lineWidth: 4");
+    expect(source).toContain("fontFamily: Georgia");
+    expect(source).toContain("fontSize: 16");
+    expect(source).toContain('textColor: "#778899"');
+    expect(source).toContain("bold: true");
+    expect(source).toContain("italic: true");
+    expect(source).toContain("underline: true");
+    expect(source).toContain("textAlign: right");
+    expect(source).toContain("lineHeight: 1.8");
+
+    const root = host.querySelector<HTMLElement>(".simple-mind-map")!;
+    expect(root.style.getPropertyValue("--sm-node-bg")).toBe("#112233");
+    expect(root.style.getPropertyValue("--sm-node-border")).toBe("#223344");
+    expect(root.style.getPropertyValue("--sm-node-border-width")).toBe("3px");
+    expect(root.style.getPropertyValue("--sm-edge-width")).toBe("4");
+    expect(root.style.getPropertyValue("--sm-font-style")).toBe("italic");
+    expect(root.style.getPropertyValue("--sm-text-align")).toBe("right");
+    expect(root.style.getPropertyValue("--sm-text-decoration")).toBe("underline");
+    expect(host.querySelector(".simple-mind-edge")?.getAttribute("stroke")).toBe("#445566");
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("clears a color override back to the theme value", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    const input = host.querySelector<HTMLInputElement>(".simple-mind-sidebar-node-fill")!;
+    const reset = input.nextElementSibling as HTMLButtonElement;
+
+    expect(reset.disabled).toBe(true);
+    input.value = "#112233";
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(reset.disabled).toBe(false);
+    expect(canvas.getSource()).toContain("nodeFillColor");
+
+    reset.click();
+    expect(reset.disabled).toBe(true);
+    expect(canvas.getSource()).not.toContain("nodeFillColor");
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("applies the global default font to maps without a font override", () => {
+    const settings = { ...DEFAULT_SETTINGS, defaultFontFamily: "Georgia, serif" };
+    const { host, canvas } = createCanvas("# Root\n- A\n", settings);
+
+    expect(
+      host.querySelector<HTMLElement>(".simple-mind-map")?.style.getPropertyValue("--sm-font"),
+    ).toBe("Georgia, serif");
+
+    canvas.destroy();
+    host.remove();
+  });
+
   it("refreshes the light and dark variants of a custom theme", () => {
     const settings = { ...DEFAULT_SETTINGS, defaultTheme: PAPER_THEME.id };
     const { host, canvas } = createCanvas("# Root\n- A\n", settings);

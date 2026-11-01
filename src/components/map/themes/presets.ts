@@ -48,6 +48,9 @@ function buildTokens(input: TokenInput): ThemeTokens {
       size: 14,
       weight: 400,
       lineHeight: 1.4,
+      fontStyle: "normal",
+      textAlign: "center",
+      textDecoration: "none",
     },
     selection: {
       outline: input.accent,

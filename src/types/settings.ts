@@ -15,6 +15,7 @@ export interface SimpleMindSettings {
   defaultAlign: NodeAlignment;
   defaultCompact: boolean;
   defaultMaxWidth: number;
+  defaultFontFamily: string;
   customThemes: ThemeDefinition[];
   restoreSourceCursor: boolean;
 }

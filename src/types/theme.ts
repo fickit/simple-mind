@@ -4,6 +4,9 @@ export type NodeShape = "rounded" | "pill" | "underline" | "plain";
 /** Connector geometry. */
 export type ConnectorStyle = "curve" | "orthogonal" | "straight";
 
+/** Horizontal text alignment. */
+export type TextAlign = "left" | "center" | "right";
+
 /** Visual tokens for one light or dark theme variant. */
 export interface ThemeTokens {
   canvasBackground: string;
@@ -32,12 +35,16 @@ export interface ThemeTokens {
     lineWidth: number;
     opacity: number;
     style: ConnectorStyle;
+    overrideColor?: string;
   };
   typography: {
     family: string;
     size: number;
     weight: number;
     lineHeight: number;
+    fontStyle: "normal" | "italic";
+    textAlign: TextAlign;
+    textDecoration: "none" | "underline";
   };
   selection: {
     outline: string;

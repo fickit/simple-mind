@@ -126,6 +126,34 @@
   background: var(--background-modifier-hover);
 }
 
+.simple-mind-sidebar-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.simple-mind-sidebar-tab {
+  flex: 1;
+  padding: 6px 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  cursor: pointer;
+}
+
+.simple-mind-sidebar-tab.is-active {
+  border-bottom-color: var(--interactive-accent);
+  color: var(--text-normal);
+  font-weight: 600;
+}
+
+.simple-mind-sidebar-pane[hidden] {
+  display: none;
+}
+
 .simple-mind-sidebar-section {
   margin-bottom: 16px;
 }
@@ -197,6 +225,44 @@
   height: 16px;
 }
 
+.simple-mind-sidebar-colors {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.simple-mind-sidebar-color {
+  width: 44px;
+  height: 26px;
+  padding: 2px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 5px;
+  background: var(--background-primary);
+  cursor: pointer;
+}
+
+.simple-mind-sidebar-reset {
+  width: 24px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 5px;
+  background: var(--background-primary);
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.simple-mind-sidebar-reset:hover:not(:disabled) {
+  background: var(--background-modifier-hover);
+}
+
+.simple-mind-sidebar-reset:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 .simple-mind-canvas {
   position: relative;
   flex: 1;
@@ -227,11 +293,13 @@
   color: var(--sm-node-text);
   font-family: var(--sm-font);
   font-size: var(--sm-font-size);
+  font-style: var(--sm-font-style, normal);
   font-weight: var(--sm-font-weight);
   line-height: var(--sm-line-height);
   overflow: hidden;
   resize: none;
-  text-align: center;
+  text-align: var(--sm-text-align, center);
+  text-decoration: var(--sm-text-decoration, none);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -292,8 +360,11 @@
   box-shadow: var(--sm-node-shadow);
   font-family: var(--sm-font);
   font-size: var(--sm-font-size);
+  font-style: var(--sm-font-style, normal);
   font-weight: var(--sm-font-weight);
   line-height: var(--sm-line-height);
+  text-align: var(--sm-text-align, center);
+  text-decoration: var(--sm-text-decoration, none);
   white-space: normal;
   overflow-wrap: anywhere;
   cursor: pointer;
@@ -373,8 +444,10 @@
 }
 
 .simple-mind-node-label {
+  flex: 1 1 auto;
   min-width: 0;
-  text-align: center;
+  text-align: var(--sm-text-align, center);
+  text-decoration: var(--sm-text-decoration, none);
 }
 
 .simple-mind-node-label a {

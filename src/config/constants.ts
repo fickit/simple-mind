@@ -29,11 +29,16 @@ export const CULLING_THRESHOLD = 1200;
 /** Initial inline-editor width for a new, empty node. */
 export const NEW_NODE_EDITOR_WIDTH = 120;
 
-/** Numeric bounds for per-file layout settings. */
+/** Numeric bounds for per-file layout and style settings. */
 export const LIMITS = {
   spacingX: { min: 8, max: 240 },
   spacingY: { min: 4, max: 120 },
   maxWidth: { min: 120, max: 600 },
   fontSize: { min: 8, max: 32 },
   lineWidth: { min: 1, max: 6 },
+  nodeBorderWidth: { min: 0, max: 8 },
+  lineHeight: { min: 1, max: 3 },
 } as const;
+
+/** Display value for color inputs when the active token is not a hex color. */
+export const COLOR_INPUT_FALLBACK = "#888888";

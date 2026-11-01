@@ -38,7 +38,10 @@ export function applyTheme(root: HTMLElement, theme: ThemeDefinition, dark: bool
   set("--sm-font", tokens.typography.family);
   set("--sm-font-size", `${tokens.typography.size}px`);
   set("--sm-font-weight", tokens.typography.weight);
+  set("--sm-font-style", tokens.typography.fontStyle ?? "normal");
   set("--sm-line-height", tokens.typography.lineHeight);
+  set("--sm-text-align", tokens.typography.textAlign ?? "center");
+  set("--sm-text-decoration", tokens.typography.textDecoration ?? "none");
   set("--sm-selection-outline", tokens.selection.outline);
   set("--sm-selection-bg", tokens.selection.background);
   set("--sm-collapse-bg", tokens.collapse.background);

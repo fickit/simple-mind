@@ -29,10 +29,25 @@ export function toHexColor(value: string): string {
   return `#${toHex(match[1])}${toHex(match[2])}${toHex(match[3])}`;
 }
 
+/** Fills typography fields that earlier custom themes did not store. */
+function normalizeTypography(tokens: ThemeTokens): ThemeTokens["typography"] {
+  const typography = tokens.typography as Partial<ThemeTokens["typography"]>;
+  return {
+    family: typography.family ?? "var(--font-text)",
+    size: typography.size ?? 14,
+    weight: typography.weight ?? 400,
+    lineHeight: typography.lineHeight ?? 1.4,
+    fontStyle: typography.fontStyle ?? "normal",
+    textAlign: typography.textAlign ?? "center",
+    textDecoration: typography.textDecoration ?? "none",
+  };
+}
+
 /** Resolves the editable color fields of one token set. */
 function resolveTokens(tokens: ThemeTokens): ThemeTokens {
   return {
     ...tokens,
+    typography: normalizeTypography(tokens),
     canvasBackground: toHexColor(tokens.canvasBackground),
     node: {
       ...tokens.node,

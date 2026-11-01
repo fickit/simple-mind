@@ -165,10 +165,16 @@ Branch: `feat/core`
 - `√` Implement Tab/Shift+Tab/Enter/Delete/F2 shortcuts; Enter/Tab in the editor commit and continue
   with a sibling/child; Space is reserved for text input and the collapse shortcut is deferred.
 - `√` New nodes open as empty single-line editors with a default width and no placeholder.
-- `√` Add a front-end style sidebar for the current file: theme, layout, spacing, alignment, compact
-  mode, node shape, connector, font, and line width.
-- `√` Add per-file style overrides (shape, connector, font size/family, line width) written to
-  frontmatter and applied on top of the selected theme.
+- `√` Add a two-tab front-end style panel for the current file. Style: theme, layout, alignment,
+  compact mode, node shape/fill/border, and connector style/color/thickness. Text: font family and
+  size, text color, weight, italic, underline, alignment, and line height.
+- `√` Keep horizontal gap, vertical gap, and maximum node width in plugin settings instead of the
+  panel; add a global default font to settings with a per-file override.
+- `√` Add per-file style overrides (node fill/border/width, connector color, text color, bold,
+  italic, underline, alignment, line height) written to frontmatter and applied on top of the theme.
+- `√` Let color controls show the effective theme color and reset an override back to the theme.
+- `√` Honor per-file connector colors and typography in the renderer, measurement, inline editor,
+  and stylesheet.
 - `√` Refresh maps on Obsidian light/dark changes through `css-change` plus a body-class fallback.
 - `√` Implement drag start threshold, reparent, reorder, drop indicators, and hover-to-expand.
 - `√` Implement internal clipboard, cut, copy, and paste, plus system-clipboard text fallback.
@@ -201,8 +207,8 @@ Branch: `feat/core`
   selection.
 - `√` Implement CSS variable compilation scoped to the view root.
 - `√` Implement automatic light/dark switching on `workspace.on('css-change')`.
-- `-` Implement custom theme validation, clone, rename, delete, import, and export.
-- `-` Implement the theme editor modal with light/dark tabs and a live preview.
+- `√` Implement custom theme validation, clone, rename, delete, import, and export.
+- `√` Implement the theme editor modal with light/dark tabs and a live preview.
 - `√` Add `README.md` for the theme module.
 - `√` Unit tests: built-in theme count, token completeness, fallback behavior, frontmatter selection.
 - `√` Verify: `npm run typecheck && npm run test`.
@@ -247,7 +253,8 @@ Manual: complete the source/map switching checklist.
 Branch: `feat/core`
 
 - `√` Implement the settings schema and persistence.
-- `√` Implement the settings tab: general defaults, layout defaults, theme management, language.
+- `√` Implement the settings tab: general defaults, layout defaults, global default font, theme
+  management, language.
 - `√` Implement English and Chinese dictionaries and `t()`.
 - `√` Re-register commands on language change without changing command ids.
 - `√` Translate the view, toolbar, notices, commands, settings, and theme editor strings.
@@ -313,13 +320,15 @@ node scripts/benchmark.mjs
 - Phase 4 renderer: canvas, themes, pan/zoom, collapse, and inline Markdown complete; visual demo
   passed in light and dark mode. rAF batching and culling remain performance tasks.
 - Phase 5 interaction: selection, inline editing, live reflow, add/delete, drag-and-drop, clipboard,
-  undo/redo, and source serialization are implemented and tested.
+  undo/redo, and source serialization are implemented and tested. The style panel is split into Style
+  and Text tabs; node, connector, and text overrides are written to frontmatter and applied live.
 - Phase 6 themes: eight built-in themes, per-file selection, automatic light/dark switching, custom
   theme editing, import/export, and live preview are implemented.
 - Phase 7 view integration: TextFileView, source switching, status bar, commands, and new-map creation
   are implemented; filename prompt and per-file view-state restore remain.
-- Phase 8 settings/i18n: settings tab, custom theme management, language switching, command
-  re-registration, and English/Chinese UI are implemented; manual verification remains.
+- Phase 8 settings/i18n: settings tab (including the global default font), custom theme management,
+  language switching, command re-registration, and English/Chinese UI are implemented; manual
+  verification remains.
 - Next: manual verification in Obsidian, then performance benchmark, README polish, and release assets.
 - Test vault: created with a sample map.
 - Author metadata: `fickit`; repository URL still pending.

@@ -61,6 +61,7 @@ export class DomNodeMeasurer {
     this.inner.style.padding = `${tokens.node.paddingY}px ${tokens.node.paddingX}px`;
     this.inner.style.fontFamily = tokens.typography.family;
     this.inner.style.fontSize = `${tokens.typography.size}px`;
+    this.inner.style.fontStyle = tokens.typography.fontStyle ?? "normal";
     this.inner.style.lineHeight = String(tokens.typography.lineHeight);
   }
 

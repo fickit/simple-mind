@@ -1,4 +1,4 @@
-import { NEW_NODE_EDITOR_WIDTH } from "../../config/constants";
+import { COLOR_INPUT_FALLBACK, LIMITS, NEW_NODE_EDITOR_WIDTH } from "../../config/constants";
 import { DEFAULT_SETTINGS, metaFromSettings } from "../../config/defaults";
 import { t } from "../../config/i18n";
 import type {
@@ -9,7 +9,7 @@ import type {
   TreeDirection,
 } from "../../types/mindmap";
 import type { SimpleMindSettings } from "../../types/settings";
-import type { ConnectorStyle, NodeShape, ThemeDefinition } from "../../types/theme";
+import type { ConnectorStyle, NodeShape, TextAlign, ThemeDefinition } from "../../types/theme";
 import { DragController, type DropPosition } from "./engine/interaction/DragController";
 import { type CommitAction, InlineEditor } from "./engine/interaction/InlineEditor";
 import {
@@ -21,7 +21,7 @@ import {
 import type { PositionedNode } from "./engine/layout/types";
 import { parseSource } from "./engine/parser/parser";
 import { MapRenderer } from "./engine/render/MapRenderer";
-import { applyTheme } from "./themes/applyTheme";
+import { applyTheme, tokensForMode } from "./themes/applyTheme";
 import { applyMetaOverrides } from "./themes/overrides";
 import { BUILT_IN_THEMES, OBSIDIAN_THEME, resolveTheme } from "./themes/presets";
 
@@ -36,6 +36,24 @@ export interface MapCanvasOptions {
 
 type ArrowKey = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight";
 
+/** Sidebar tabs. */
+type SidebarTab = "style" | "text";
+
+/** A color picker paired with a reset button. */
+interface SidebarColorControl {
+  input: HTMLInputElement;
+  reset: HTMLButtonElement;
+}
+
+/** Options for a sidebar number input. */
+interface SidebarNumberOptions {
+  min: number;
+  max: number;
+  onChange: (value: number | undefined) => void;
+  placeholder?: string;
+  step?: number;
+}
+
 /** Canvas component that owns the renderer, controller, toolbar, and editing. */
 export class MapCanvas {
   private readonly rootEl: HTMLElement;
@@ -47,6 +65,8 @@ export class MapCanvas {
   private readonly editor: InlineEditor;
   private readonly drag: DragController;
   private theme: ThemeDefinition = OBSIDIAN_THEME;
+  private effectiveTheme: ThemeDefinition = OBSIDIAN_THEME;
+  private activeTab: SidebarTab = "style";
   private settings: SimpleMindSettings;
   private readonly onSource: () => void;
   private readonly onChangeSource: (source: string) => void;
@@ -62,19 +82,29 @@ export class MapCanvas {
   private readonly zoomInButton: HTMLButtonElement;
   private readonly zoomOutButton: HTMLButtonElement;
   private readonly styleButton: HTMLButtonElement;
+  private sidebarStylePane!: HTMLElement;
+  private sidebarTextPane!: HTMLElement;
+  private readonly sidebarTabs = new Map<SidebarTab, HTMLButtonElement>();
   private sidebarThemeSelect!: HTMLSelectElement;
   private sidebarLayoutSelect!: HTMLSelectElement;
   private sidebarDirectionSelect!: HTMLSelectElement;
   private sidebarAlignSelect!: HTMLSelectElement;
   private sidebarCompactInput!: HTMLInputElement;
-  private sidebarSpacingXInput!: HTMLInputElement;
-  private sidebarSpacingYInput!: HTMLInputElement;
-  private sidebarMaxWidthInput!: HTMLInputElement;
   private sidebarNodeShapeSelect!: HTMLSelectElement;
+  private sidebarNodeFill!: SidebarColorControl;
+  private sidebarNodeBorder!: SidebarColorControl;
+  private sidebarNodeBorderWidthInput!: HTMLInputElement;
   private sidebarConnectorSelect!: HTMLSelectElement;
+  private sidebarConnectorColor!: SidebarColorControl;
+  private sidebarLineWidthInput!: HTMLInputElement;
   private sidebarFontFamilyInput!: HTMLInputElement;
   private sidebarFontSizeInput!: HTMLInputElement;
-  private sidebarLineWidthInput!: HTMLInputElement;
+  private sidebarTextColor!: SidebarColorControl;
+  private sidebarBoldInput!: HTMLInputElement;
+  private sidebarItalicInput!: HTMLInputElement;
+  private sidebarUnderlineInput!: HTMLInputElement;
+  private sidebarTextAlignSelect!: HTMLSelectElement;
+  private sidebarLineHeightInput!: HTMLInputElement;
   private readonly keydownHandler: (event: KeyboardEvent) => void;
   private controller: MapController | null = null;
   private pendingAdd: PendingAdd | null = null;
@@ -283,6 +313,7 @@ export class MapCanvas {
   private buildSidebar(): void {
     const doc = this.sidebarEl.ownerDocument;
     this.sidebarEl.replaceChildren();
+    this.sidebarTabs.clear();
 
     const header = doc.createElement("div");
     header.className = "simple-mind-sidebar-header";
@@ -297,7 +328,29 @@ export class MapCanvas {
     header.append(title, close);
     this.sidebarEl.appendChild(header);
 
-    const themeSection = this.createSidebarSection(t("sidebar.theme"));
+    const tabs = doc.createElement("div");
+    tabs.className = "simple-mind-sidebar-tabs";
+    tabs.setAttribute("role", "tablist");
+    const definitions: Array<{ id: SidebarTab; label: string }> = [
+      { id: "style", label: t("sidebar.style") },
+      { id: "text", label: t("sidebar.text") },
+    ];
+    for (const definition of definitions) {
+      const tab = doc.createElement("button");
+      tab.type = "button";
+      tab.className = "simple-mind-sidebar-tab";
+      tab.textContent = definition.label;
+      tab.setAttribute("role", "tab");
+      tab.addEventListener("click", () => this.setSidebarTab(definition.id));
+      this.sidebarTabs.set(definition.id, tab);
+      tabs.appendChild(tab);
+    }
+    this.sidebarEl.appendChild(tabs);
+
+    this.sidebarStylePane = this.createSidebarPane("style");
+    this.sidebarTextPane = this.createSidebarPane("text");
+
+    const themeSection = this.createSidebarSection(this.sidebarStylePane, t("sidebar.theme"));
     this.sidebarThemeSelect = doc.createElement("select");
     this.sidebarThemeSelect.className = "simple-mind-sidebar-select simple-mind-sidebar-theme";
     this.sidebarThemeSelect.setAttribute("aria-label", t("sidebar.theme"));
@@ -314,7 +367,7 @@ export class MapCanvas {
       themeSection.appendChild(manage);
     }
 
-    const layoutSection = this.createSidebarSection(t("sidebar.layout"));
+    const layoutSection = this.createSidebarSection(this.sidebarStylePane, t("sidebar.layout"));
     this.sidebarLayoutSelect = this.createSidebarSelect(
       layoutSection,
       t("sidebar.layoutType"),
@@ -335,20 +388,6 @@ export class MapCanvas {
       ],
       (value) => this.updateMetaAndRender({ direction: value as TreeDirection }),
     );
-    this.sidebarSpacingXInput = this.createSidebarNumber(
-      layoutSection,
-      t("settings.spacingX"),
-      8,
-      240,
-      (value) => this.updateMetaAndRender({ spacingX: value }),
-    );
-    this.sidebarSpacingYInput = this.createSidebarNumber(
-      layoutSection,
-      t("settings.spacingY"),
-      4,
-      120,
-      (value) => this.updateMetaAndRender({ spacingY: value }),
-    );
     this.sidebarAlignSelect = this.createSidebarSelect(
       layoutSection,
       t("settings.align"),
@@ -358,22 +397,15 @@ export class MapCanvas {
       ],
       (value) => this.updateMetaAndRender({ align: value as NodeAlignment }),
     );
-    this.sidebarMaxWidthInput = this.createSidebarNumber(
-      layoutSection,
-      t("settings.maxWidth"),
-      120,
-      600,
-      (value) => this.updateMetaAndRender({ maxWidth: value }),
-    );
     this.sidebarCompactInput = this.createSidebarCheckbox(
       layoutSection,
       t("settings.compact"),
       (value) => this.updateMetaAndRender({ compact: value }),
     );
 
-    const styleSection = this.createSidebarSection(t("sidebar.nodeStyle"));
+    const nodeSection = this.createSidebarSection(this.sidebarStylePane, t("sidebar.node"));
     this.sidebarNodeShapeSelect = this.createSidebarSelect(
-      styleSection,
+      nodeSection,
       t("sidebar.nodeShape"),
       [
         { value: "", label: t("sidebar.themeDefault") },
@@ -388,8 +420,34 @@ export class MapCanvas {
         }),
     );
     this.sidebarNodeShapeSelect.classList.add("simple-mind-sidebar-node-shape");
+    this.sidebarNodeFill = this.createSidebarColor(nodeSection, t("sidebar.fill"), (value) =>
+      this.updateMetaAndRender({ nodeFillColor: value }),
+    );
+    this.sidebarNodeFill.input.classList.add("simple-mind-sidebar-node-fill");
+    this.sidebarNodeBorder = this.createSidebarColor(
+      nodeSection,
+      t("sidebar.borderColor"),
+      (value) => this.updateMetaAndRender({ nodeBorderColor: value }),
+    );
+    this.sidebarNodeBorder.input.classList.add("simple-mind-sidebar-node-border");
+    this.sidebarNodeBorderWidthInput = this.createSidebarNumber(
+      nodeSection,
+      t("sidebar.borderWidth"),
+      {
+        min: LIMITS.nodeBorderWidth.min,
+        max: LIMITS.nodeBorderWidth.max,
+        placeholder: t("sidebar.defaultValue"),
+        onChange: (value) => this.updateMetaAndRender({ nodeBorderWidth: value }),
+      },
+    );
+    this.sidebarNodeBorderWidthInput.classList.add("simple-mind-sidebar-node-border-width");
+
+    const connectorSection = this.createSidebarSection(
+      this.sidebarStylePane,
+      t("sidebar.connector"),
+    );
     this.sidebarConnectorSelect = this.createSidebarSelect(
-      styleSection,
+      connectorSection,
       t("themeEditor.connector"),
       [
         { value: "", label: t("sidebar.themeDefault") },
@@ -403,8 +461,27 @@ export class MapCanvas {
         }),
     );
     this.sidebarConnectorSelect.classList.add("simple-mind-sidebar-connector");
+    this.sidebarConnectorColor = this.createSidebarColor(
+      connectorSection,
+      t("sidebar.connectorColor"),
+      (value) => this.updateMetaAndRender({ connectorColor: value }),
+    );
+    this.sidebarConnectorColor.input.classList.add("simple-mind-sidebar-connector-color");
+    this.sidebarLineWidthInput = this.createSidebarNumber(
+      connectorSection,
+      t("sidebar.connectorWidth"),
+      {
+        min: LIMITS.lineWidth.min,
+        max: LIMITS.lineWidth.max,
+        placeholder: t("sidebar.defaultValue"),
+        onChange: (value) => this.updateMetaAndRender({ lineWidth: value }),
+      },
+    );
+    this.sidebarLineWidthInput.classList.add("simple-mind-sidebar-line-width");
+
+    const fontSection = this.createSidebarSection(this.sidebarTextPane, t("sidebar.font"));
     this.sidebarFontFamilyInput = this.createSidebarText(
-      styleSection,
+      fontSection,
       t("themeEditor.fontFamily"),
       t("sidebar.themeDefault"),
       (value) =>
@@ -412,33 +489,94 @@ export class MapCanvas {
           fontFamily: value.trim() || undefined,
         }),
     );
-    this.sidebarFontSizeInput = this.createSidebarNumber(
-      styleSection,
-      t("themeEditor.fontSize"),
-      8,
-      32,
-      (value) => this.updateMetaAndRender({ fontSize: value }),
-      "",
+    this.sidebarFontFamilyInput.classList.add("simple-mind-sidebar-font-family");
+    this.sidebarFontSizeInput = this.createSidebarNumber(fontSection, t("themeEditor.fontSize"), {
+      min: LIMITS.fontSize.min,
+      max: LIMITS.fontSize.max,
+      placeholder: t("sidebar.defaultValue"),
+      onChange: (value) => this.updateMetaAndRender({ fontSize: value }),
+    });
+    this.sidebarFontSizeInput.classList.add("simple-mind-sidebar-font-size");
+
+    const textSection = this.createSidebarSection(this.sidebarTextPane, t("sidebar.text"));
+    this.sidebarTextColor = this.createSidebarColor(textSection, t("sidebar.textColor"), (value) =>
+      this.updateMetaAndRender({ textColor: value }),
     );
-    this.sidebarLineWidthInput = this.createSidebarNumber(
-      styleSection,
-      t("themeEditor.lineWidth"),
-      1,
-      6,
-      (value) => this.updateMetaAndRender({ lineWidth: value }),
-      "",
+    this.sidebarTextColor.input.classList.add("simple-mind-sidebar-text-color");
+    this.sidebarBoldInput = this.createSidebarCheckbox(textSection, t("sidebar.bold"), (value) =>
+      this.updateMetaAndRender({ bold: value ? true : undefined }),
     );
+    this.sidebarBoldInput.classList.add("simple-mind-sidebar-bold");
+    this.sidebarItalicInput = this.createSidebarCheckbox(
+      textSection,
+      t("sidebar.italic"),
+      (value) => this.updateMetaAndRender({ italic: value ? true : undefined }),
+    );
+    this.sidebarItalicInput.classList.add("simple-mind-sidebar-italic");
+    this.sidebarUnderlineInput = this.createSidebarCheckbox(
+      textSection,
+      t("sidebar.underline"),
+      (value) => this.updateMetaAndRender({ underline: value ? true : undefined }),
+    );
+    this.sidebarUnderlineInput.classList.add("simple-mind-sidebar-underline");
+    this.sidebarTextAlignSelect = this.createSidebarSelect(
+      textSection,
+      t("sidebar.textAlign"),
+      [
+        { value: "", label: t("sidebar.themeDefault") },
+        { value: "left", label: t("sidebar.textAlign.left") },
+        { value: "center", label: t("sidebar.textAlign.center") },
+        { value: "right", label: t("sidebar.textAlign.right") },
+      ],
+      (value) =>
+        this.updateMetaAndRender({
+          textAlign: value ? (value as TextAlign) : undefined,
+        }),
+    );
+    this.sidebarTextAlignSelect.classList.add("simple-mind-sidebar-text-align");
+    this.sidebarLineHeightInput = this.createSidebarNumber(textSection, t("sidebar.lineHeight"), {
+      min: LIMITS.lineHeight.min,
+      max: LIMITS.lineHeight.max,
+      step: 0.1,
+      placeholder: t("sidebar.defaultValue"),
+      onChange: (value) => this.updateMetaAndRender({ lineHeight: value }),
+    });
+    this.sidebarLineHeightInput.classList.add("simple-mind-sidebar-line-height");
+
+    this.setSidebarTab(this.activeTab);
   }
 
-  /** Creates a labeled sidebar section. */
-  private createSidebarSection(title: string): HTMLElement {
+  /** Creates one tab pane. */
+  private createSidebarPane(tab: SidebarTab): HTMLElement {
+    const pane = this.sidebarEl.ownerDocument.createElement("div");
+    pane.className = "simple-mind-sidebar-pane";
+    pane.dataset.tab = tab;
+    pane.setAttribute("role", "tabpanel");
+    this.sidebarEl.appendChild(pane);
+    return pane;
+  }
+
+  /** Shows one sidebar tab and hides the other. */
+  private setSidebarTab(tab: SidebarTab): void {
+    this.activeTab = tab;
+    for (const [id, button] of this.sidebarTabs) {
+      const active = id === tab;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-selected", String(active));
+    }
+    this.sidebarStylePane.hidden = tab !== "style";
+    this.sidebarTextPane.hidden = tab !== "text";
+  }
+
+  /** Creates a labeled sidebar section inside a pane. */
+  private createSidebarSection(parent: HTMLElement, title: string): HTMLElement {
     const doc = this.sidebarEl.ownerDocument;
     const section = doc.createElement("section");
     section.className = "simple-mind-sidebar-section";
     const heading = doc.createElement("h4");
     heading.textContent = title;
     section.appendChild(heading);
-    this.sidebarEl.appendChild(section);
+    parent.appendChild(section);
     return section;
   }
 
@@ -462,6 +600,7 @@ export class MapCanvas {
   ): HTMLSelectElement {
     const select = this.sidebarEl.ownerDocument.createElement("select");
     select.className = "simple-mind-sidebar-select";
+    select.setAttribute("aria-label", label);
     for (const option of options) {
       const item = this.sidebarEl.ownerDocument.createElement("option");
       item.value = option.value;
@@ -473,25 +612,31 @@ export class MapCanvas {
     return select;
   }
 
-  /** Adds a number control. */
+  /** Adds a number control that clears its override when emptied. */
   private createSidebarNumber(
     section: HTMLElement,
     label: string,
-    min: number,
-    max: number,
-    onChange: (value: number) => void,
-    placeholder = "",
+    options: SidebarNumberOptions,
   ): HTMLInputElement {
     const input = this.sidebarEl.ownerDocument.createElement("input");
     input.type = "number";
-    input.min = String(min);
-    input.max = String(max);
-    input.placeholder = placeholder;
+    input.min = String(options.min);
+    input.max = String(options.max);
+    input.placeholder = options.placeholder ?? "";
+    if (options.step !== undefined) input.step = String(options.step);
     input.className = "simple-mind-sidebar-number";
+    input.setAttribute("aria-label", label);
     input.addEventListener("change", () => {
+      if (input.value.trim() === "") {
+        options.onChange(undefined);
+        return;
+      }
       const value = Number(input.value);
-      if (!Number.isFinite(value)) return;
-      onChange(Math.min(max, Math.max(min, value)));
+      if (!Number.isFinite(value)) {
+        options.onChange(undefined);
+        return;
+      }
+      options.onChange(Math.min(options.max, Math.max(options.min, value)));
     });
     this.createSidebarRow(section, label, input);
     return input;
@@ -508,6 +653,7 @@ export class MapCanvas {
     input.type = "text";
     input.placeholder = placeholder;
     input.className = "simple-mind-sidebar-text";
+    input.setAttribute("aria-label", label);
     input.addEventListener("change", () => onChange(input.value));
     this.createSidebarRow(section, label, input);
     return input;
@@ -522,9 +668,38 @@ export class MapCanvas {
     const input = this.sidebarEl.ownerDocument.createElement("input");
     input.type = "checkbox";
     input.className = "simple-mind-sidebar-checkbox";
+    input.setAttribute("aria-label", label);
     input.addEventListener("change", () => onChange(input.checked));
     this.createSidebarRow(section, label, input);
     return input;
+  }
+
+  /** Adds a color picker with a reset-to-theme button. */
+  private createSidebarColor(
+    section: HTMLElement,
+    label: string,
+    onChange: (value: string | undefined) => void,
+  ): SidebarColorControl {
+    const doc = this.sidebarEl.ownerDocument;
+    const wrap = doc.createElement("span");
+    wrap.className = "simple-mind-sidebar-colors";
+
+    const input = doc.createElement("input");
+    input.type = "color";
+    input.className = "simple-mind-sidebar-color";
+    input.setAttribute("aria-label", label);
+    input.addEventListener("change", () => onChange(input.value));
+
+    const reset = doc.createElement("button");
+    reset.type = "button";
+    reset.className = "simple-mind-sidebar-reset";
+    reset.textContent = "×";
+    reset.setAttribute("aria-label", t("sidebar.resetColor"));
+    reset.addEventListener("click", () => onChange(undefined));
+
+    wrap.append(input, reset);
+    this.createSidebarRow(section, label, wrap);
+    return { input, reset };
   }
 
   /** Rebuilds the theme choices in the sidebar. */
@@ -548,19 +723,44 @@ export class MapCanvas {
   private syncSidebar(): void {
     if (!this.sidebarThemeSelect) return;
     const meta = this.controller?.getDocument().meta;
+    const tokens = tokensForMode(this.effectiveTheme, this.dark);
+
     this.syncThemeOptions();
     this.sidebarLayoutSelect.value = meta?.layout ?? this.settings.defaultLayout;
     this.sidebarDirectionSelect.value = meta?.direction ?? this.settings.defaultDirection;
-    this.sidebarSpacingXInput.value = String(meta?.spacingX ?? this.settings.defaultSpacingX);
-    this.sidebarSpacingYInput.value = String(meta?.spacingY ?? this.settings.defaultSpacingY);
     this.sidebarAlignSelect.value = meta?.align ?? this.settings.defaultAlign;
-    this.sidebarMaxWidthInput.value = String(meta?.maxWidth ?? this.settings.defaultMaxWidth);
     this.sidebarCompactInput.checked = meta?.compact ?? this.settings.defaultCompact;
+
     this.sidebarNodeShapeSelect.value = meta?.nodeShape ?? "";
+    this.syncColorControl(this.sidebarNodeFill, meta?.nodeFillColor, tokens.node.background);
+    this.syncColorControl(this.sidebarNodeBorder, meta?.nodeBorderColor, tokens.node.border);
+    this.sidebarNodeBorderWidthInput.value = optionalNumber(meta?.nodeBorderWidth);
     this.sidebarConnectorSelect.value = meta?.connectorStyle ?? "";
+    this.syncColorControl(
+      this.sidebarConnectorColor,
+      meta?.connectorColor,
+      tokens.branch.overrideColor ?? tokens.branch.palette[0] ?? tokens.selection.outline,
+    );
+    this.sidebarLineWidthInput.value = optionalNumber(meta?.lineWidth);
+
     this.sidebarFontFamilyInput.value = meta?.fontFamily ?? "";
-    this.sidebarFontSizeInput.value = meta?.fontSize !== undefined ? String(meta.fontSize) : "";
-    this.sidebarLineWidthInput.value = meta?.lineWidth !== undefined ? String(meta.lineWidth) : "";
+    this.sidebarFontSizeInput.value = optionalNumber(meta?.fontSize);
+    this.syncColorControl(this.sidebarTextColor, meta?.textColor, tokens.node.text);
+    this.sidebarBoldInput.checked = meta?.bold === true;
+    this.sidebarItalicInput.checked = meta?.italic === true;
+    this.sidebarUnderlineInput.checked = meta?.underline === true;
+    this.sidebarTextAlignSelect.value = meta?.textAlign ?? "";
+    this.sidebarLineHeightInput.value = optionalNumber(meta?.lineHeight);
+  }
+
+  /** Shows the effective color and enables reset only when an override exists. */
+  private syncColorControl(
+    control: SidebarColorControl,
+    override: string | undefined,
+    fallback: string,
+  ): void {
+    control.input.value = resolveColorInput(override ?? fallback, this.rootEl);
+    control.reset.disabled = override === undefined;
   }
 
   /** Applies per-file metadata changes and redraws. */
@@ -582,6 +782,7 @@ export class MapCanvas {
     );
     this.theme = base;
     const effective = document ? applyMetaOverrides(base, document.meta) : base;
+    this.effectiveTheme = effective;
     this.dark = isDarkDocument(this.rootEl.ownerDocument);
     applyTheme(this.rootEl, effective, this.dark);
     this.renderer.setTheme(effective, this.dark);
@@ -1200,4 +1401,43 @@ export class MapCanvas {
 /** Returns true when Obsidian's document is in dark mode. */
 function isDarkDocument(doc: Document): boolean {
   return doc.body.classList.contains("theme-dark");
+}
+
+/** Formats an optional numeric override for a sidebar input. */
+function optionalNumber(value: number | undefined): string {
+  return value === undefined ? "" : String(value);
+}
+
+const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+const RGB_COLOR = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/i;
+
+/** Expands a hex color into the six-digit form required by color inputs. */
+function normalizeHex(value: string): string | null {
+  if (!HEX_COLOR.test(value)) return null;
+  if (value.length === 7) return value.toLowerCase();
+  const [, r, g, b] = value;
+  return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
+}
+
+/** Resolves a token color, including CSS variables, into a color input value. */
+function resolveColorInput(value: string, host: HTMLElement): string {
+  const direct = normalizeHex(value);
+  if (direct) return direct;
+
+  const win = host.ownerDocument.defaultView;
+  if (!win) return COLOR_INPUT_FALLBACK;
+  const probe = host.ownerDocument.createElement("span");
+  probe.style.display = "none";
+  probe.style.color = value;
+  host.appendChild(probe);
+  const computed = win.getComputedStyle(probe).color;
+  probe.remove();
+
+  const match = RGB_COLOR.exec(computed);
+  if (!match) return COLOR_INPUT_FALLBACK;
+  const hex = match
+    .slice(1)
+    .map((part) => Number(part).toString(16).padStart(2, "0"))
+    .join("");
+  return `#${hex}`;
 }

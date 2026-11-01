@@ -38,6 +38,7 @@ The file opens as a map. The Source action switches the same tab to Obsidian's n
 - Three layouts: mind map, tree, and organization chart.
 - Direct editing: add, edit, delete, collapse, drag, copy/paste, undo, and redo.
 - Eight built-in themes with automatic light/dark switching and a custom theme editor.
+- A per-map Style/Text panel for node, connector, and text overrides.
 - English and Chinese UI.
 - Desktop-first performance target of 1,000 nodes per map.
 

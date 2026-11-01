@@ -77,9 +77,17 @@ mindmap:
 - `align`: `center` or `start`; controls parent alignment relative to its child block.
 - `compact`: boolean; reduces gaps.
 - `maxWidth`: maximum node width; clamped to 120-600.
-- Optional per-file style overrides: `nodeShape` (`rounded`, `pill`, `underline`, `plain`),
-  `connectorStyle` (`curve`, `orthogonal`, `straight`), `fontFamily`, `fontSize` (8-32), and
-  `lineWidth` (1-6). They are applied on top of the selected theme.
+- Optional per-file style overrides, applied on top of the selected theme:
+  - Node: `nodeShape` (`rounded`, `pill`, `underline`, `plain`), `nodeFillColor`, `nodeBorderColor`,
+    `nodeBorderWidth` (0-8).
+  - Connector: `connectorStyle` (`curve`, `orthogonal`, `straight`), `connectorColor`,
+    `lineWidth` (1-6).
+  - Text: `fontFamily`, `fontSize` (8-32), `textColor`, `bold`, `italic`, `underline`,
+    `textAlign` (`left`, `center`, `right`), `lineHeight` (1-3).
+
+  An override is deleted from the file when the control is reset, so the theme value applies again.
+  Themes own complete style designs (colors, fonts, shapes, and connectors); per-file overrides only
+  replace the fields the user changes.
 
 Missing values fall back to plugin defaults. Invalid values fall back to the default, produce a
 non-blocking notice, and are not written back until the user changes the corresponding setting.
@@ -163,6 +171,21 @@ interface MindMapMeta {
   align: NodeAlignment;
   compact: boolean;
   maxWidth: number;
+  nodeShape?: NodeShape;
+  nodeFillColor?: string;
+  nodeBorderColor?: string;
+  nodeBorderWidth?: number;
+  connectorStyle?: ConnectorStyle;
+  connectorColor?: string;
+  lineWidth?: number;
+  fontFamily?: string;
+  fontSize?: number;
+  textColor?: string;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  textAlign?: TextAlign;
+  lineHeight?: number;
 }
 
 interface MindNode {
@@ -544,6 +567,8 @@ Each theme provides both light and dark tokens. The active variant is selected b
 - Custom themes live in plugin data and have generated ids.
 - The editor provides light and dark tabs, color inputs, node shape and connector selects, font
   controls, and a small live preview.
+- A theme is a full style design: colors, typography, node shape and border, and connector geometry
+  and width all belong to the theme. Per-file overrides are applied on top.
 - Import validates schema, clamps numeric values, and rejects unknown or malformed fields.
 - Export writes a JSON object containing the theme definition.
 - Deleting a theme that is referenced by a file falls back to the global default with a notice.
@@ -567,11 +592,21 @@ Each theme provides both light and dark tokens. The active variant is selected b
 
 ### 11.2.1 Front-end style sidebar
 
-The map view includes a right-side style panel. It controls the current file's theme, layout,
-direction, spacing, alignment, compact mode, maximum width, node shape, connector style, font family
-and size, and line width. Every change is written to the file's `mindmap` frontmatter and reprocessed
-immediately, so existing maps update without being recreated. A "Manage themes" action opens the
-settings tab for custom theme creation and color editing.
+The map view includes a right-side style panel with two tabs:
+
+- **Style**: theme, layout type, tree direction, parent alignment, compact mode; node shape, fill,
+  border color, and border width; connector style, color, and thickness.
+- **Text**: font family and size; text color, bold, italic, underline, text alignment, and line
+  height.
+
+The panel only exposes settings that belong to one map. Horizontal gap, vertical gap, and maximum
+node width live in the plugin settings as defaults. The global default font lives in settings as
+well; a font set in the Text tab overrides it for that file.
+
+Every change is written to the file's `mindmap` frontmatter and reprocessed immediately, so existing
+maps update without being recreated. Color controls fall back to the effective theme color and expose
+a reset action that removes the override. A "Manage themes" action opens the settings tab for custom
+theme creation and color editing.
 
 Command names use the i18n dictionary. On language change, commands are removed and re-registered
 using the same ids. This requires `minAppVersion: 1.7.2`.

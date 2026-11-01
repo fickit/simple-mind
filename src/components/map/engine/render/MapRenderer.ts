@@ -496,11 +496,12 @@ export class MapRenderer {
     return path;
   }
 
-  /** Assigns branch colors by top-level branch order. */
+  /** Assigns a uniform connector color or per-branch palette colors. */
   private assignColors(document: MindMapDocument): void {
     this.colors.clear();
-    const palette = this.themeTokens().branch.palette;
-    this.colors.set(document.root.id, this.themeTokens().selection.outline);
+    const tokens = this.themeTokens();
+    const override = tokens.branch.overrideColor;
+    this.colors.set(document.root.id, tokens.selection.outline);
 
     const assign = (node: MindNode, color: string): void => {
       this.colors.set(node.id, color);
@@ -508,7 +509,14 @@ export class MapRenderer {
     };
 
     document.root.children.forEach((child, index) => {
-      assign(child, palette[index % palette.length] ?? this.themeTokens().selection.outline);
+      if (override) {
+        assign(child, override);
+        return;
+      }
+      assign(
+        child,
+        tokens.branch.palette[index % tokens.branch.palette.length] ?? tokens.selection.outline,
+      );
     });
   }
 

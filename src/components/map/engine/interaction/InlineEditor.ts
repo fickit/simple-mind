@@ -30,9 +30,11 @@ const MIRROR_STYLE_PROPS = [
   "fontFamily",
   "fontSize",
   "fontWeight",
+  "fontStyle",
   "lineHeight",
   "letterSpacing",
   "textAlign",
+  "textDecoration",
   "paddingTop",
   "paddingRight",
   "paddingBottom",
@@ -143,8 +145,6 @@ export class InlineEditor {
       copyComputedStyles(options.nodeElement, input);
       copyComputedStyles(options.nodeElement, mirror);
     }
-    input.style.textAlign = "center";
-    mirror.style.textAlign = "center";
 
     input.addEventListener("compositionstart", () => {
       this.composing = true;

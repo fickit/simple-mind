@@ -7,7 +7,7 @@ export type TreeDirection = "right" | "left";
 /** Alignment of a parent node relative to its child block. */
 export type NodeAlignment = "center" | "start";
 
-import type { ConnectorStyle, NodeShape } from "./theme";
+import type { ConnectorStyle, NodeShape, TextAlign } from "./theme";
 
 /** Per-file map settings stored in the `mindmap` frontmatter block. */
 export interface MindMapMeta {
@@ -21,10 +21,20 @@ export interface MindMapMeta {
   compact: boolean;
   maxWidth: number;
   nodeShape?: NodeShape;
+  nodeFillColor?: string;
+  nodeBorderColor?: string;
+  nodeBorderWidth?: number;
   connectorStyle?: ConnectorStyle;
+  connectorColor?: string;
+  lineWidth?: number;
   fontFamily?: string;
   fontSize?: number;
-  lineWidth?: number;
+  textColor?: string;
+  bold?: boolean;
+  italic?: boolean;
+  underline?: boolean;
+  textAlign?: TextAlign;
+  lineHeight?: number;
 }
 
 /** A live mind map node. */

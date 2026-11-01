@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
+import type { ThemeTokens } from "../../../types/theme";
 import { OBSIDIAN_THEME } from "./presets";
 import {
   cloneTheme,
@@ -36,5 +37,23 @@ describe("theme-utils", () => {
     expect(cloned.name).toBe("Custom");
     expect(cloned.builtIn).toBe(false);
     expect(createCustomThemeId([cloned])).not.toBe(cloned.id);
+  });
+
+  it("fills typography fields on themes saved by earlier versions", () => {
+    const legacy = JSON.parse(JSON.stringify(OBSIDIAN_THEME)) as {
+      light: { typography: Partial<ThemeTokens["typography"]> };
+      dark: { typography: Partial<ThemeTokens["typography"]> };
+    };
+    for (const tokens of [legacy.light, legacy.dark]) {
+      delete tokens.typography.fontStyle;
+      delete tokens.typography.textAlign;
+      delete tokens.typography.textDecoration;
+    }
+
+    const imported = themeFromJson(JSON.stringify(legacy));
+
+    expect(imported?.light.typography.fontStyle).toBe("normal");
+    expect(imported?.light.typography.textAlign).toBe("center");
+    expect(imported?.light.typography.textDecoration).toBe("none");
   });
 });
