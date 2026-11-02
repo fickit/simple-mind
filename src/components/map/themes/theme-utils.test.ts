@@ -4,6 +4,7 @@ import type { ThemeTokens } from "../../../types/theme";
 import { OBSIDIAN_THEME } from "./presets";
 import {
   cloneTheme,
+  contrastRatio,
   createCustomThemeId,
   isValidTheme,
   themeFromJson,
@@ -55,5 +56,22 @@ describe("theme-utils", () => {
     expect(imported?.light.typography.fontStyle).toBe("normal");
     expect(imported?.light.typography.textAlign).toBe("center");
     expect(imported?.light.typography.textDecoration).toBe("none");
+  });
+});
+
+describe("contrastRatio", () => {
+  it("matches the WCAG reference pairs", () => {
+    expect(contrastRatio("#000000", "#ffffff")).toBeCloseTo(21, 0);
+    expect(contrastRatio("#767676", "#ffffff")).toBeCloseTo(4.54, 1);
+    expect(contrastRatio("#ffffff", "#ffffff")).toBeCloseTo(1, 2);
+  });
+
+  it("is symmetric in the two arguments", () => {
+    expect(contrastRatio("#5c4033", "#faf6f1")).toBeCloseTo(contrastRatio("#faf6f1", "#5c4033"), 6);
+  });
+
+  it("accepts short hex colors", () => {
+    expect(toHexColor("#fff")).toBe("#ffffff");
+    expect(contrastRatio("#fff", "#000")).toBeCloseTo(21, 0);
   });
 });

@@ -47,4 +47,5 @@ export function applyTheme(root: HTMLElement, theme: ThemeDefinition, dark: bool
   set("--sm-collapse-bg", tokens.collapse.background);
   set("--sm-collapse-text", tokens.collapse.text);
   root.dataset.simpleMindTheme = theme.id;
+  root.dataset.smMode = dark ? "dark" : "light";
 }

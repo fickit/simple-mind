@@ -11,19 +11,21 @@ Obsidian's global styles and make light/dark switching and custom themes determi
 
 ## Files
 
-- `applyTheme.ts`: compiles a token set into `--sm-*` variables and resolves the active light/dark
-  variant.
-- `presets.ts`: eight built-in themes with light and dark variants, plus fallback resolution.
+- `applyTheme.ts`: compiles a token set into `--sm-*` variables, resolves the active light/dark
+  variant, and marks the map root with `data-sm-mode` so the chrome can switch palettes.
+- `presets.ts`: nine built-in themes with light and dark variants, plus fallback resolution.
 - `overrides.ts`: applies the file's connector shape and global font/connector defaults on top of a
   theme.
 - `nodeVisual.ts`: resolves one node's effective colors and typography from a theme plus its inline
   style marker.
-- `theme-utils.ts`: clones, validates, and serializes theme definitions for custom theme management.
+- `theme-utils.ts`: clones, validates, and serializes theme definitions, and computes WCAG contrast
+  ratios for color choices.
 
 ## Built-in themes
 
-Obsidian Native, Paper, Graphite, Nord, Solarized, Forest, Ocean, and Sakura. Every theme defines a
-complete style design—colors, typography, node shape and border, and connector geometry and width.
+Meadow (the default), Obsidian Native, Paper, Graphite, Nord, Solarized, Forest, Ocean, and Sakura.
+Every theme defines a complete style design—colors, typography, node shape and border, and connector
+geometry and width. Meadow is the Natural Organic light palette over a moonlit-forest dark one.
 
 ## Call flow
 

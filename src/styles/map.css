@@ -10,66 +10,95 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--background-modifier-border);
-  background: var(--background-secondary);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--smui-hairline);
+  background: var(--smui-panel);
 }
 
 .simple-mind-toolbar-divider {
   width: 1px;
   height: 18px;
   margin: 0 2px;
-  background: var(--background-modifier-border);
+  background: var(--smui-hairline);
 }
 
 .simple-mind-toolbar-spacer {
   flex: 1;
 }
 
-.simple-mind-toolbar-button {
-  min-width: 28px;
-  height: 26px;
-  padding: 0 8px;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 6px;
-  background: var(--background-primary);
-  color: var(--text-normal);
+.simple-mind-toolbar-button,
+.simple-mind-toolbar-select {
+  min-width: 30px;
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--smui-edge);
+  border-radius: var(--smui-radius-pill);
+  background: var(--smui-raised);
+  color: var(--smui-body);
+  font-family: var(--smui-sans);
   font-size: var(--font-ui-smaller);
   cursor: pointer;
-}
-
-.simple-mind-toolbar-button:hover {
-  background: var(--background-modifier-hover);
+  transition:
+    background-color var(--smui-duration) ease-in-out,
+    border-color var(--smui-duration) ease-in-out,
+    color var(--smui-duration) ease-in-out;
 }
 
 .simple-mind-toolbar-select {
   max-width: 150px;
-  height: 26px;
-  padding: 0 6px;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 6px;
-  background: var(--background-primary);
-  color: var(--text-normal);
-  font-size: var(--font-ui-smaller);
+  padding: 0 8px;
+}
+
+.simple-mind-toolbar-button:hover,
+.simple-mind-toolbar-select:hover {
+  border-color: var(--smui-sage);
+  background: var(--smui-hover);
+  color: var(--smui-ink);
+}
+
+.simple-mind-toolbar-button:active {
+  background: var(--smui-edge);
 }
 
 .simple-mind-toolbar-button:disabled,
 .simple-mind-toolbar-button:disabled:hover {
   opacity: 0.45;
-  background: var(--background-primary);
+  border-color: var(--smui-hairline);
+  background: var(--smui-raised);
+  color: var(--smui-muted);
   cursor: default;
 }
 
 .simple-mind-banner {
-  padding: 6px 12px;
-  border-bottom: 1px solid var(--background-modifier-border);
-  background: var(--background-modifier-error);
-  color: var(--text-error);
+  margin: 8px 12px 0;
+  padding: 8px 14px;
+  border: 1px solid var(--smui-edge);
+  border-radius: var(--smui-radius-card);
+  background: var(--smui-danger-bg);
+  color: var(--smui-danger-ink);
   font-size: var(--font-ui-smaller);
 }
 
 .simple-mind-banner[hidden] {
   display: none;
+}
+
+.simple-mind-map button:focus-visible,
+.simple-mind-map select:focus-visible,
+.simple-mind-map input:focus-visible,
+.simple-mind-settings :is(button, select, input):focus-visible,
+.simple-mind-theme-editor :is(button, select, input):focus-visible {
+  outline: 2px solid var(--smui-sage);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .simple-mind-map *,
+  .simple-mind-theme-editor *,
+  .simple-mind-map *::before,
+  .simple-mind-map *::after {
+    transition-duration: 0ms;
+  }
 }
 
 .simple-mind-canvas-host {
@@ -89,10 +118,11 @@
   flex: 0 0 270px;
   width: 270px;
   min-height: 0;
-  padding: 12px;
+  padding: 14px 16px 18px;
   overflow-y: auto;
-  border-left: 1px solid var(--background-modifier-border);
-  background: var(--background-secondary);
+  border-left: 1px solid var(--smui-hairline);
+  border-radius: var(--smui-radius-panel);
+  background: var(--smui-panel);
   box-sizing: border-box;
 }
 
@@ -105,49 +135,65 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
-  color: var(--text-normal);
+  color: var(--smui-ink);
+  font-family: var(--smui-serif);
   font-size: var(--font-ui-medium);
   font-weight: 600;
 }
 
 .simple-mind-sidebar-close {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   padding: 0;
-  border: none;
-  border-radius: 4px;
+  border: 1px solid transparent;
+  border-radius: var(--smui-radius-pill);
   background: transparent;
-  color: var(--text-muted);
+  color: var(--smui-muted);
   font-size: 16px;
+  line-height: 1;
   cursor: pointer;
+  transition:
+    background-color var(--smui-duration) ease-in-out,
+    color var(--smui-duration) ease-in-out;
 }
 
 .simple-mind-sidebar-close:hover {
-  background: var(--background-modifier-hover);
+  background: var(--smui-hover);
+  color: var(--smui-ink);
 }
 
 .simple-mind-sidebar-tabs {
   display: flex;
-  gap: 4px;
-  margin-bottom: 14px;
-  border-bottom: 1px solid var(--background-modifier-border);
+  gap: 6px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--smui-hairline);
 }
 
 .simple-mind-sidebar-tab {
   flex: 1;
-  padding: 6px 0;
-  border: none;
-  border-bottom: 2px solid transparent;
+  padding: 5px 0;
+  border: 1px solid transparent;
+  border-radius: var(--smui-radius-pill);
   background: transparent;
-  color: var(--text-muted);
+  color: var(--smui-muted);
+  font-family: var(--smui-sans);
   font-size: var(--font-ui-smaller);
   cursor: pointer;
+  transition:
+    background-color var(--smui-duration) ease-in-out,
+    color var(--smui-duration) ease-in-out;
+}
+
+.simple-mind-sidebar-tab:hover {
+  background: var(--smui-hover);
+  color: var(--smui-ink);
 }
 
 .simple-mind-sidebar-tab.is-active {
-  border-bottom-color: var(--interactive-accent);
-  color: var(--text-normal);
-  font-weight: 600;
+  border-color: var(--smui-accent);
+  background: var(--smui-accent);
+  color: var(--smui-accent-ink);
 }
 
 .simple-mind-sidebar-pane[hidden] {
@@ -155,23 +201,32 @@
 }
 
 .simple-mind-sidebar-section {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .simple-mind-sidebar-section h4 {
-  margin: 0 0 8px;
-  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
+  color: var(--smui-muted);
+  font-family: var(--smui-serif);
   font-size: var(--font-ui-smaller);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+}
+
+.simple-mind-sidebar-section h4::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--smui-hairline);
 }
 
 .simple-mind-sidebar-hint {
-  margin: 0 0 8px;
-  color: var(--text-faint);
+  margin: 0 0 10px;
+  color: var(--smui-muted);
   font-size: var(--font-ui-smaller);
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .simple-mind-sidebar-hint[hidden] {
@@ -183,8 +238,8 @@
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
-  margin: 6px 0;
-  color: var(--text-normal);
+  margin: 7px 0;
+  color: var(--smui-body);
   font-size: var(--font-ui-smaller);
 }
 
@@ -201,18 +256,29 @@
 .simple-mind-sidebar-number,
 .simple-mind-sidebar-text {
   max-width: 130px;
-  height: 26px;
-  padding: 0 6px;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 5px;
-  background: var(--background-primary);
-  color: var(--text-normal);
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--smui-edge);
+  border-radius: var(--smui-radius-pill);
+  background: var(--smui-raised);
+  color: var(--smui-ink);
+  font-family: var(--smui-sans);
   font-size: var(--font-ui-smaller);
   box-sizing: border-box;
+  transition:
+    border-color var(--smui-duration) ease-in-out,
+    background-color var(--smui-duration) ease-in-out;
+}
+
+.simple-mind-sidebar-select:focus,
+.simple-mind-sidebar-number:focus,
+.simple-mind-sidebar-text:focus {
+  border-color: var(--smui-sage);
 }
 
 .simple-mind-sidebar-number {
   width: 74px;
+  padding: 0 8px;
 }
 
 .simple-mind-sidebar-text {
@@ -227,22 +293,30 @@
 .simple-mind-sidebar-button {
   width: 100%;
   margin-top: 8px;
-  padding: 5px 8px;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 5px;
-  background: var(--background-primary);
-  color: var(--text-normal);
+  padding: 6px 12px;
+  border: 1px solid var(--smui-edge);
+  border-radius: var(--smui-radius-pill);
+  background: var(--smui-raised);
+  color: var(--smui-body);
+  font-family: var(--smui-sans);
   font-size: var(--font-ui-smaller);
   cursor: pointer;
+  transition:
+    border-color var(--smui-duration) ease-in-out,
+    background-color var(--smui-duration) ease-in-out,
+    color var(--smui-duration) ease-in-out;
 }
 
 .simple-mind-sidebar-button:hover {
-  background: var(--background-modifier-hover);
+  border-color: var(--smui-sage);
+  background: var(--smui-hover);
+  color: var(--smui-ink);
 }
 
 .simple-mind-sidebar-checkbox {
   width: 16px;
   height: 16px;
+  accent-color: var(--smui-accent);
 }
 
 .simple-mind-sidebar-colors {
@@ -255,27 +329,31 @@
   width: 44px;
   height: 26px;
   padding: 2px;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 5px;
-  background: var(--background-primary);
+  border: 1px solid var(--smui-edge);
+  border-radius: var(--smui-radius-pill);
+  background: var(--smui-raised);
   cursor: pointer;
 }
 
 .simple-mind-sidebar-reset {
-  width: 24px;
+  width: 26px;
   height: 26px;
   padding: 0;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 5px;
-  background: var(--background-primary);
-  color: var(--text-muted);
+  border: 1px solid var(--smui-edge);
+  border-radius: var(--smui-radius-pill);
+  background: var(--smui-raised);
+  color: var(--smui-muted);
   font-size: 14px;
   line-height: 1;
   cursor: pointer;
+  transition:
+    background-color var(--smui-duration) ease-in-out,
+    color var(--smui-duration) ease-in-out;
 }
 
 .simple-mind-sidebar-reset:hover:not(:disabled) {
-  background: var(--background-modifier-hover);
+  background: var(--smui-hover);
+  color: var(--smui-ink);
 }
 
 .simple-mind-sidebar-reset:disabled {
@@ -288,7 +366,11 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  background: var(--sm-canvas-bg, var(--background-primary));
+  background-color: var(--sm-canvas-bg, var(--smui-paper));
+  background-image: var(--smui-grain);
+  background-size: var(--smui-grain-size);
+  background-position: var(--smui-grain-position);
+  background-repeat: var(--smui-grain-repeat);
   cursor: grab;
   outline: none;
 }
@@ -298,7 +380,7 @@
 }
 
 .simple-mind-canvas:focus-visible {
-  box-shadow: inset 0 0 0 1px var(--sm-selection-outline);
+  box-shadow: inset 0 0 0 2px var(--smui-sage);
 }
 
 .simple-mind-inline-editor {
@@ -328,7 +410,7 @@
 }
 
 .simple-mind-inline-editor::placeholder {
-  color: var(--text-faint);
+  color: color-mix(in srgb, var(--sm-node-text) 55%, transparent);
 }
 
 .simple-mind-editor-mirror {

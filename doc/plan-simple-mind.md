@@ -193,6 +193,12 @@ Branch: `feat/core`
 - `√` Draw curved connectors as one sweep so the line leaves the node without a straight stub.
 - `√` Fold the tree direction into the layout type (`tree-left` / `tree-right`) and drop the alignment
   option from the panel, the settings, and the frontmatter.
+- `√` Add the Meadow theme pair as the new default: Natural Organic light and a moonlit-forest dark.
+- `√` Give the chrome its own `--smui-*` tokens in both modes: pill controls, asymmetric container
+  radii, serif section labels without uppercase tracking, and a static canvas atmosphere (paper
+  speckle in light, staggered star fields with a mist band in dark).
+- `√` Keep chrome motion color-only at 140 ms with a sage keyboard focus and a reduced-motion fallback,
+  and re-sync the sidebar when Obsidian flips between light and dark.
 - `√` Refresh maps on Obsidian light/dark changes through `css-change` plus a body-class fallback.
 - `√` Implement drag start threshold, reparent, reorder, drop indicators, and hover-to-expand.
 - `√` Implement internal clipboard, cut, copy, and paste, plus system-clipboard text fallback.
@@ -220,7 +226,7 @@ Manual: open a sample map in Obsidian and exercise every shortcut.
 Branch: `feat/core`
 
 - `√` Define `ThemeTokens`, `ThemeDefinition`, `NodeShape`, and `ConnectorStyle`.
-- `√` Implement the eight built-in themes with light and dark variants.
+- `√` Implement the built-in themes with light and dark variants (nine since Meadow was added).
 - `√` Implement built-in theme resolution with native-theme fallback and per-file frontmatter
   selection.
 - `√` Implement CSS variable compilation scoped to the view root.
@@ -230,7 +236,7 @@ Branch: `feat/core`
 - `√` Add `README.md` for the theme module.
 - `√` Unit tests: built-in theme count, token completeness, fallback behavior, frontmatter selection.
 - `√` Verify: `npm run typecheck && npm run test`.
-- `-` Manual test: all eight themes and custom theme reload.
+- `-` Manual test: all nine themes and custom theme reload.
 - `√` Commit the built-in theme checkpoint.
 
 Verification:
@@ -346,7 +352,7 @@ node scripts/benchmark.mjs
   bundle and the add button between the child lines, collapsed groups become count bubbles and lose
   the add button, and side-aware add buttons persist a branch's root side. Compact
   spacing and the straight connector style are removed.
-- Phase 6 themes: eight built-in themes, per-file selection, automatic light/dark switching, custom
+- Phase 6 themes: nine built-in themes, per-file selection, automatic light/dark switching, custom
   theme editing, import/export, and live preview are implemented.
 - Phase 7 view integration: TextFileView, source switching, status bar, commands, and new-map creation
   are implemented; filename prompt and per-file view-state restore remain.

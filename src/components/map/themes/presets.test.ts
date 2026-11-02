@@ -1,17 +1,20 @@
 import { describe, expect, it } from "vitest";
+import { DEFAULT_THEME_ID } from "../../../config/constants";
 import type { ThemeDefinition } from "../../../types/theme";
 import {
   BUILT_IN_THEMES,
   createObsidianCustomTheme,
   getBuiltInTheme,
+  MEADOW_THEME,
   OBSIDIAN_THEME,
   resolveTheme,
 } from "./presets";
+import { contrastRatio } from "./theme-utils";
 
 describe("built-in themes", () => {
-  it("ships eight unique themes", () => {
-    expect(BUILT_IN_THEMES).toHaveLength(8);
-    expect(new Set(BUILT_IN_THEMES.map((theme) => theme.id)).size).toBe(8);
+  it("ships nine unique themes", () => {
+    expect(BUILT_IN_THEMES).toHaveLength(9);
+    expect(new Set(BUILT_IN_THEMES.map((theme) => theme.id)).size).toBe(9);
     expect(BUILT_IN_THEMES.every((theme) => theme.name.length > 0)).toBe(true);
   });
 
@@ -26,9 +29,10 @@ describe("built-in themes", () => {
     }
   });
 
-  it("falls back to the native theme for unknown ids", () => {
-    expect(getBuiltInTheme("missing")).toBe(OBSIDIAN_THEME);
+  it("falls back to the default theme for unknown ids", () => {
+    expect(getBuiltInTheme("missing")).toBe(MEADOW_THEME);
     expect(getBuiltInTheme("nord").id).toBe("nord");
+    expect(MEADOW_THEME.id).toBe(DEFAULT_THEME_ID);
   });
 
   it("resolves custom themes before built-ins", () => {
@@ -48,5 +52,35 @@ describe("built-in themes", () => {
     expect(custom.builtIn).toBe(false);
     expect(custom.light.canvasBackground).not.toBe(custom.dark.canvasBackground);
     expect(custom.light.node.background).not.toBe(custom.dark.node.background);
+  });
+});
+
+describe("Meadow theme", () => {
+  it("keeps node and root label text at WCAG AA", () => {
+    for (const tokens of [MEADOW_THEME.light, MEADOW_THEME.dark]) {
+      expect(contrastRatio(tokens.node.text, tokens.node.background)).toBeGreaterThanOrEqual(4.5);
+      expect(contrastRatio(tokens.root.text, tokens.root.background)).toBeGreaterThanOrEqual(4.5);
+      expect(
+        contrastRatio(tokens.collapse.text, tokens.collapse.background),
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("uses organic radii, a pill root, and serif labels", () => {
+    expect(MEADOW_THEME.light.node.radius).toBe(18);
+    expect(MEADOW_THEME.dark.node.radius).toBe(20);
+    expect(MEADOW_THEME.light.root.shape).toBe("pill");
+    expect(MEADOW_THEME.light.typography.family).toContain("serif");
+  });
+
+  it("keeps cool colors auxiliary rather than primary", () => {
+    for (const tokens of [MEADOW_THEME.light, MEADOW_THEME.dark]) {
+      const cool = tokens.branch.palette.filter((color) => {
+        const red = Number.parseInt(color.slice(1, 3), 16);
+        const blue = Number.parseInt(color.slice(5, 7), 16);
+        return blue > red + 40;
+      });
+      expect(cool.length).toBeLessThanOrEqual(2);
+    }
   });
 });

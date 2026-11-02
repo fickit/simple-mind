@@ -13,7 +13,7 @@ Simple Mind stores a mind map as a readable `.mindmap` file:
 ---
 mindmap:
   version: 1
-  theme: obsidian
+  theme: meadow
   layout: mindmap
   spacingX: 64
   spacingY: 18
@@ -34,7 +34,7 @@ The file opens as a map. The Source action switches the same tab to Obsidian's n
 
 - Four layouts: mind map, tree to the right, tree to the left, and organization chart.
 - Direct editing: add, edit, delete, collapse, drag, copy/paste, undo, and redo.
-- Eight built-in themes with automatic light/dark switching and a custom theme editor.
+- Nine built-in themes with automatic light/dark switching and a custom theme editor.
 - A Style/Text panel that styles the selected node; connector shape per map, connector color and
   thickness in settings.
 - Hover controls: connector-colored collapse chevrons, hidden-node count bubbles, and side-aware

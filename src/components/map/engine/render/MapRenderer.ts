@@ -10,7 +10,7 @@ import type { MindMapDocument, MindNode, NodeStyle } from "../../../../types/min
 import type { ThemeDefinition, ThemeTokens } from "../../../../types/theme";
 import { tokensForMode } from "../../themes/applyTheme";
 import { type NodeVisual, nodeVisual } from "../../themes/nodeVisual";
-import { toHexColor } from "../../themes/theme-utils";
+import { contrastRatio, toHexColor } from "../../themes/theme-utils";
 import { layoutDocument, treeSideOf } from "../layout/layout";
 import type { LayoutBounds, LayoutResult, NodeMeasurer, PositionedNode } from "../layout/types";
 import { connectorPath } from "./connectors";
@@ -744,18 +744,15 @@ export class MapRenderer {
     button.style.setProperty("--sm-control-text", this.contrastText(background));
   }
 
-  /** Returns black or white, whichever contrasts with the background. */
+  /** Returns black or white, whichever contrasts more with the background. */
   private contrastText(background: string): string {
     const key = `${this.dark ? "dark" : "light"}\u0000${background}`;
     const cached = this.contrastCache.get(key);
     if (cached) return cached;
 
     const hex = toHexColor(background);
-    const red = Number.parseInt(hex.slice(1, 3), 16);
-    const green = Number.parseInt(hex.slice(3, 5), 16);
-    const blue = Number.parseInt(hex.slice(5, 7), 16);
-    const luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
-    const text = luminance > 150 ? "#111111" : "#ffffff";
+    const text =
+      contrastRatio("#ffffff", hex) >= contrastRatio("#111111", hex) ? "#ffffff" : "#111111";
     this.contrastCache.set(key, text);
     return text;
   }

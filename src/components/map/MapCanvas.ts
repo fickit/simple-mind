@@ -6,7 +6,7 @@ import {
   NODE_CONTROL_SIZE,
   NODE_CONTROL_SPACING,
 } from "../../config/constants";
-import { DEFAULT_SETTINGS, metaFromSettings } from "../../config/defaults";
+import { DEFAULT_MINDMAP_META, DEFAULT_SETTINGS, metaFromSettings } from "../../config/defaults";
 import { t } from "../../config/i18n";
 import type { BranchSide, LayoutKind, MindMapMeta, MindNode, NodeStyle } from "../../types/mindmap";
 import type { SimpleMindSettings } from "../../types/settings";
@@ -687,7 +687,7 @@ export class MapCanvas {
     }
     this.sidebarThemeSelect.value = options.some((theme) => theme.id === current)
       ? current
-      : "obsidian";
+      : DEFAULT_MINDMAP_META.theme;
   }
 
   /** Synchronizes sidebar controls with the file metadata and selected node. */
@@ -813,6 +813,7 @@ export class MapCanvas {
   refreshTheme(): void {
     this.applyCurrentTheme();
     this.rerender(false);
+    this.syncSidebar();
     this.updateToolbar();
   }
 

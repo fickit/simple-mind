@@ -1,14 +1,81 @@
-.simple-mind-view {
-  --simple-mind-font: var(--font-text);
-  --simple-mind-text: var(--text-normal);
-  --simple-mind-muted: var(--text-muted);
-  --simple-mind-background: var(--background-primary);
-  --simple-mind-border: var(--background-modifier-border);
+/*
+ * Plugin-owned design tokens. The map canvas root carries them because that is
+ * the element `applyTheme` decorates with the active mode; the map colors still
+ * come from the theme. Settings and theme dialogs inherit the tokens but not the
+ * view background, which belongs to Obsidian.
+ */
+.simple-mind-map,
+.simple-mind-settings,
+.simple-mind-theme-editor {
+  --smui-paper: #faf6f1;
+  --smui-panel: #fffdf9;
+  --smui-raised: #ffffff;
+  --smui-ink: #3b332c;
+  --smui-body: #5a5248;
+  --smui-muted: #7a6f61;
+  --smui-hairline: #e3d9c9;
+  --smui-edge: #d5c8b3;
+  --smui-hover: #efe7db;
+  --smui-accent: #5c4033;
+  --smui-accent-ink: #faf6f1;
+  --smui-sage: #7f9469;
+  --smui-danger-bg: #f3e2d4;
+  --smui-danger-ink: #7a3c17;
+  --smui-serif:
+    "Iowan Old Style", "Palatino Linotype", Palatino, "Source Han Serif SC", "Noto Serif CJK SC",
+    "Songti SC", Georgia, serif;
+  --smui-sans: ui-sans-serif, system-ui, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --smui-radius-panel: 24px 0 0 0;
+  --smui-radius-card: 22px 26px 20px 24px;
+  --smui-radius-pill: 999px;
+  --smui-duration: 140ms;
+  --smui-grain:
+    radial-gradient(rgba(92, 64, 51, 0.05) 0.6px, transparent 0.7px),
+    radial-gradient(rgba(127, 148, 105, 0.05) 0.6px, transparent 0.7px);
+  --smui-grain-size: 7px 7px, 11px 11px;
+  --smui-grain-position: 0 0, 3px 4px;
+  --smui-grain-repeat: repeat, repeat;
+}
 
+.simple-mind-view {
   display: flex;
   flex-direction: column;
   height: 100%;
-  color: var(--simple-mind-text);
-  background: var(--simple-mind-background);
-  font-family: var(--simple-mind-font);
+  color: var(--text-normal);
+  background: var(--background-primary);
+  font-family: var(--font-text);
+}
+
+.simple-mind-map {
+  color: var(--smui-ink);
+  background: var(--smui-paper);
+  font-family: var(--smui-sans);
+}
+
+/* Moonlit forest: still water, cool mist, and stars above the canvas. */
+.simple-mind-map[data-sm-mode="dark"],
+body.theme-dark .simple-mind-settings,
+body.theme-dark .simple-mind-theme-editor {
+  --smui-paper: #0f1714;
+  --smui-panel: #131d19;
+  --smui-raised: #16231d;
+  --smui-ink: #e2ecdf;
+  --smui-body: #c3d3c6;
+  --smui-muted: #93a89a;
+  --smui-hairline: #263830;
+  --smui-edge: #2b3d34;
+  --smui-hover: #1a2620;
+  --smui-accent: #7fb69a;
+  --smui-accent-ink: #0f1714;
+  --smui-sage: #8fc7a6;
+  --smui-danger-bg: #2b2418;
+  --smui-danger-ink: #e6bb6f;
+  --smui-grain:
+    radial-gradient(rgba(226, 236, 223, 0.15) 0.7px, transparent 0.8px),
+    radial-gradient(rgba(226, 236, 223, 0.1) 1.1px, transparent 1.2px),
+    radial-gradient(rgba(226, 236, 223, 0.07) 1.6px, transparent 1.8px),
+    linear-gradient(to top, rgba(111, 154, 155, 0.14), rgba(111, 154, 155, 0) 100%);
+  --smui-grain-size: 29px 29px, 47px 47px, 83px 83px, 100% 55%;
+  --smui-grain-position: 0 0, 23px 11px, 41px 29px, left bottom;
+  --smui-grain-repeat: repeat, repeat, repeat, no-repeat;
 }

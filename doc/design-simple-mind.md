@@ -560,6 +560,7 @@ root. Obsidian's global styles are never modified.
 
 | Id | Name | Character |
 | --- | --- | --- |
+| `meadow` | Meadow | Natural Organic light over a moonlit-forest dark; serif labels, pill root (default) |
 | `obsidian` | Obsidian Native | Uses Obsidian surface/text/accent variables, transparent canvas |
 | `paper` | Paper | Warm paper, ink text, muted palette |
 | `graphite` | Graphite | Grayscale, high contrast |
@@ -571,6 +572,7 @@ root. Obsidian's global styles are never modified.
 
 Each theme provides both light and dark tokens. The active variant is selected by
 `document.body.classList.contains('theme-dark')` and refreshed on `workspace.on('css-change')`.
+`meadow` is the default for new files and for the unknown-id fallback.
 
 ### 10.3 Custom themes
 
@@ -583,6 +585,28 @@ Each theme provides both light and dark tokens. The active variant is selected b
 - Import validates schema, clamps numeric values, and rejects unknown or malformed fields.
 - Export writes a JSON object containing the theme definition.
 - Deleting a theme that is referenced by a file falls back to the global default with a notice.
+
+### 10.4 Interface design tokens
+
+The chrome (toolbar, sidebar, inputs, banner, theme dialogs) does not follow Obsidian's palette. It
+carries its own `--smui-*` tokens in `src/styles/base.css`, declared on `.simple-mind-map`,
+`.simple-mind-settings`, and `.simple-mind-theme-editor`; `applyTheme` marks the map root with
+`data-sm-mode="light|dark"`, and the dialogs key off `body.theme-dark`. Map colors still come from the
+theme, so a file can pick any of the nine themes while the panel keeps one material.
+
+- Light is Natural Organic: cream paper, bark ink, sage and clay accents, hairline rules, serif section
+  labels in sentence case, and asymmetric container radii with pill controls.
+- Dark is the same system turned toward a forest at night: near-black green surfaces, moon-pale text, a
+  lichen accent, cool mist as the secondary, and low-saturation firefly amber for attention. No pure
+  black, no neon, and no gradients on controls.
+- The canvas atmosphere is the one signature: a faint speckle in light, and three staggered star fields
+  plus a mist band along the bottom in dark. It is static, sits behind the world layer, and does not
+  move with pan or zoom.
+- Motion stays conservative because these controls are edge affordances: hover changes color only over
+  140 ms, there is no translate, scale, or ring, keyboard focus uses a sage outline, and
+  `prefers-reduced-motion` zeroes every transition.
+- Text and surface pairs hold WCAG AA (4.5:1) in both modes. The theme token pairs are asserted in
+  `presets.test.ts`; the chrome pairs are measured in the browser.
 
 ## 11. Obsidian integration
 
@@ -729,7 +753,7 @@ are compared against those numbers rather than against a new guess.
 - Open a `.mindmap` file, toggle source, edit both sides, save, reload.
 - Verify add/edit/delete/collapse/drag/copy/paste/undo/redo.
 - Verify all layouts and layout parameters.
-- Verify all eight themes in light and dark mode.
+- Verify all nine themes in light and dark mode.
 - Create, edit, export, import, and delete a custom theme.
 - Verify Chinese IME editing.
 - Verify errors: malformed outline, malformed YAML, unknown theme, save failure.

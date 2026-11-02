@@ -1,3 +1,4 @@
+import { DEFAULT_THEME_ID } from "../../../config/constants";
 import type { ConnectorStyle, NodeShape, ThemeDefinition, ThemeTokens } from "../../../types/theme";
 
 interface TokenInput {
@@ -10,6 +11,8 @@ interface TokenInput {
   palette: string[];
   fontFamily?: string;
   nodeShape?: NodeShape;
+  rootShape?: NodeShape;
+  radius?: number;
   connector?: ConnectorStyle;
 }
 
@@ -22,7 +25,7 @@ function buildTokens(input: TokenInput): ThemeTokens {
       text: input.text,
       border: input.border,
       borderWidth: 1,
-      radius: 8,
+      radius: input.radius ?? 8,
       paddingX: 10,
       paddingY: 6,
       shadow: "0 1px 3px rgba(0, 0, 0, 0.14)",
@@ -35,7 +38,7 @@ function buildTokens(input: TokenInput): ThemeTokens {
       borderWidth: 0,
       radius: 12,
       shadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
-      shape: input.nodeShape ?? "rounded",
+      shape: input.rootShape ?? input.nodeShape ?? "rounded",
     },
     branch: {
       palette: input.palette,
@@ -92,6 +95,58 @@ export const OBSIDIAN_THEME: ThemeDefinition = {
   builtIn: true,
   light: obsidianTokens(),
   dark: obsidianTokens(),
+};
+
+const MEADOW_SERIF =
+  '"Iowan Old Style", "Palatino Linotype", Palatino, "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", Georgia, serif';
+
+/** Natural Organic light palette with its moonlit-forest dark counterpart. */
+export const MEADOW_THEME: ThemeDefinition = {
+  id: DEFAULT_THEME_ID,
+  name: "Meadow",
+  builtIn: true,
+  light: buildTokens({
+    canvas: "#faf6f1",
+    surface: "#fffdf9",
+    text: "#3b332c",
+    border: "#ddd0bd",
+    accent: "#5c4033",
+    accentText: "#faf6f1",
+    palette: [
+      "#7f9469",
+      "#c1793a",
+      "#6b8e23",
+      "#a8763e",
+      "#8b9d77",
+      "#5f7d5a",
+      "#b08968",
+      "#8c5a3c",
+    ],
+    fontFamily: MEADOW_SERIF,
+    rootShape: "pill",
+    radius: 18,
+  }),
+  dark: buildTokens({
+    canvas: "#0f1714",
+    surface: "#182821",
+    text: "#e2ecdf",
+    border: "#2b3d34",
+    accent: "#7fb69a",
+    accentText: "#0f1714",
+    palette: [
+      "#7fb69a",
+      "#6f9a9b",
+      "#a3c9a8",
+      "#e3b465",
+      "#87b0a0",
+      "#c8a27a",
+      "#9db8a4",
+      "#5f8f7d",
+    ],
+    fontFamily: MEADOW_SERIF,
+    rootShape: "pill",
+    radius: 20,
+  }),
 };
 
 /**
@@ -455,6 +510,7 @@ export const SAKURA_THEME: ThemeDefinition = {
 
 /** Built-in themes available to the view. */
 export const BUILT_IN_THEMES: ThemeDefinition[] = [
+  MEADOW_THEME,
   OBSIDIAN_THEME,
   PAPER_THEME,
   GRAPHITE_THEME,
@@ -466,12 +522,12 @@ export const BUILT_IN_THEMES: ThemeDefinition[] = [
 ];
 
 /**
- * Resolves a built-in theme id, falling back to the native theme.
+ * Resolves a built-in theme id, falling back to the default theme.
  *
  * @param id Theme id from frontmatter or settings.
  */
 export function getBuiltInTheme(id: string): ThemeDefinition {
-  return BUILT_IN_THEMES.find((theme) => theme.id === id) ?? OBSIDIAN_THEME;
+  return BUILT_IN_THEMES.find((theme) => theme.id === id) ?? MEADOW_THEME;
 }
 
 /**

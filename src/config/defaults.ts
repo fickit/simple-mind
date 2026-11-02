@@ -1,10 +1,11 @@
 import type { MindMapMeta } from "../types/mindmap";
 import type { SimpleMindSettings } from "../types/settings";
+import { DEFAULT_THEME_ID } from "./constants";
 
 /** Default per-file map settings. */
 export const DEFAULT_MINDMAP_META: MindMapMeta = {
   version: 1,
-  theme: "obsidian",
+  theme: DEFAULT_THEME_ID,
   layout: "mindmap",
   spacingX: 64,
   spacingY: 18,

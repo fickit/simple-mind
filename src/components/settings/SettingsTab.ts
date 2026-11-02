@@ -32,6 +32,7 @@ export class SettingsTab extends PluginSettingTab {
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
+    containerEl.addClass("simple-mind-settings");
     containerEl.createEl("h2", { text: t("settings.title") });
     this.renderGeneral(containerEl);
     this.renderThemes(containerEl);

@@ -10,6 +10,9 @@ export const FILE_EXTENSION = "mindmap";
 /** Frontmatter key owned by the plugin. */
 export const FRONTMATTER_KEY = "mindmap";
 
+/** Built-in theme id used when a file or setting does not choose one. */
+export const DEFAULT_THEME_ID = "meadow";
+
 /** Canonical source indentation width. */
 export const INDENT_WIDTH = 2;
 

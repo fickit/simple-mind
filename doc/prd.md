@@ -62,7 +62,7 @@ Example:
 ---
 mindmap:
   version: 1
-  theme: obsidian
+  theme: meadow
   layout: mindmap
   spacingX: 64
   spacingY: 18
@@ -179,7 +179,7 @@ mindmap:
 - A `.mindmap` file opens as a map with no manual setup after enabling the plugin.
 - Source and map switch in the same tab without data loss.
 - Add, edit, delete, collapse, drag, copy/paste, undo, and redo update both the map and the source.
-- All eight themes work in light and dark mode, and a custom theme survives a plugin reload.
+- All nine themes work in light and dark mode, and a custom theme survives a plugin reload.
 - A synthetic 1,000-node map opens, lays out, and responds to edits within the performance budget
   recorded by the benchmark script.
 - The plugin builds with `npm run build`, passes `npm run typecheck`, and passes the unit test suite.

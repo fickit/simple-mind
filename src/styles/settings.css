@@ -1,3 +1,9 @@
+.simple-mind-theme-editor h2,
+.simple-mind-theme-editor h3 {
+  color: var(--smui-ink);
+  font-family: var(--smui-serif);
+}
+
 .simple-mind-theme-tabs {
   display: flex;
   gap: 6px;
@@ -5,19 +11,30 @@
 }
 
 .simple-mind-theme-tab {
-  padding: 4px 12px;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 6px;
-  background: var(--background-primary);
-  color: var(--text-normal);
+  padding: 5px 14px;
+  border: 1px solid var(--smui-edge);
+  border-radius: var(--smui-radius-pill);
+  background: var(--smui-raised);
+  color: var(--smui-body);
+  font-family: var(--smui-sans);
   font-size: var(--font-ui-smaller);
   cursor: pointer;
+  transition:
+    background-color var(--smui-duration) ease-in-out,
+    border-color var(--smui-duration) ease-in-out,
+    color var(--smui-duration) ease-in-out;
+}
+
+.simple-mind-theme-tab:hover {
+  border-color: var(--smui-sage);
+  background: var(--smui-hover);
+  color: var(--smui-ink);
 }
 
 .simple-mind-theme-tab.is-active {
-  border-color: var(--interactive-accent);
-  background: var(--interactive-accent);
-  color: var(--text-on-accent);
+  border-color: var(--smui-accent);
+  background: var(--smui-accent);
+  color: var(--smui-accent-ink);
 }
 
 .simple-mind-theme-preview {
@@ -25,9 +42,13 @@
   height: 190px;
   margin: 8px 0 16px;
   overflow: hidden;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 8px;
-  background: var(--sm-canvas-bg);
+  border: 1px solid var(--smui-hairline);
+  border-radius: var(--smui-radius-card);
+  background-color: var(--sm-canvas-bg, var(--smui-paper));
+  background-image: var(--smui-grain);
+  background-size: var(--smui-grain-size);
+  background-position: var(--smui-grain-position);
+  background-repeat: var(--smui-grain-repeat);
 }
 
 .simple-mind-theme-preview .simple-mind-node {
@@ -46,9 +67,12 @@
 }
 
 .simple-mind-theme-editor input[type="color"] {
-  width: 40px;
-  height: 24px;
-  padding: 0;
+  width: 42px;
+  height: 26px;
+  padding: 2px;
+  border: 1px solid var(--smui-edge);
+  border-radius: var(--smui-radius-pill);
+  background: var(--smui-raised);
 }
 
 .simple-mind-theme-editor .setting-item {

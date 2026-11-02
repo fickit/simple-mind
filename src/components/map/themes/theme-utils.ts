@@ -4,6 +4,27 @@ const NODE_SHAPES: NodeShape[] = ["rounded", "pill", "underline", "plain"];
 const CONNECTOR_STYLES: ConnectorStyle[] = ["curve", "orthogonal"];
 const CUSTOM_PREFIX = "custom-";
 
+/** Returns the WCAG 2.1 contrast ratio between two colors. */
+export function contrastRatio(foreground: string, background: string): number {
+  const first = relativeLuminance(foreground);
+  const second = relativeLuminance(background);
+  const lighter = Math.max(first, second);
+  const darker = Math.min(first, second);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+/** Returns the relative luminance of one color. */
+function relativeLuminance(color: string): number {
+  const hex = toHexColor(color);
+  const channels = [1, 3, 5].map(
+    (offset) => Number.parseInt(hex.slice(offset, offset + 2), 16) / 255,
+  );
+  const linear = channels.map((value) =>
+    value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4,
+  );
+  return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+}
+
 /** Converts rgb()/rgba() or a CSS variable into a hex color for color inputs. */
 export function toHexColor(value: string): string {
   const trimmed = value.trim();

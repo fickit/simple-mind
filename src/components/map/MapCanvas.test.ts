@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { DEFAULT_SETTINGS } from "../../config/defaults";
+import { DEFAULT_MINDMAP_META, DEFAULT_SETTINGS } from "../../config/defaults";
 import { MapCanvas } from "./MapCanvas";
 import { PAPER_THEME } from "./themes/presets";
 
@@ -66,8 +66,9 @@ describe("MapCanvas", () => {
     expect(host.querySelector(".simple-mind-node.is-root")?.textContent).toContain("Root");
     expect(host.querySelector(".simple-mind-node-label")?.textContent).toBe("Root");
     expect(host.querySelector(".simple-mind-map")?.getAttribute("data-simple-mind-theme")).toBe(
-      "obsidian",
+      DEFAULT_MINDMAP_META.theme,
     );
+    expect(host.querySelector(".simple-mind-map")?.getAttribute("data-sm-mode")).toBe("light");
 
     canvas.destroy();
     host.remove();
@@ -701,14 +702,18 @@ describe("MapCanvas", () => {
     const settings = { ...DEFAULT_SETTINGS, defaultTheme: PAPER_THEME.id };
     const { host, canvas } = createCanvas("# Root\n- A\n", settings);
     const root = host.querySelector<HTMLElement>(".simple-mind-map");
+    selectNode(host, "n2");
+    const fill = host.querySelector<HTMLInputElement>(".simple-mind-sidebar-node-fill")!;
 
     document.body.classList.add("theme-dark");
     canvas.refreshTheme();
     expect(root?.style.getPropertyValue("--sm-canvas-bg")).toBe(PAPER_THEME.dark.canvasBackground);
+    expect(fill.value).toBe(PAPER_THEME.dark.node.background);
 
     document.body.classList.remove("theme-dark");
     canvas.refreshTheme();
     expect(root?.style.getPropertyValue("--sm-canvas-bg")).toBe(PAPER_THEME.light.canvasBackground);
+    expect(fill.value).toBe(PAPER_THEME.light.node.background);
 
     canvas.destroy();
     host.remove();
