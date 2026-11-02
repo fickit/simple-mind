@@ -601,19 +601,24 @@ theme, so a file can pick any of the nine themes while the panel keeps one mater
   lichen accent, cool mist as the secondary, and low-saturation firefly amber for attention. No pure
   black, no neon, and no gradients on controls.
 - Every icon is an inline SVG drawn from a stroke table in `engine/render/icons.ts`: chevrons on the
-  collapse controls, a plus on the add control, a close on dismiss, letterforms for bold, italic, and
-  underline, pictograms for the four layout types and the four node shapes, and a chevron inside each
-  select. No control uses a text character as its icon, and each icon is `aria-hidden` while the button
-  keeps its own label. `setIcon` skips a repeat, so controls refreshed every frame do not rebuild
-  their SVG.
-- One affordance per job: bold, italic, and underline are icon toggles rather than checkboxes;
-  border width, font size, and line height are steppers (`− value +` plus a reset); a single wrap
-  arrow means "restore the default" on colors, steppers, and the leading node-shape tile. Text
-  alignment is three tiles with no reset tile—clicking the active one again clears the override—and
-  the label for an absent override is "Default" everywhere.
-- Selects, number fields, and buttons hug their content: a hidden mirror span measures the current
-  select label and the field takes that width, so a control sits tightly beside its icon instead of
-  stretching across the panel.
+  collapse controls and inside steppers, a plus on the add control, a close on dismiss, a gear for the
+  settings entry, letterforms for bold, italic, and underline, pictograms for the four layout types,
+  the four node shapes, and both connector shapes, and a chevron inside each select. No control uses a
+  text character as its icon, and each icon is `aria-hidden` while the button keeps its own label.
+  `setIcon` skips a repeat, so controls refreshed every frame do not rebuild their SVG.
+- One affordance per job: bold, italic, and underline are one unlabeled row of icon toggles; text
+  alignment is another; both rows center their tiles and share the panel width as it changes, with a
+  16 px icon in a 30 px tile and 6 px between tiles. Numeric fields are steppers with the value on the
+  left and the two step chevrons stacked on the right. A single wrap arrow means "restore the default",
+  and it only remains on the color swatches.
+- Every control shows the effective value instead of a placeholder: a numeric field prints the theme's
+  number when the node has no override, and the node-shape and connector rows highlight the tile the
+  theme resolves to. Writing a value that equals the theme deletes the override, so there is no
+  separate reset step for numbers, shapes, or connector style. Alignment keeps its clear-on-second-click
+  because it needs a way back to the theme without a fourth tile.
+- Selects and buttons hug their content: a hidden mirror span measures the current select label and the
+  field takes that width, so a control sits tightly beside its icon instead of stretching across the
+  panel.
 - The canvas atmosphere is the one signature: a faint speckle in light, and three staggered star fields
   plus a mist band along the bottom in dark. It is static, sits behind the world layer, and does not
   move with pan or zoom.
@@ -648,17 +653,20 @@ The map view includes a right-side style panel. It is one scrolling column of se
 Node, Connector, Text—with no tab switching, so a file-level change and a node-level change are visible
 at the same time.
 
-- **Theme / Layout / Connector**: the theme select, four layout pictograms, and the connector shape
-  select. These write to the file's frontmatter.
-- **Node**: node shape pictograms (led by a reset tile), fill, border color, and a border-width stepper.
-- **Text**: text color, a font-size stepper, bold, italic, and underline icon toggles, three alignment
-  tiles, and a line-height stepper.
+- **Theme**: one row holding the section title, the theme select, and a gear that opens the settings
+  tab. The earlier "Manage themes" button is gone; the gear is the only entry.
+- **Layout / Connector**: four layout pictograms and two connector pictograms (curve, orthogonal), both
+  writing to the file's frontmatter. The connector row replaced a text select.
+- **Node**: four node-shape pictograms, fill, border color, and a border-width stepper.
+- **Text**: text color, a font-size stepper, one unlabeled row of bold/italic/underline toggles, one
+  unlabeled row of alignment tiles, and a line-height stepper.
 
 Node and text controls are disabled with a hint until a node is selected. Every edit is applied to
 that node only, written into its inline metadata marker, and reprocessed immediately. Color controls
-fall back to the node's effective theme color and expose a reset action that removes the override;
-numeric fields do the same through their stepper's reset. The root is a node too, so the H1 line can
-carry its own style.
+fall back to the node's effective theme color and expose a reset action that removes the override.
+Numbers and shapes instead print the effective value and drop the override when the written value
+matches it; the same rule applies to the file-level connector shape, which removes the frontmatter key.
+The root is a node too, so the H1 line can carry its own style.
 
 Font family is not in the panel. It is a global default in the settings tab, because a per-node typeface
 splits one map across whatever fonts a machine happens to have; the inline marker still accepts

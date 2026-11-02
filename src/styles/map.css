@@ -208,7 +208,6 @@
 }
 
 .simple-mind-sidebar-select,
-.simple-mind-sidebar-number,
 .simple-mind-sidebar-select-mirror {
   height: 28px;
   padding: 0 6px;
@@ -244,8 +243,7 @@
   margin: 0;
 }
 
-.simple-mind-sidebar-select:focus,
-.simple-mind-sidebar-number:focus {
+.simple-mind-sidebar-select:focus {
   border-color: var(--smui-sage);
 }
 
@@ -262,59 +260,45 @@
   white-space: pre;
 }
 
-.simple-mind-sidebar-button {
-  display: block;
-  margin-top: 8px;
-  padding: 4px 8px;
-  border: 1px solid var(--smui-edge);
-  border-radius: var(--smui-radius);
-  background: var(--smui-raised);
-  color: var(--smui-body);
-  font-family: var(--smui-sans);
+/* Theme row: title on the left, then the select, then the settings gear. */
+.simple-mind-sidebar-theme-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.simple-mind-sidebar-section-title {
+  color: var(--smui-muted);
+  font-family: var(--smui-serif);
   font-size: var(--font-ui-smaller);
-  cursor: pointer;
-  transition:
-    border-color var(--smui-duration) ease-in-out,
-    background-color var(--smui-duration) ease-in-out,
-    color var(--smui-duration) ease-in-out;
+  font-weight: 600;
 }
 
-.simple-mind-sidebar-button:hover {
-  border-color: var(--smui-sage);
-  background: var(--smui-hover);
-  color: var(--smui-ink);
+.simple-mind-sidebar-theme-row .simple-mind-sidebar-select {
+  margin-left: auto;
 }
 
-.simple-mind-sidebar-toggle {
+.simple-mind-sidebar-gear {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   padding: 0;
-  border: 1px solid var(--smui-edge);
+  border: 1px solid transparent;
   border-radius: var(--smui-radius);
-  background-color: var(--smui-raised);
+  background: transparent;
   color: var(--smui-muted);
   cursor: pointer;
   transition:
     background-color var(--smui-duration) ease-in-out,
-    border-color var(--smui-duration) ease-in-out,
     color var(--smui-duration) ease-in-out;
 }
 
-.simple-mind-sidebar-toggle:hover:not(:disabled) {
-  border-color: var(--smui-sage);
+.simple-mind-sidebar-gear:hover {
   background: var(--smui-hover);
   color: var(--smui-ink);
 }
 
-.simple-mind-sidebar-toggle.is-active {
-  border-color: var(--smui-accent);
-  background: var(--smui-accent);
-  color: var(--smui-accent-ink);
-}
-
-.simple-mind-sidebar-toggle:disabled,
 .simple-mind-sidebar-step:disabled,
 .simple-mind-sidebar-segment-item:disabled {
   opacity: 0.5;
@@ -360,6 +344,7 @@
 
 .simple-mind-sidebar-segment {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 2px;
   padding: 2px;
@@ -369,8 +354,7 @@
 }
 
 .simple-mind-sidebar-segment-item,
-.simple-mind-sidebar-step,
-.simple-mind-sidebar-stepper .simple-mind-sidebar-reset {
+.simple-mind-sidebar-step {
   display: grid;
   place-items: center;
   width: 26px;
@@ -387,8 +371,7 @@
 }
 
 .simple-mind-sidebar-segment-item:hover:not(:disabled),
-.simple-mind-sidebar-step:hover:not(:disabled),
-.simple-mind-sidebar-stepper .simple-mind-sidebar-reset:hover:not(:disabled) {
+.simple-mind-sidebar-step:hover:not(:disabled) {
   background: var(--smui-hover);
   color: var(--smui-ink);
 }
@@ -398,27 +381,66 @@
   color: var(--smui-accent-ink);
 }
 
+/* Unlabeled rows center their tiles, which share the row width as it changes. */
+.simple-mind-sidebar-segment.is-wide {
+  justify-content: center;
+  gap: 6px;
+  margin: 2px 0 8px;
+}
+
+.simple-mind-sidebar-segment.is-wide .simple-mind-sidebar-segment-item {
+  flex: 1 1 0;
+  width: auto;
+  max-width: 56px;
+  height: 30px;
+  border-radius: 4px;
+}
+
+.simple-mind-sidebar-segment.is-wide .simple-mind-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* Value on the left, stacked arrows on the right. */
 .simple-mind-sidebar-stepper {
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 2px;
+  height: 28px;
+  padding: 0 2px 0 6px;
   border: 1px solid var(--smui-edge);
   border-radius: var(--smui-radius);
   background-color: var(--smui-raised);
 }
 
 .simple-mind-sidebar-stepper .simple-mind-sidebar-number {
-  width: 54px;
-  height: 22px;
-  padding: 0 2px;
+  width: 42px;
+  height: 24px;
+  padding: 0;
   border: none;
   border-radius: 3px;
   background: transparent;
+  color: var(--smui-ink);
+  font-family: var(--smui-sans);
+  font-size: var(--font-ui-smaller);
+  text-align: left;
+  text-align-last: left;
 }
 
-.simple-mind-sidebar-stepper .simple-mind-sidebar-number:focus {
-  background: var(--smui-hover);
+.simple-mind-sidebar-arrows {
+  display: flex;
+  flex-direction: column;
+  padding-left: 2px;
+  border-left: 1px solid var(--smui-hairline);
+}
+
+.simple-mind-sidebar-arrows .simple-mind-sidebar-step {
+  width: 20px;
+  height: 11px;
+}
+
+.simple-mind-sidebar-arrows .simple-mind-icon {
+  width: 10px;
+  height: 10px;
 }
 
 .simple-mind-icon {

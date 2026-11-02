@@ -198,11 +198,15 @@ Branch: `feat/core`
   fields with a mist band in dark).
 - `√` Draw every control icon as inline SVG from a stroke table, and center compact select and number
   fields that size to their own content.
-- `√` Merge the Style and Text panes into one scrolling column, move the font family to the settings
-  page, and label an absent override "Default".
-- `√` Turn bold, italic, and underline into icon toggles, border width, font size, and line height into
-  steppers, node shape and layout type into pictogram tiles, and every restore-default action into one
-  wrap-arrow icon. Text alignment keeps three tiles and clears on a second click.
+- `√` Merge the Style and Text panes into one scrolling column and move the font family to the
+  settings page.
+- `√` Turn bold, italic, and underline into one centered unlabeled row of icon toggles, give alignment
+  its own unlabeled row, and enlarge both rows for the wider panel.
+- `√` Show the effective value everywhere: numeric steppers put the value on the left and stack the
+  step chevrons on the right, node shape and connector shape highlight the tile the theme resolves to,
+  and writing a value equal to the theme drops the override instead of offering a reset tile.
+- `√` Replace the connector text select with curve and orthogonal pictograms, and fold the theme
+  title, select, and a settings gear into a single row.
 - `√` Keep chrome motion color-only at 140 ms with a reduced-motion fallback and no focus outline
   anywhere in the panel, and re-sync the sidebar when Obsidian flips between light and dark.
 - `√` Refresh maps on Obsidian light/dark changes through `css-change` plus a body-class fallback.

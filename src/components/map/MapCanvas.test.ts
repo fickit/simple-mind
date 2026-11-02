@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { DEFAULT_MINDMAP_META, DEFAULT_SETTINGS } from "../../config/defaults";
-import { MapCanvas } from "./MapCanvas";
+import { MapCanvas, type MapCanvasOptions } from "./MapCanvas";
 import { PAPER_THEME } from "./themes/presets";
 
 class ResizeObserverMock {
@@ -17,6 +17,7 @@ beforeAll(() => {
 function createCanvas(
   source: string,
   settings = DEFAULT_SETTINGS,
+  options: Partial<MapCanvasOptions> = {},
 ): {
   host: HTMLElement;
   canvas: MapCanvas;
@@ -29,7 +30,7 @@ function createCanvas(
   const onSource = vi.fn();
   const onChange = vi.fn();
   const onNotice = vi.fn();
-  const canvas = new MapCanvas(host, { onSource, onChange, onNotice, settings });
+  const canvas = new MapCanvas(host, { onSource, onChange, onNotice, settings, ...options });
   canvas.setSource(source);
   return { host, canvas, onSource, onChange, onNotice };
 }
@@ -59,23 +60,21 @@ function tiles(host: HTMLElement, group: string): HTMLButtonElement[] {
   return Array.from(wrap.querySelectorAll<HTMLButtonElement>(".simple-mind-sidebar-segment-item"));
 }
 
-/** Returns a stepper's field with its step and reset buttons. */
+/** Returns a stepper's field with its step buttons. */
 function stepper(
   host: HTMLElement,
   field: string,
 ): {
   input: HTMLInputElement;
-  decrease: HTMLButtonElement;
-  increase: HTMLButtonElement;
-  reset: HTMLButtonElement;
+  up: HTMLButtonElement;
+  down: HTMLButtonElement;
 } {
   const input = host.querySelector<HTMLInputElement>(`.simple-mind-sidebar-${field}`)!;
   const wrap = input.closest(".simple-mind-sidebar-stepper")!;
   return {
     input,
-    decrease: wrap.querySelector<HTMLButtonElement>('[aria-label="Decrease"]')!,
-    increase: wrap.querySelector<HTMLButtonElement>('[aria-label="Increase"]')!,
-    reset: wrap.querySelector<HTMLButtonElement>(".simple-mind-sidebar-reset")!,
+    up: wrap.querySelector<HTMLButtonElement>('[aria-label="Increase"]')!,
+    down: wrap.querySelector<HTMLButtonElement>('[aria-label="Decrease"]')!,
   };
 }
 
@@ -511,7 +510,7 @@ describe("MapCanvas", () => {
   it("writes per-file layout and connector-shape overrides from the sidebar", () => {
     const { host, canvas, onChange } = createCanvas("# Root\n- A\n");
     const layoutTiles = tiles(host, "Type");
-    const connector = host.querySelector<HTMLSelectElement>(".simple-mind-sidebar-connector")!;
+    const connectorTiles = tiles(host, "Shape");
 
     expect(layoutTiles.map((tile) => tile.dataset.value)).toEqual([
       "mindmap",
@@ -521,16 +520,25 @@ describe("MapCanvas", () => {
     ]);
     expect(layoutTiles[0].dataset.icon).toBe("layout-mindmap");
     expect(layoutTiles[0].classList.contains("is-active")).toBe(true);
+    expect(connectorTiles.map((tile) => tile.dataset.icon)).toEqual([
+      "connector-curve",
+      "connector-orthogonal",
+    ]);
+    const themeConnector = connectorTiles.find((tile) => tile.classList.contains("is-active"))!;
+    const otherConnector = connectorTiles.find((tile) => tile !== themeConnector)!;
 
     layoutTiles[3].click();
-    connector.value = "orthogonal";
-    connector.dispatchEvent(new Event("change", { bubbles: true }));
+    otherConnector.click();
 
     expect(onChange).toHaveBeenCalledTimes(2);
     expect(canvas.getSource()).toContain("layout: org");
-    expect(canvas.getSource()).toContain("connectorStyle: orthogonal");
+    expect(canvas.getSource()).toContain(`connectorStyle: ${otherConnector.dataset.value}`);
     expect(layoutTiles[3].classList.contains("is-active")).toBe(true);
     expect(layoutTiles[0].classList.contains("is-active")).toBe(false);
+
+    themeConnector.click();
+    expect(canvas.getSource()).not.toContain("connectorStyle");
+    expect(themeConnector.classList.contains("is-active")).toBe(true);
 
     canvas.destroy();
     host.remove();
@@ -549,6 +557,32 @@ describe("MapCanvas", () => {
     ).toHaveLength(0);
     expect(host.querySelector(".simple-mind-sidebar-node-fill")).not.toBeNull();
     expect(host.querySelector(".simple-mind-sidebar-line-height")).not.toBeNull();
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("keeps the theme title, select, and settings gear on one row", () => {
+    const opened = vi.fn();
+    const { host, canvas } = createCanvas("# Root\n- A\n", DEFAULT_SETTINGS, {
+      onOpenSettings: opened,
+    });
+    const row = host.querySelector(".simple-mind-sidebar-theme-row")!;
+    const section = host.querySelector(".simple-mind-sidebar-section")!;
+
+    expect(row.querySelector(".simple-mind-sidebar-section-title")?.textContent).toBe("Theme");
+    expect(row.querySelector("select.simple-mind-sidebar-theme")).not.toBeNull();
+    expect(section.querySelector("h4")).toBeNull();
+    expect(
+      Array.from(host.querySelectorAll("button")).some(
+        (button) => button.textContent === "Manage themes",
+      ),
+    ).toBe(false);
+
+    const gear = row.querySelector<HTMLButtonElement>(".simple-mind-sidebar-gear")!;
+    expect(gear.dataset.icon).toBe("settings");
+    gear.click();
+    expect(opened).toHaveBeenCalledTimes(1);
 
     canvas.destroy();
     host.remove();
@@ -580,91 +614,103 @@ describe("MapCanvas", () => {
     expect(shapeTiles.every((tile) => tile.disabled)).toBe(true);
     expect(fill.disabled).toBe(true);
     expect(width.input.disabled).toBe(true);
-    expect(width.reset.disabled).toBe(true);
+    expect(width.up.disabled).toBe(true);
+    expect(width.down.disabled).toBe(true);
     expect(hint.hidden).toBe(false);
 
     selectNode(host, "n2");
     expect(shapeTiles.every((tile) => !tile.disabled)).toBe(true);
     expect(fill.disabled).toBe(false);
     expect(width.input.disabled).toBe(false);
+    expect(width.up.disabled).toBe(false);
+    expect(width.down.disabled).toBe(false);
     expect(hint.hidden).toBe(true);
 
     canvas.destroy();
     host.remove();
   });
 
-  it("shows node shape as pictogram tiles with a reset tile", () => {
+  it("shows node shape as pictogram tiles that follow the theme by default", () => {
     const { host, canvas } = createCanvas("# Root\n- A\n");
     selectNode(host, "n2");
     const shapeTiles = tiles(host, "Node shape");
 
     expect(shapeTiles.map((tile) => tile.dataset.icon)).toEqual([
-      "reset",
       "shape-rounded",
       "shape-pill",
       "shape-underline",
       "shape-plain",
     ]);
-    expect(shapeTiles[0].classList.contains("is-active")).toBe(true);
+    expect(host.querySelector(".simple-mind-sidebar-segment [data-icon='reset']")).toBeNull();
+    const themeShape = shapeTiles.find((tile) => tile.classList.contains("is-active"))!;
+    const otherShape = shapeTiles.find((tile) => tile !== themeShape)!;
 
-    shapeTiles[2].click();
-    expect(canvas.getSource()).toContain('<!-- sm:{"shape":"pill"} -->');
-    expect(shapeTiles[2].getAttribute("aria-pressed")).toBe("true");
+    otherShape.click();
+    expect(canvas.getSource()).toContain(`<!-- sm:{"shape":"${otherShape.dataset.value}"} -->`);
+    expect(otherShape.getAttribute("aria-pressed")).toBe("true");
 
-    shapeTiles[0].click();
+    themeShape.click();
     expect(canvas.getSource()).not.toContain("<!-- sm:");
-    expect(shapeTiles[0].classList.contains("is-active")).toBe(true);
+    expect(themeShape.classList.contains("is-active")).toBe(true);
 
     canvas.destroy();
     host.remove();
   });
 
-  it("steps numeric style values and returns them to the theme default", () => {
+  it("shows the theme value in steppers and clears the override when it matches", () => {
     const { host, canvas } = createCanvas("# Root\n- A\n");
     selectNode(host, "n2");
     const fontSize = stepper(host, "font-size");
+    const initial = Number(fontSize.input.value);
 
-    expect(fontSize.input.placeholder).toBe("Default");
-    expect(fontSize.input.value).toBe("");
+    expect(initial).toBeGreaterThan(0);
+    expect(host.querySelector(".simple-mind-sidebar-stepper [data-icon='reset']")).toBeNull();
 
-    fontSize.increase.click();
-    expect(canvas.getSource()).toContain('<!-- sm:{"fontSize":8} -->');
-    fontSize.increase.click();
-    expect(fontSize.input.value).toBe("9");
-    fontSize.decrease.click();
-    expect(fontSize.input.value).toBe("8");
+    fontSize.up.click();
+    expect(fontSize.input.value).toBe(String(initial + 1));
+    expect(canvas.getSource()).toContain(`"fontSize":${initial + 1}`);
+
+    fontSize.down.click();
+    expect(fontSize.input.value).toBe(String(initial));
+    expect(canvas.getSource()).not.toContain("<!-- sm:");
 
     commitNumber(fontSize.input, "99");
     expect(fontSize.input.value).toBe("32");
     expect(canvas.getSource()).toContain('"fontSize":32');
 
-    expect(fontSize.reset.disabled).toBe(false);
-    fontSize.reset.click();
-    expect(fontSize.input.value).toBe("");
-    expect(fontSize.reset.disabled).toBe(true);
-    expect(canvas.getSource()).not.toContain("<!-- sm:");
+    commitNumber(fontSize.input, "");
+    expect(fontSize.input.value).toBe("32");
 
     canvas.destroy();
     host.remove();
   });
 
-  it("toggles bold, italic, and underline with icon buttons", () => {
+  it("toggles bold, italic, and underline as one unlabeled row of icon tiles", () => {
     const { host, canvas } = createCanvas("# Root\n- A\n");
     selectNode(host, "n2");
-    const bold = host.querySelector<HTMLButtonElement>(
-      '.simple-mind-sidebar-toggle[aria-label="Bold"]',
-    )!;
+    const styleTiles = tiles(host, "Text style");
+    const labels = Array.from(host.querySelectorAll(".simple-mind-sidebar-row > span")).map(
+      (label) => label.textContent,
+    );
 
-    expect(bold.dataset.icon).toBe("bold");
-    expect(bold.getAttribute("aria-pressed")).toBe("false");
+    expect(styleTiles.map((tile) => tile.dataset.icon)).toEqual(["bold", "italic", "underline"]);
+    expect(host.querySelectorAll(".simple-mind-sidebar-segment.is-wide")).toHaveLength(2);
+    expect(labels).not.toContain("Bold");
+    expect(labels).not.toContain("Text alignment");
+
+    const [bold, italic] = styleTiles;
+    bold.click();
+    expect(canvas.getSource()).toContain('"bold":true');
+    expect(bold.getAttribute("aria-pressed")).toBe("true");
+
+    italic.click();
+    expect(canvas.getSource()).toContain('"italic":true');
+    expect(italic.getAttribute("aria-pressed")).toBe("true");
 
     bold.click();
-    expect(canvas.getSource()).toContain('<!-- sm:{"bold":true} -->');
-    expect(bold.classList.contains("is-active")).toBe(true);
-
-    bold.click();
-    expect(canvas.getSource()).toContain('<!-- sm:{"bold":false} -->');
+    expect(canvas.getSource()).toContain('"bold":false');
     expect(bold.getAttribute("aria-pressed")).toBe("false");
+    expect(italic.getAttribute("aria-pressed")).toBe("true");
 
     canvas.destroy();
     host.remove();
@@ -701,17 +747,13 @@ describe("MapCanvas", () => {
       input.dispatchEvent(new Event("change", { bubbles: true }));
     };
 
-    tiles(host, "Node shape")[2].click();
+    tiles(host, "Node shape")[1].click();
     change(".simple-mind-sidebar-node-fill", "#112233");
     change(".simple-mind-sidebar-node-border", "#223344");
     change(".simple-mind-sidebar-node-border-width", "3");
     change(".simple-mind-sidebar-font-size", "16");
     change(".simple-mind-sidebar-text-color", "#778899");
-    for (const label of ["Bold", "Italic", "Underline"]) {
-      host
-        .querySelector<HTMLButtonElement>(`.simple-mind-sidebar-toggle[aria-label="${label}"]`)!
-        .click();
-    }
+    for (const tile of tiles(host, "Text style")) tile.click();
     tiles(host, "Text alignment")[2].click();
     change(".simple-mind-sidebar-line-height", "1.8");
 

@@ -9,6 +9,8 @@ export type IconName =
   | "chevron-right"
   | "chevron-up"
   | "close"
+  | "connector-curve"
+  | "connector-orthogonal"
   | "italic"
   | "layout-mindmap"
   | "layout-org"
@@ -17,6 +19,7 @@ export type IconName =
   | "minus"
   | "plus"
   | "reset"
+  | "settings"
   | "shape-pill"
   | "shape-plain"
   | "shape-rounded"
@@ -41,6 +44,8 @@ const SHAPES: Record<IconName, IconShape[]> = {
   "chevron-right": [{ d: "M5.75 3.5 10.25 8l-4.5 4.5" }],
   "chevron-up": [{ d: "M3.75 10.25 8 6l4.25 4.25" }],
   close: [{ d: "M4.5 4.5l7 7" }, { d: "M11.5 4.5l-7 7" }],
+  "connector-curve": [{ d: "M2 10.5c4 0 8-5 12-5" }],
+  "connector-orthogonal": [{ d: "M2 10.5h5.5V5.5H14" }],
   italic: [{ glyph: "I", italic: true }],
   "layout-mindmap": [
     { d: "M6 6.5h4v3H6Z" },
@@ -75,6 +80,17 @@ const SHAPES: Record<IconName, IconShape[]> = {
   minus: [{ d: "M3.5 8h9" }],
   plus: [{ d: "M8 3.5v9" }, { d: "M3.5 8h9" }],
   reset: [{ d: "M12.75 10.5a4.75 4.75 0 1 1 .6-4.9" }, { d: "M13.85 2.75v3.3h-3.3" }],
+  settings: [
+    { d: "M8 5.9a2.1 2.1 0 1 0 0 4.2 2.1 2.1 0 0 0 0-4.2Z" },
+    { d: "M8 1.9v1.9" },
+    { d: "M8 12.2v1.9" },
+    { d: "M1.9 8h1.9" },
+    { d: "M12.2 8h1.9" },
+    { d: "M3.6 3.6l1.3 1.3" },
+    { d: "M11.1 11.1l1.3 1.3" },
+    { d: "M12.4 3.6l-1.3 1.3" },
+    { d: "M4.9 11.1l-1.3 1.3" },
+  ],
   "shape-pill": [{ d: "M4.5 5h7a3 3 0 0 1 0 6h-7a3 3 0 0 1 0-6Z" }],
   "shape-plain": [{ d: "M4 8h8" }],
   "shape-rounded": [
