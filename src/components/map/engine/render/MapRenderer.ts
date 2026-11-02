@@ -251,6 +251,26 @@ export class MapRenderer {
     this.applyTransform();
   }
 
+  /** Returns the current pan and zoom. */
+  getTransform(): { x: number; y: number; scale: number } {
+    return { x: this.translateX, y: this.translateY, scale: this.scale };
+  }
+
+  /**
+   * Restores a pan and zoom without fitting the map again.
+   *
+   * @param x Horizontal world offset in screen pixels.
+   * @param y Vertical world offset in screen pixels.
+   * @param scale Zoom factor, clamped to the allowed range.
+   */
+  setTransform(x: number, y: number, scale: number): void {
+    this.scale = clamp(scale, ZOOM_MIN, ZOOM_MAX);
+    this.translateX = x;
+    this.translateY = y;
+    this.pendingFit = false;
+    this.applyTransform();
+  }
+
   /** Removes listeners and rendered DOM. */
   destroy(): void {
     this.resizeObserver.disconnect();

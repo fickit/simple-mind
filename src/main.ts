@@ -1,5 +1,5 @@
 import { Notice, Plugin, type TFile } from "obsidian";
-import { loadSettings } from "./api/obsidian/settings";
+import { loadPluginData, savePluginData } from "./api/obsidian/settings";
 import { SettingsTab } from "./components/settings/SettingsTab";
 import { isSourceMode } from "./components/source/SourceModeGuard";
 import { switchToMap, switchToSource } from "./components/source/SourceSwitch";
@@ -8,12 +8,14 @@ import { DEFAULT_SETTINGS } from "./config/defaults";
 import { setLanguage, t } from "./config/i18n";
 import { MindMapView } from "./pages/MindMapView";
 import type { SimpleMindSettings, SimpleMindSettingsHost } from "./types/settings";
+import type { MapViewState } from "./types/view";
 
 /** Main Obsidian plugin entry point. */
 export default class SimpleMindPlugin extends Plugin implements SimpleMindSettingsHost {
   /** Current plugin settings. */
   settings: SimpleMindSettings = DEFAULT_SETTINGS;
 
+  private viewStates: Record<string, MapViewState> = {};
   private statusBarEl: HTMLElement | null = null;
   private ribbonEl: HTMLElement | null = null;
   private newMapRibbonEl: HTMLElement | null = null;
@@ -31,7 +33,9 @@ export default class SimpleMindPlugin extends Plugin implements SimpleMindSettin
 
   /** Registers the map view, commands, settings, and file-open fallbacks. */
   async onload(): Promise<void> {
-    this.settings = await loadSettings(this);
+    const stored = await loadPluginData(this);
+    this.settings = stored.settings;
+    this.viewStates = stored.viewStates;
     setLanguage(this.settings.language);
 
     this.registerView(
@@ -41,6 +45,10 @@ export default class SimpleMindPlugin extends Plugin implements SimpleMindSettin
           leaf,
           () => this.settings,
           () => this.openSettingsTab(),
+          {
+            load: (path) => this.viewStates[path],
+            save: (path, state) => this.storeViewState(path, state),
+          },
         ),
     );
     this.registerCommands();
@@ -49,6 +57,13 @@ export default class SimpleMindPlugin extends Plugin implements SimpleMindSettin
     this.addSettingTab(new SettingsTab(this.app, this));
     this.registerFileHandlers();
     this.registerFileExtension();
+    this.registerEvent(
+      this.app.vault.on("delete", (file) => {
+        if (!this.viewStates[file.path]) return;
+        delete this.viewStates[file.path];
+        void this.saveSettings();
+      }),
+    );
     this.updateStatusBar();
   }
 
@@ -57,9 +72,15 @@ export default class SimpleMindPlugin extends Plugin implements SimpleMindSettin
     this.app.workspace.detachLeavesOfType(VIEW_TYPE_MAP);
   }
 
-  /** Persists settings for the settings tab. */
+  /** Persists settings and per-file view states. */
   async saveSettings(): Promise<void> {
-    await this.saveData(this.settings);
+    await savePluginData(this, { settings: this.settings, viewStates: this.viewStates });
+  }
+
+  /** Remembers a map's pan, zoom, and selection for its next open. */
+  private storeViewState(path: string, state: MapViewState): void {
+    this.viewStates[path] = state;
+    void this.saveSettings();
   }
 
   /** Reapplies settings to every open map view. */

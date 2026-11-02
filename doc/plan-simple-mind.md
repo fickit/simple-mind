@@ -63,11 +63,11 @@ npm run build
   `ItemView.titleEl` and broke the view header. The field is now `headerTitleEl`.
 - `√` Add a file-open fallback and ribbon action so the map view opens even if the extension mapping
   is claimed by Markdown.
-- `-` Verify the map view saves through `TextFileView` after an edit.
-- `-` Switch the same leaf to the native `markdown` view in source mode.
-- `-` Verify the native editor opens the `.mindmap` file and the text is editable.
-- `-` Switch back to the map view and verify the saved content is reloaded.
-- `-` Verify `Plugin.removeCommand` is available at the chosen `minAppVersion`.
+- `√` Verify the map view saves through `TextFileView` after an edit.
+- `√` Switch the same leaf to the native `markdown` view in source mode.
+- `√` Verify the native editor opens the `.mindmap` file and the text is editable.
+- `√` Switch back to the map view and verify the saved content is reloaded.
+- `√` Verify `Plugin.removeCommand` is available at the chosen `minAppVersion`.
 - `√` Commit the view checkpoint on `feat/view`; the temporary preview is replaced by the canvas in
   the core and view phases.
 
@@ -233,7 +233,7 @@ Branch: `feat/core`
 - `√` DOM tests: editing lifecycle, shortcuts, add/delete, undo, read-only mode, IME guard,
   copy/paste, and drop-position resolution.
 - `√` Verify: `npm run typecheck && npm run test -- interaction`.
-- `-` Manual test in the test vault: drag every direction, auto-expand, copy/paste, undo/redo.
+- `√` Manual test in the test vault: drag every direction, auto-expand, copy/paste, undo/redo.
 - `√` Commit the interaction checkpoint after the view save path is wired.
 
 Verification:
@@ -260,7 +260,7 @@ Branch: `feat/core`
 - `√` Add `README.md` for the theme module.
 - `√` Unit tests: built-in theme count, token completeness, fallback behavior, frontmatter selection.
 - `√` Verify: `npm run typecheck && npm run test`.
-- `-` Manual test: all nine themes and custom theme reload.
+- `√` Manual test: all nine themes and custom theme reload.
 - `√` Commit the built-in theme checkpoint.
 
 Verification:
@@ -280,11 +280,11 @@ Branch: `feat/core`
 - `√` Implement the Source action: save, switch the same leaf to `markdown` source mode.
 - `√` Implement the status-bar action and toggle command to return to the map.
 - `√` Implement commands: new mind map, toggle, add child, add sibling, delete, edit, undo, redo, fit.
-- `-` Implement a filename prompt for new maps; v1 creates a numbered file directly.
-- `-` Restore map pan/zoom/selection per file where practical.
-- `-` Update the root README architecture section for the final module layout.
+- `x` Prompt for a file name on new maps; new maps keep the auto-numbered default name.
+- `√` Restore each file's pan, zoom, and selection when it reopens; the snapshot is stored in `data.json` and dropped when the file is deleted.
+- `√` Update the root README architecture section for the final module layout.
 - `√` Verify: `npm run typecheck && npm run build`.
-- `-` Manual test in `test-vault`: default map, source switch, save/reload, commands, status bar.
+- `√` Manual test in `test-vault`: default map, source switch, save/reload, commands, status bar.
 - `√` Commit the integration checkpoint.
 
 Verification:
@@ -309,7 +309,7 @@ Branch: `feat/core`
 - `√` Implement reset-to-defaults.
 - `√` Add `README.md` for the settings module.
 - `√` Verify: `npm run typecheck && npm run test`.
-- `-` Manual test: switch languages, change defaults, create a new file, verify frontmatter, edit and
+- `√` Manual test: switch languages, change defaults, create a new file, verify frontmatter, edit and
   import/export custom themes.
 - `√` Commit the settings and theme-editor checkpoint.
 
@@ -327,9 +327,9 @@ Branch: `feat/release`
 - `√` Add `scripts/benchmark.mjs` to generate 100, 500, and 1,000 node maps and time parse, layout,
   paths, first render, incremental edit, and serialize (landed on `feat/core`).
 - `√` Record benchmark output in `doc/benchmark-simple-mind.md`, including the Chromium check.
-- `-` Complete the manual checklist in `test-vault`.
-- `-` Verify parse-error, invalid-frontmatter, unknown-theme, save-failure, and root-protection paths.
-- `-` Run the full verification suite.
+- `√` Complete the manual checklist in `test-vault`.
+- `√` Verify parse-error, invalid-frontmatter, unknown-theme, save-failure, and root-protection paths.
+- `√` Run the full verification suite.
 
 ```bash
 npm run typecheck
@@ -362,7 +362,7 @@ node scripts/benchmark.mjs
 
 - Documentation: written and self-reviewed.
 - Phase 0 scaffold: complete; verification is green.
-- Phase 1 view spike: custom view opens; source switching still needs a manual round-trip check.
+- Phase 1 view spike: the map view opens, saves through `TextFileView`, and round-trips to source mode.
 - Phase 2 core document: parser, serializer, and history complete; command controller is next.
 - Phase 3 layout: complete for mindmap, tree left/right, and org.
 - Phase 4 renderer: canvas, themes, pan/zoom, collapse, and inline Markdown complete; visual demo
@@ -378,11 +378,12 @@ node scripts/benchmark.mjs
   spacing and the straight connector style are removed.
 - Phase 6 themes: nine built-in themes, per-file selection, automatic light/dark switching, custom
   theme editing, import/export, and live preview are implemented.
-- Phase 7 view integration: TextFileView, source switching, status bar, commands, and new-map creation
-  are implemented; filename prompt and per-file view-state restore remain.
+- Phase 7 view integration: TextFileView, source switching, status bar, commands, new-map creation,
+  and per-file pan/zoom/selection restore are implemented. New maps keep the auto-numbered default
+  name; the filename prompt is rejected.
 - Phase 8 settings/i18n: settings tab (including global font and connector defaults), custom theme
-  management, language switching, command re-registration, and English/Chinese UI are implemented;
-  manual verification remains.
-- Next: manual verification in Obsidian, then README polish and release assets.
-- Test vault: created with a sample map.
+  management, language switching, command re-registration, and English/Chinese UI are implemented.
+- Manual verification: completed in the test vault for every phase.
+- Next: release preparation (CHANGELOG, manifest links, release workflow, release bundle).
+- Test vault: local only and ignored by git; the build writes the plugin into it.
 - Author metadata: `fickit`; repository URL still pending.

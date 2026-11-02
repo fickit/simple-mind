@@ -4,26 +4,37 @@ import { switchToSource } from "../components/source/SourceSwitch";
 import { VIEW_TYPE_MAP } from "../config/constants";
 import { DEFAULT_SETTINGS } from "../config/defaults";
 import type { SimpleMindSettings } from "../types/settings";
+import type { MapViewState } from "../types/view";
+
+/** Reads and writes per-file view states through the plugin. */
+export interface ViewStateHost {
+  load(path: string): MapViewState | undefined;
+  save(path: string, state: MapViewState): void;
+}
 
 /** Obsidian view that renders a `.mindmap` file as an interactive canvas. */
 export class MindMapView extends TextFileView {
   private canvas: MapCanvas | null = null;
   private readonly getSettings: () => SimpleMindSettings;
   private readonly onOpenSettings?: () => void;
+  private readonly viewStates?: ViewStateHost;
 
   /**
    * @param leaf Workspace leaf that owns this view.
    * @param getSettings Reads the current plugin settings.
    * @param onOpenSettings Opens the plugin settings tab.
+   * @param viewStates Reads and writes the per-file pan, zoom, and selection.
    */
   constructor(
     leaf: WorkspaceLeaf,
     getSettings: () => SimpleMindSettings = () => DEFAULT_SETTINGS,
     onOpenSettings?: () => void,
+    viewStates?: ViewStateHost,
   ) {
     super(leaf);
     this.getSettings = getSettings;
     this.onOpenSettings = onOpenSettings;
+    this.viewStates = viewStates;
   }
 
   /** Returns the custom view type. */
@@ -61,6 +72,7 @@ export class MindMapView extends TextFileView {
     });
     if (this.data) {
       this.canvas.setSource(this.data);
+      this.restoreViewState();
     }
     this.registerEvent(this.app.workspace.on("css-change", () => this.canvas?.refreshTheme()));
 
@@ -89,6 +101,7 @@ export class MindMapView extends TextFileView {
 
   /** Releases the renderer and DOM. */
   async onClose(): Promise<void> {
+    this.saveViewState();
     this.canvas?.destroy();
     this.canvas = null;
     this.contentEl.empty();
@@ -105,6 +118,7 @@ export class MindMapView extends TextFileView {
     if (clear) this.contentEl.scrollTop = 0;
     if (!clear && data === this.canvas?.getSource()) return;
     this.canvas?.setSource(data);
+    if (clear) this.restoreViewState();
   }
 
   /** Returns the source text to save. */
@@ -187,6 +201,22 @@ export class MindMapView extends TextFileView {
   private async openSource(): Promise<void> {
     const file = this.file;
     if (!file) return;
+    this.saveViewState();
     await switchToSource(this.leaf, file);
+  }
+
+  /** Remembers the pan, zoom, and selection of the open file. */
+  private saveViewState(): void {
+    const path = this.file?.path;
+    if (!path || !this.canvas) return;
+    this.viewStates?.save(path, this.canvas.getViewState());
+  }
+
+  /** Applies the stored pan, zoom, and selection of the open file. */
+  private restoreViewState(): void {
+    const path = this.file?.path;
+    if (!path) return;
+    const state = this.viewStates?.load(path);
+    if (state) this.canvas?.setViewState(state);
   }
 }

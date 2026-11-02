@@ -300,6 +300,28 @@ describe("MapCanvas", () => {
     host.remove();
   });
 
+  it("captures and restores pan, zoom, and selection", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    selectNode(host, "n2");
+    const captured = canvas.getViewState();
+    expect(captured.selectedId).toBe("n2");
+
+    canvas.setSource("# Root\n- A\n");
+    expect(canvas.getSelectedId()).toBeNull();
+
+    canvas.setViewState({ ...captured, x: 42, y: -13, scale: 1.5 });
+    expect(canvas.getSelectedId()).toBe("n2");
+    expect(canvas.getViewState()).toMatchObject({ x: 42, y: -13, scale: 1.5, selectedId: "n2" });
+
+    canvas.setSource("# Root\n- A\n");
+    canvas.setViewState({ x: 0, y: 0, scale: 1, selectedId: "gone" });
+    expect(canvas.getSelectedId()).toBeNull();
+    expect(canvas.getViewState()).toMatchObject({ x: 0, y: 0, scale: 1 });
+
+    canvas.destroy();
+    host.remove();
+  });
+
   it("invokes the source action from the floating menu", () => {
     const { host, canvas, onSource } = createCanvas("# Root\n");
     const sourceButton = host.querySelector<HTMLButtonElement>(

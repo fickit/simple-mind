@@ -747,14 +747,23 @@ switches the same leaf back to the map. The item is hidden in the map view and f
 ### 11.4 File creation
 
 "New mind map" creates a `.mindmap` file with the default frontmatter and a starter root, then opens it
-in the active leaf. The file name is requested through a modal or created from a default name; the
-implementation uses a modal with validation.
+in the active leaf. The file is named `New mind map.mindmap`, or `New mind map 2.mindmap` and so on when
+that name is taken; there is no naming prompt, so creation never blocks on a dialog.
 
 ### 11.5 `.mindmap` and the Obsidian graph
 
 Obsidian indexes Markdown files for links and backlinks. A `.mindmap` file is not part of that index.
 The native editor can still edit it. This is a documented consequence of the dedicated extension and
 is accepted for v1.
+
+### 11.6 View state
+
+The plugin remembers each map's pan, zoom, and selected node. `MindMapView` captures the snapshot
+through `MapCanvas.getViewState()` when the view closes or switches to source; the plugin stores it in
+`data.json` under `viewStates[path]`, beside the settings. Reopening the file applies it after the
+source is rendered: `MapCanvas.setViewState()` restores the transform without fitting and selects the
+node again when it still exists. Deleting a file drops its entry. Values read back from `data.json` are
+checked for finite numbers, so a corrupt entry falls back to a fitted view.
 
 ## 12. Internationalization and documentation
 

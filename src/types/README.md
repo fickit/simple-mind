@@ -15,6 +15,7 @@ module keeps those contracts consistent and prevents circular imports between im
   source text, parser errors, and parse results.
 - `theme.ts`: node shapes, connector styles, text alignment, theme tokens, and theme definitions.
 - `settings.ts`: language and persistent plugin settings.
+- `view.ts`: the per-file pan, zoom, and selection snapshot.
 
 ## Call flow
 

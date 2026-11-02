@@ -17,6 +17,7 @@ import type {
   ThemeDefinition,
   ThemeTokens,
 } from "../../types/theme";
+import type { MapViewState } from "../../types/view";
 import { DragController, type DropPosition } from "./engine/interaction/DragController";
 import { type CommitAction, InlineEditor } from "./engine/interaction/InlineEditor";
 import {
@@ -275,6 +276,23 @@ export class MapCanvas {
   /** Returns the selected node id. */
   getSelectedId(): string | null {
     return this.selectedId;
+  }
+
+  /** Returns the pan, zoom, and selection to persist with the file. */
+  getViewState(): MapViewState {
+    const { x, y, scale } = this.renderer.getTransform();
+    return { x, y, scale, selectedId: this.selectedId };
+  }
+
+  /**
+   * Restores a stored pan, zoom, and selection after the source is rendered.
+   *
+   * @param state Snapshot previously returned by `getViewState`.
+   */
+  setViewState(state: MapViewState): void {
+    this.renderer.setTransform(state.x, state.y, state.scale);
+    const node = state.selectedId ? this.controller?.findNode(state.selectedId) : null;
+    if (node) this.renderer.selectNode(node.id);
   }
 
   /**
