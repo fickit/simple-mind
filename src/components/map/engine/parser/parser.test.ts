@@ -7,7 +7,10 @@ import { parseSource } from "./parser";
 import { serializeDocument } from "./serializer";
 
 function fixture(name: string): string {
-  return readFileSync(new URL(`./__fixtures__/${name}`, import.meta.url), "utf8");
+  return readFileSync(new URL(`./__fixtures__/${name}`, import.meta.url), "utf8").replace(
+    /\r\n/g,
+    "\n",
+  );
 }
 
 function simplify(node: MindNode): { text: string; children: unknown[] } {
