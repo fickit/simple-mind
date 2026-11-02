@@ -11,6 +11,7 @@ export type IconName =
   | "close"
   | "connector-curve"
   | "connector-orthogonal"
+  | "fit"
   | "italic"
   | "layout-mindmap"
   | "layout-org"
@@ -24,6 +25,8 @@ export type IconName =
   | "shape-plain"
   | "shape-rounded"
   | "shape-underline"
+  | "source"
+  | "style"
   | "underline";
 
 /** One drawn piece of an icon: a stroke path or a letterform. */
@@ -46,6 +49,7 @@ const SHAPES: Record<IconName, IconShape[]> = {
   close: [{ d: "M4.5 4.5l7 7" }, { d: "M11.5 4.5l-7 7" }],
   "connector-curve": [{ d: "M2 10.5c4 0 8-5 12-5" }],
   "connector-orthogonal": [{ d: "M2 10.5h5.5V5.5H14" }],
+  fit: [{ d: "M3 6V3h3" }, { d: "M10 3h3v3" }, { d: "M13 10v3h-3" }, { d: "M6 13H3v-3" }],
   italic: [{ glyph: "I", italic: true }],
   "layout-mindmap": [
     { d: "M6 6.5h4v3H6Z" },
@@ -99,6 +103,15 @@ const SHAPES: Record<IconName, IconShape[]> = {
     },
   ],
   "shape-underline": [{ d: "M5 4.5h6" }, { d: "M2.5 11h11" }],
+  source: [{ d: "M6 4.5 2.5 8 6 11.5" }, { d: "M10 4.5 13.5 8 10 11.5" }],
+  style: [
+    { d: "M3 4.5h10" },
+    { d: "M6 3v3" },
+    { d: "M3 8h10" },
+    { d: "M10 6.5v3" },
+    { d: "M3 11.5h10" },
+    { d: "M7 10v3" },
+  ],
   underline: [{ glyph: "U", under: true }],
 };
 

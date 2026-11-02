@@ -11,8 +11,8 @@ editing stay inside this directory so they can be tested without a live vault.
 
 ## Files and subdirectories
 
-- `MapCanvas.ts`: canvas component that wires the document to the renderer, toolbar, the Style/Text
-  panel, and node add/collapse actions.
+- `MapCanvas.ts`: canvas component that wires the document to the renderer, the floating menu, the
+  style panel, and node add/collapse actions.
 - `engine/`: parser, layout, renderer, interaction, history, and model utilities.
 - `themes/`: theme tokens, presets, per-file style overrides, and validation helpers.
 

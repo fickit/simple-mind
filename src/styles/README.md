@@ -14,7 +14,7 @@ from TypeScript and grouped by responsibility. The build step bridges the two re
 
 - `index.css`: entry point for CSS bundling.
 - `base.css`: the plugin-owned `--smui-*` design tokens for both modes, plus the view and map root.
-- `map.css`: toolbar, sidebar, canvas, node, connector, floating control, and error banner styles.
+- `map.css`: floating menu, sidebar, canvas, node, connector, floating control, and error banner styles.
 - `settings.css`: the settings tab and theme editor dialog, which reuse the same tokens.
 
 ## Call flow

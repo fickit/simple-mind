@@ -5,62 +5,50 @@
   min-height: 0;
 }
 
-.simple-mind-toolbar {
+/* Floating menu pinned to the canvas's top-right corner. */
+.simple-mind-menu {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 6;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--smui-hairline);
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--smui-hairline);
+  border-radius: var(--smui-radius);
   background: var(--smui-panel);
 }
 
-.simple-mind-toolbar-divider {
-  width: 1px;
-  height: 18px;
-  margin: 0 2px;
-  background: var(--smui-hairline);
-}
-
-.simple-mind-toolbar-spacer {
-  flex: 1;
-}
-
-.simple-mind-map .simple-mind-toolbar-button {
+.simple-mind-map .simple-mind-menu-button {
   box-shadow: none;
-  min-width: 28px;
-  height: 28px;
-  padding: 0 8px;
-  border: 1px solid var(--smui-edge);
-  border-radius: var(--smui-radius);
-  background: var(--smui-raised);
-  color: var(--smui-body);
-  font-family: var(--smui-sans);
-  font-size: var(--font-ui-smaller);
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--smui-muted);
   cursor: pointer;
   transition:
     background-color var(--smui-duration) ease-in-out,
-    border-color var(--smui-duration) ease-in-out,
     color var(--smui-duration) ease-in-out;
 }
 
-.simple-mind-toolbar-button:hover {
-  border-color: var(--smui-sage);
+.simple-mind-menu-button:hover {
   background: var(--smui-hover);
   color: var(--smui-ink);
 }
 
-.simple-mind-toolbar-button:active {
-  background: var(--smui-edge);
+.simple-mind-menu-button.is-active {
+  background: var(--smui-accent);
+  color: var(--smui-accent-ink);
 }
 
-.simple-mind-toolbar-button:disabled,
-.simple-mind-toolbar-button:disabled:hover {
-  opacity: 0.45;
-  border-color: var(--smui-hairline);
-  background: var(--smui-raised);
-  color: var(--smui-muted);
-  cursor: default;
+.simple-mind-menu-button .simple-mind-icon {
+  width: 14px;
+  height: 14px;
 }
 
 .simple-mind-banner {
@@ -99,6 +87,8 @@
 
 .simple-mind-canvas-host {
   position: relative;
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-height: 0;
   min-width: 0;

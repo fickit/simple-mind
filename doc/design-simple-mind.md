@@ -248,7 +248,7 @@ be tested in a real DOM without Obsidian.
 | --- | --- |
 | `config` | Constants, defaults, i18n dictionaries, built-in theme presets |
 | `pages/MindMapView` | Obsidian `TextFileView` lifecycle, map/source switching, file save/load |
-| `components/map/MapCanvas` | Hosts the world layer, toolbar, error banner, and engine wiring |
+| `components/map/MapCanvas` | Hosts the world layer, floating menu, error banner, and engine wiring |
 | `engine/parser` | Frontmatter, outline grammar, validation, serialization |
 | `engine/model` | Document and node types, tree utilities, validation |
 | `engine/layout` | Measurement abstraction, three layout modes, edge geometry |
@@ -330,21 +330,33 @@ which keeps the button inside the fan of child lines. Sibling gaps keep using th
 ### 7.1 DOM structure
 
 ```html
-<div class="simple-mind-view">
-  <div class="simple-mind-toolbar">...</div>
-  <div class="simple-mind-canvas" tabindex="0" role="tree">
-    <div class="simple-mind-world">
-      <svg class="simple-mind-edges" aria-hidden="true"></svg>
-      <div class="simple-mind-nodes"></div>
-      <textarea class="simple-mind-inline-editor"></textarea>
+<div class="simple-mind-map">
+  <div class="simple-mind-banner" hidden></div>
+  <div class="simple-mind-content">
+    <div class="simple-mind-canvas-host">
+      <div class="simple-mind-menu">
+        <button aria-label="Fit"></button>
+        <button aria-label="Style"></button>
+        <button aria-label="Source"></button>
+      </div>
+      <div class="simple-mind-canvas" tabindex="0" role="tree">
+        <div class="simple-mind-world">
+          <svg class="simple-mind-edges" aria-hidden="true"></svg>
+          <div class="simple-mind-nodes"></div>
+          <textarea class="simple-mind-inline-editor"></textarea>
+        </div>
+      </div>
     </div>
+    <aside class="simple-mind-sidebar"></aside>
   </div>
-  <div class="simple-mind-error" hidden></div>
 </div>
 ```
 
-The world layer receives `translate3d(x, y, 0) scale(z)`. Node positions are world coordinates applied
-with `translate3d`. The SVG uses a viewBox matching the layout bounds and `overflow: visible`.
+The menu floats over the canvas's top-right corner; because the host is the canvas's flex container,
+opening the style panel shrinks the host and the menu slides left with it, and closing the panel puts it
+back in the corner. The world layer receives `translate3d(x, y, 0) scale(z)`. Node positions are world
+coordinates applied with `translate3d`. The SVG uses a viewBox matching the layout bounds and
+`overflow: visible`.
 
 ### 7.2 Incremental updates
 
@@ -588,7 +600,7 @@ Each theme provides both light and dark tokens. The active variant is selected b
 
 ### 10.4 Interface design tokens
 
-The chrome (toolbar, sidebar, inputs, banner, theme dialogs) does not follow Obsidian's palette. It
+The chrome (menu, sidebar, inputs, banner, theme dialogs) does not follow Obsidian's palette. It
 carries its own `--smui-*` tokens in `src/styles/base.css`, declared on `.simple-mind-map`,
 `.simple-mind-settings`, and `.simple-mind-theme-editor`; `applyTheme` marks the map root with
 `data-sm-mode="light|dark"`, and the dialogs key off `body.theme-dark`. Map colors still come from the
@@ -709,6 +721,15 @@ beneath per-node overrides and per-file connector shape.
   downward, the mind-map root shows both left and right, and a branch node shows only its own side.
 - Clicking a root-side `+` pins the new branch to that side by writing `side` into the node marker.
   Layout groups explicitly sided branches first and balances branches without a side.
+
+### 11.2.4 Floating menu
+
+The map keeps only three actions above the canvas: fit to window, toggle the style panel, and switch to
+the source editor. All three are icon buttons with an `aria-label` and no visible text, grouped in a
+small panel-toned strip pinned to the canvas's top-right corner. The strip lives inside the canvas host,
+so opening the style panel narrows the host and carries the menu left with it; closing the panel returns
+it to the corner. Node actions (add, delete, undo, redo, zoom) stay on the map's own controls, the
+keyboard shortcuts, and the command palette.
 
 ### 11.3 Status bar
 

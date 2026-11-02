@@ -47,13 +47,6 @@ function nextFrame(): Promise<void> {
   });
 }
 
-function clickButton(host: HTMLElement, label: string): void {
-  const button = Array.from(host.querySelectorAll("button")).find(
-    (candidate) => candidate.textContent === label,
-  );
-  button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-}
-
 /** Returns the tiles of the named icon group. */
 function tiles(host: HTMLElement, group: string): HTMLButtonElement[] {
   const wrap = host.querySelector<HTMLElement>(`[role="group"][aria-label="${group}"]`)!;
@@ -307,10 +300,10 @@ describe("MapCanvas", () => {
     host.remove();
   });
 
-  it("invokes the source action from the toolbar", () => {
+  it("invokes the source action from the floating menu", () => {
     const { host, canvas, onSource } = createCanvas("# Root\n");
-    const sourceButton = Array.from(host.querySelectorAll("button")).find(
-      (button) => button.textContent === "Source",
+    const sourceButton = host.querySelector<HTMLButtonElement>(
+      '.simple-mind-menu button[aria-label="Source"]',
     );
 
     sourceButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
@@ -320,10 +313,38 @@ describe("MapCanvas", () => {
     host.remove();
   });
 
+  it("floats three icon buttons over the canvas and toggles the panel", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    const menu = host.querySelector(".simple-mind-canvas-host > .simple-mind-menu")!;
+    const buttons = Array.from(menu.querySelectorAll("button"));
+    const sidebar = host.querySelector<HTMLElement>(".simple-mind-sidebar")!;
+
+    expect(buttons.map((button) => button.getAttribute("aria-label"))).toEqual([
+      "Fit",
+      "Style",
+      "Source",
+    ]);
+    expect(buttons.map((button) => button.dataset.icon)).toEqual(["fit", "style", "source"]);
+    expect(menu.closest(".simple-mind-canvas")).toBeNull();
+    expect(host.querySelector(".simple-mind-toolbar")).toBeNull();
+
+    const style = buttons[1];
+    expect(style.getAttribute("aria-pressed")).toBe("true");
+    style.click();
+    expect(sidebar.hidden).toBe(true);
+    expect(style.getAttribute("aria-pressed")).toBe("false");
+    style.click();
+    expect(sidebar.hidden).toBe(false);
+    expect(style.classList.contains("is-active")).toBe(true);
+
+    canvas.destroy();
+    host.remove();
+  });
+
   it("adds a child through the inline editor and emits source", () => {
     const { host, canvas, onChange } = createCanvas("# Root\n- A\n");
     selectNode(host, "n2");
-    clickButton(host, "+ Child");
+    pressKey(host.querySelector(".simple-mind-canvas"), "Tab");
 
     const input = host.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor");
     expect(input).not.toBeNull();
@@ -341,7 +362,7 @@ describe("MapCanvas", () => {
   it("starts an empty single-line editor without a placeholder", () => {
     const { host, canvas } = createCanvas("# Root\n- A\n");
     selectNode(host, "n2");
-    clickButton(host, "+ Child");
+    pressKey(host.querySelector(".simple-mind-canvas"), "Tab");
 
     const input = host.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor");
     expect(input?.value).toBe("");
@@ -356,7 +377,7 @@ describe("MapCanvas", () => {
   it("commits on Enter and immediately starts a sibling editor", () => {
     const { host, canvas, onChange } = createCanvas("# Root\n- A\n");
     selectNode(host, "n2");
-    clickButton(host, "+ Child");
+    pressKey(host.querySelector(".simple-mind-canvas"), "Tab");
 
     const input = host.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor");
     input!.value = "First";
@@ -376,7 +397,7 @@ describe("MapCanvas", () => {
   it("commits on Tab and immediately starts a child editor", () => {
     const { host, canvas, onChange } = createCanvas("# Root\n- A\n");
     selectNode(host, "n2");
-    clickButton(host, "+ Child");
+    pressKey(host.querySelector(".simple-mind-canvas"), "Tab");
 
     const input = host.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor");
     input!.value = "Parent";
@@ -414,16 +435,13 @@ describe("MapCanvas", () => {
   it("deletes a node and restores it with undo", () => {
     const { host, canvas, onChange } = createCanvas("# Root\n- A\n- B\n");
     selectNode(host, "n2");
-    clickButton(host, "Delete");
+    const canvasEl = host.querySelector(".simple-mind-canvas");
+    pressKey(canvasEl, "Delete");
 
     expect(canvas.getSource()).not.toContain("- A");
     expect(onChange).toHaveBeenCalledOnce();
 
-    const undoButton = Array.from(host.querySelectorAll("button")).find(
-      (button) => button.textContent === "Undo",
-    );
-    expect((undoButton as HTMLButtonElement).disabled).toBe(false);
-    undoButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    pressKey(canvasEl, "z", { ctrlKey: true });
 
     expect(canvas.getSource()).toContain("- A");
     expect(onChange).toHaveBeenCalledTimes(2);
@@ -916,11 +934,6 @@ describe("MapCanvas", () => {
   it("disables editing when source errors exist", () => {
     const { host, canvas, onChange, onNotice } = createCanvas("# Root\nhello\n");
     selectNode(host, "n1");
-
-    const childButton = Array.from(host.querySelectorAll("button")).find(
-      (button) => button.textContent === "+ Child",
-    ) as HTMLButtonElement;
-    expect(childButton.disabled).toBe(true);
 
     pressKey(host.querySelector(".simple-mind-canvas"), "Tab");
     expect(onNotice).toHaveBeenCalledWith("Fix the source errors before editing.");

@@ -2,15 +2,7 @@ import type { MessageKey } from "./en";
 
 export const zh: Record<MessageKey, string> = {
   "toolbar.fit": "适应画布",
-  "toolbar.theme": "主题",
   "toolbar.style": "样式",
-  "toolbar.zoomOut": "缩小",
-  "toolbar.zoomIn": "放大",
-  "toolbar.addChild": "+ 子节点",
-  "toolbar.addSibling": "+ 兄弟节点",
-  "toolbar.delete": "删除",
-  "toolbar.undo": "撤销",
-  "toolbar.redo": "重做",
   "toolbar.source": "源码",
   "banner.sourceError": "源码错误（第 {line} 行）：{message}{more}",
   "banner.moreErrors": "（另有 {count} 条）",

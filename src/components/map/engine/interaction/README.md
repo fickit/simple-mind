@@ -24,9 +24,9 @@ every change pass through one validation, serialization, and history path.
 
 ## Call flow
 
-`MapCanvas` forwards keyboard and toolbar actions to `MapController`. Inline commits become
-controller commands, which serialize the document and notify the view to save. While the editor is
-open, `MapCanvas` throttles live rectangles with `requestAnimationFrame`; `MapRenderer` reflows the
+`MapCanvas` forwards keyboard shortcuts and floating-menu actions to `MapController`. Inline commits
+become controller commands, which serialize the document and notify the view to save. While the editor
+is open, `MapCanvas` throttles live rectangles with `requestAnimationFrame`; `MapRenderer` reflows the
 tree with the editor size so children move and connectors follow. `DragController` reports drops to
 `MapCanvas`, which calls `MapController.moveNode`. Collapse remains runtime-only and does not change
 source.

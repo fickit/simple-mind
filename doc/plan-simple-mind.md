@@ -210,6 +210,10 @@ Branch: `feat/core`
   and the close control keep their own surface.
 - `√` Keep the color wells on Obsidian's native input skin and flatten the stepper field on hover,
   focus, and press.
+- `√` Replace the toolbar strip with a three-icon menu (fit, style, source) floating over the canvas's
+  top-right corner; opening the style panel carries it left with the canvas.
+- `√` Drop the zoom, add, delete, undo, and redo buttons and their labels; those actions stay on the
+  keyboard, the node controls, and the command palette.
 - `√` Replace the connector text select with curve and orthogonal pictograms, and fold the theme
   title, select, and a settings gear into a single row.
 - `√` Keep chrome motion color-only at 140 ms with a reduced-motion fallback and no focus outline

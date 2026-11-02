@@ -90,15 +90,8 @@ export class MapCanvas {
   private readonly onChangeSource: (source: string) => void;
   private readonly onNotice: (message: string) => void;
   private readonly onOpenSettings?: () => void;
-  private readonly childButton: HTMLButtonElement;
-  private readonly siblingButton: HTMLButtonElement;
-  private readonly deleteButton: HTMLButtonElement;
-  private readonly undoButton: HTMLButtonElement;
-  private readonly redoButton: HTMLButtonElement;
   private readonly fitButton: HTMLButtonElement;
   private readonly sourceButton: HTMLButtonElement;
-  private readonly zoomInButton: HTMLButtonElement;
-  private readonly zoomOutButton: HTMLButtonElement;
   private readonly styleButton: HTMLButtonElement;
   private sidebarPane!: HTMLElement;
   private sidebarSelectMirror!: HTMLSpanElement;
@@ -153,10 +146,6 @@ export class MapCanvas {
     this.rootEl.style.setProperty("--sm-control-spacing", `${NODE_CONTROL_SPACING}px`);
     container.replaceChildren(this.rootEl);
 
-    const toolbar = doc.createElement("div");
-    toolbar.className = "simple-mind-toolbar";
-    this.rootEl.appendChild(toolbar);
-
     this.bannerEl = doc.createElement("div");
     this.bannerEl.className = "simple-mind-banner";
     this.bannerEl.hidden = true;
@@ -167,9 +156,13 @@ export class MapCanvas {
     this.contentRow.className = "simple-mind-content";
     this.rootEl.appendChild(this.contentRow);
 
+    const canvasHost = doc.createElement("div");
+    canvasHost.className = "simple-mind-canvas-host";
+    this.contentRow.appendChild(canvasHost);
+
     this.canvasEl = doc.createElement("div");
-    this.canvasEl.className = "simple-mind-canvas-host";
-    this.contentRow.appendChild(this.canvasEl);
+    this.canvasEl.className = "simple-mind-canvas";
+    canvasHost.appendChild(this.canvasEl);
 
     this.sidebarEl = doc.createElement("aside");
     this.sidebarEl.className = "simple-mind-sidebar";
@@ -196,38 +189,21 @@ export class MapCanvas {
       drop: (sourceId, targetId, position) => this.dropNode(sourceId, targetId, position),
     });
 
-    this.fitButton = this.createToolbarButton(toolbar, t("toolbar.fit"), () => this.renderer.fit());
-    this.zoomOutButton = this.createToolbarButton(toolbar, t("toolbar.zoomOut"), () =>
-      this.renderer.zoomBy(0.8),
+    const menu = doc.createElement("div");
+    menu.className = "simple-mind-menu";
+    canvasHost.appendChild(menu);
+    this.fitButton = this.createToolbarButton(menu, t("toolbar.fit"), "fit", () =>
+      this.renderer.fit(),
     );
-    this.zoomInButton = this.createToolbarButton(toolbar, t("toolbar.zoomIn"), () =>
-      this.renderer.zoomBy(1.2),
-    );
-    setIcon(this.zoomOutButton, "minus");
-    setIcon(this.zoomInButton, "plus");
-    this.zoomOutButton.setAttribute("aria-label", t("toolbar.zoomOut"));
-    this.zoomInButton.setAttribute("aria-label", t("toolbar.zoomIn"));
-    this.createToolbarDivider(toolbar);
-    this.childButton = this.createToolbarButton(toolbar, t("toolbar.addChild"), () =>
-      this.addChild(),
-    );
-    this.siblingButton = this.createToolbarButton(toolbar, t("toolbar.addSibling"), () =>
-      this.addSibling(),
-    );
-    this.deleteButton = this.createToolbarButton(toolbar, t("toolbar.delete"), () =>
-      this.deleteSelected(),
-    );
-    this.createToolbarDivider(toolbar);
-    this.undoButton = this.createToolbarButton(toolbar, t("toolbar.undo"), () => this.undo());
-    this.redoButton = this.createToolbarButton(toolbar, t("toolbar.redo"), () => this.redo());
-    this.createToolbarDivider(toolbar);
-    this.styleButton = this.createToolbarButton(toolbar, t("toolbar.style"), () =>
+    this.styleButton = this.createToolbarButton(menu, t("toolbar.style"), "style", () =>
       this.toggleSidebar(),
     );
-    const spacer = doc.createElement("span");
-    spacer.className = "simple-mind-toolbar-spacer";
-    toolbar.appendChild(spacer);
-    this.sourceButton = this.createToolbarButton(toolbar, t("toolbar.source"), this.onSource);
+    this.sourceButton = this.createToolbarButton(
+      menu,
+      t("toolbar.source"),
+      "source",
+      this.onSource,
+    );
 
     this.keydownHandler = (event) => this.handleKeydown(event);
     this.canvasEl.addEventListener("keydown", this.keydownHandler);
@@ -318,18 +294,11 @@ export class MapCanvas {
     }
   }
 
-  /** Updates toolbar labels after a language change. */
+  /** Updates menu labels after a language change. */
   refreshLanguage(): void {
-    this.fitButton.textContent = t("toolbar.fit");
-    this.zoomOutButton.setAttribute("aria-label", t("toolbar.zoomOut"));
-    this.zoomInButton.setAttribute("aria-label", t("toolbar.zoomIn"));
-    this.childButton.textContent = t("toolbar.addChild");
-    this.siblingButton.textContent = t("toolbar.addSibling");
-    this.deleteButton.textContent = t("toolbar.delete");
-    this.undoButton.textContent = t("toolbar.undo");
-    this.redoButton.textContent = t("toolbar.redo");
-    this.sourceButton.textContent = t("toolbar.source");
-    this.styleButton.textContent = t("toolbar.style");
+    this.fitButton.setAttribute("aria-label", t("toolbar.fit"));
+    this.styleButton.setAttribute("aria-label", t("toolbar.style"));
+    this.sourceButton.setAttribute("aria-label", t("toolbar.source"));
     this.buildSidebar();
     this.syncSidebar();
     if (this.controller) this.rerender(false);
@@ -945,6 +914,7 @@ export class MapCanvas {
   /** Shows or hides the style sidebar. */
   private toggleSidebar(): void {
     this.sidebarEl.hidden = !this.sidebarEl.hidden;
+    this.updateToolbar();
   }
 
   /** Removes the renderer and map DOM. */
@@ -1145,31 +1115,27 @@ export class MapCanvas {
   }
 
   /**
-   * Creates a toolbar button.
+   * Creates one icon button in the floating menu.
    *
-   * @param toolbar Toolbar element.
-   * @param label Visible label.
+   * @param menu Menu element that receives the button.
+   * @param label Accessible label.
+   * @param icon Icon to draw.
    * @param action Click action.
    */
   private createToolbarButton(
-    toolbar: HTMLElement,
+    menu: HTMLElement,
     label: string,
+    icon: IconName,
     action: () => void,
   ): HTMLButtonElement {
-    const button = toolbar.ownerDocument.createElement("button");
+    const button = menu.ownerDocument.createElement("button");
     button.type = "button";
-    button.className = "simple-mind-toolbar-button";
-    button.textContent = label;
+    button.className = "simple-mind-menu-button";
+    button.setAttribute("aria-label", label);
+    setIcon(button, icon);
     button.addEventListener("click", action);
-    toolbar.appendChild(button);
+    menu.appendChild(button);
     return button;
-  }
-
-  /** Adds a visual separator to the toolbar. */
-  private createToolbarDivider(toolbar: HTMLElement): void {
-    const divider = toolbar.ownerDocument.createElement("span");
-    divider.className = "simple-mind-toolbar-divider";
-    toolbar.appendChild(divider);
   }
 
   /** Adds a child from a floating button on either the root side or a branch. */
@@ -1507,17 +1473,11 @@ export class MapCanvas {
     }
   }
 
-  /** Updates toolbar disabled states. */
+  /** Mirrors the sidebar state on the style toggle. */
   private updateToolbar(): void {
-    const hasSelection = !!this.selectedId;
-    const canEdit = this.canEdit();
-    const selectedRoot = hasSelection && this.controller?.isRoot(this.selectedId ?? "") === true;
-
-    this.childButton.disabled = !canEdit || !hasSelection;
-    this.siblingButton.disabled = !canEdit || !hasSelection;
-    this.deleteButton.disabled = !canEdit || !hasSelection || selectedRoot;
-    this.undoButton.disabled = !canEdit || this.controller?.canUndo() !== true;
-    this.redoButton.disabled = !canEdit || this.controller?.canRedo() !== true;
+    const open = !this.sidebarEl.hidden;
+    this.styleButton.classList.toggle("is-active", open);
+    this.styleButton.setAttribute("aria-pressed", String(open));
   }
 
   /** Re-renders the controller document. */
