@@ -96,6 +96,7 @@ node scripts/benchmark.mjs  # 合成性能报告
 - `doc/design-simple-mind.md`
 - `doc/plan-simple-mind.md`
 - `doc/benchmark-simple-mind.md`
+- `CHANGELOG.md`
 
 ## 许可证
 

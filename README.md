@@ -100,6 +100,7 @@ without a mind-map runtime dependency.
 - `doc/design-simple-mind.md`
 - `doc/plan-simple-mind.md`
 - `doc/benchmark-simple-mind.md`
+- `CHANGELOG.md`
 
 ## License
 
