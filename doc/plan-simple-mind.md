@@ -339,13 +339,13 @@ npm run build
 node scripts/benchmark.mjs
 ```
 
-- `-` Update root `README.md`, `README.zh-CN.md`, and `CHANGELOG.md`.
-- `-` Set `manifest.json` author name, author URL, repository URL, and funding URL from project owner
-  information.
-- `-` Set `version: 0.1.0` and update `versions.json`.
-- `-` Confirm the release bundle contains only `main.js`, `manifest.json`, and `styles.css`.
-- `-` Add the GitHub release workflow if the project owner wants automated releases.
-- `-` Commit `feat/release`.
+- `√` Update root `README.md`, `README.zh-CN.md`, and add `CHANGELOG.md`.
+- `√` Set the `manifest.json` author name and author URL (`fickit`). No funding URL.
+- `-` Add `repositoryUrl` to `manifest.json` once the repository exists.
+- `√` Set `version: 0.1.0` and update `versions.json`.
+- `√` Confirm the release bundle contains only `main.js`, `manifest.json`, and `styles.css`.
+- `√` Add a tag-triggered GitHub release workflow that verifies the bundle and uploads the three assets.
+- `x` Use a separate `feat/release` branch; release work lands on `feat/core` with the rest.
 
 ## Phase 10 — Deferred beyond v1 (excluded from this plan)
 
@@ -384,6 +384,8 @@ node scripts/benchmark.mjs
 - Phase 8 settings/i18n: settings tab (including global font and connector defaults), custom theme
   management, language switching, command re-registration, and English/Chinese UI are implemented.
 - Manual verification: completed in the test vault for every phase.
-- Next: release preparation (CHANGELOG, manifest links, release workflow, release bundle).
+- Release preparation: changelog written, release workflow added, and version metadata already at
+  `0.1.0`; only the repository URL and the first tag remain.
+- Next: publish the repository, fill `manifest.json` `repositoryUrl`, then push a tag to release.
 - Test vault: local only and ignored by git; the build writes the plugin into it.
 - Author metadata: `fickit`; repository URL still pending.

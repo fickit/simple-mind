@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      - name: Compare the manifest version with the tag
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          node -e "const manifest = require('./manifest.json'); const tag = process.env.TAG.replace(/^v/, ''); if (manifest.version !== tag) { throw new Error('manifest.json is ' + manifest.version + ' but the tag is ' + process.env.TAG); }"
+
+      - name: Check the release bundle
+        run: test -f main.js && test -f manifest.json && test -f styles.css
+
+      - name: Publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css --title "$GITHUB_REF_NAME" --generate-notes
