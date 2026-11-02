@@ -6,12 +6,8 @@ styles.css
 .DS_Store
 .vscode/
 
-test-vault/.obsidian/plugins/simple-mind/
-test-vault/.obsidian/workspace*.json
-test-vault/.obsidian/cache/
-test-vault/.obsidian/appearance.json
-test-vault/.obsidian/core-plugins.json
-test-vault/.obsidian/plugins/*/data.json
+test-vault/
+
 .tmp-demo/
 .tmp-bench/
 
