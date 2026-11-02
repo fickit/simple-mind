@@ -385,9 +385,8 @@ node scripts/benchmark.mjs
 - Phase 8 settings/i18n: settings tab (including global font and connector defaults), custom theme
   management, language switching, command re-registration, and English/Chinese UI are implemented.
 - Manual verification: completed in the test vault for every phase.
-- Release preparation: changelog written, release workflow added, version metadata at `0.1.0`, and the
-  repository URL is recorded in the package and READMEs; only pushing the repository and the first tag
-  remain.
-- Next: push to `github.com/fickit/simple-mind`, then push a tag to release.
+- Release 0.1.0 published on 2026-11-02: `https://github.com/fickit/simple-mind/releases/tag/0.1.0`
+  ships `main.js`, `manifest.json`, and `styles.css`.
+- Next: submit the plugin to the Obsidian community list when ready.
 - Test vault: local only and ignored by git; the build writes the plugin into it.
-- Author metadata: `fickit`; repository URL still pending.
+- Author metadata: `fickit`; repository `https://github.com/fickit/simple-mind`.
