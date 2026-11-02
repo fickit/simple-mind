@@ -35,8 +35,8 @@ The file opens as a map. The Source action switches the same tab to Obsidian's n
 - Four layouts: mind map, tree to the right, tree to the left, and organization chart.
 - Direct editing: add, edit, delete, collapse, drag, copy/paste, undo, and redo.
 - Nine built-in themes with automatic light/dark switching and a custom theme editor.
-- A Style/Text panel that styles the selected node; connector shape per map, connector color and
-  thickness in settings.
+- One style panel that edits the file's theme, layout, and connector shape together with the selected
+  node's shape, colors, and text; connector color, thickness, and font family live in settings.
 - Hover controls: connector-colored collapse chevrons, hidden-node count bubbles, and side-aware
   floating add buttons.
 - English and Chinese UI.

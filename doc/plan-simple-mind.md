@@ -166,10 +166,9 @@ Branch: `feat/core`
 - `√` Implement Tab/Shift+Tab/Enter/Delete/F2 shortcuts; Enter/Tab in the editor commit and continue
   with a sibling/child; Space is reserved for text input and the collapse shortcut is deferred.
 - `√` New nodes open as empty single-line editors with a default width and no placeholder.
-- `√` Add a two-tab style panel. Style: theme, layout, and connector shape for the file;
-  node shape, fill, border color, and border width for the selected node. Text: font
-  family and size, text color, bold, italic, underline, alignment, and line height for the selected
-  node.
+- `√` Add a style panel. Theme, layout, and connector shape for the file; node shape, fill, border
+  color, and border width plus font size, text color, bold, italic, underline, alignment, and line
+  height for the selected node.
 - `√` Keep horizontal gap, vertical gap, and maximum node width in plugin settings. Add global
   defaults for font, connector color, and connector thickness; a thickness of 0 uses the theme.
 - `√` Store per-node styles in trailing `<!-- sm:{...} -->` markers, validate and clamp them on parse,
@@ -197,10 +196,15 @@ Branch: `feat/core`
 - `√` Give the chrome its own `--smui-*` tokens in both modes: small even radii, serif section labels
   without uppercase tracking, and a static canvas atmosphere (paper speckle in light, staggered star
   fields with a mist band in dark).
-- `√` Draw every control icon as inline SVG from a stroke table, replace the text-alignment dropdown
-  with icon tiles plus a reset, and center compact select, number, and text fields.
-- `√` Keep chrome motion color-only at 140 ms with a sage keyboard focus and a reduced-motion fallback,
-  and re-sync the sidebar when Obsidian flips between light and dark.
+- `√` Draw every control icon as inline SVG from a stroke table, and center compact select and number
+  fields that size to their own content.
+- `√` Merge the Style and Text panes into one scrolling column, move the font family to the settings
+  page, and label an absent override "Default".
+- `√` Turn bold, italic, and underline into icon toggles, border width, font size, and line height into
+  steppers, node shape and layout type into pictogram tiles, and every restore-default action into one
+  wrap-arrow icon. Text alignment keeps three tiles and clears on a second click.
+- `√` Keep chrome motion color-only at 140 ms with a reduced-motion fallback and no focus outline
+  anywhere in the panel, and re-sync the sidebar when Obsidian flips between light and dark.
 - `√` Refresh maps on Obsidian light/dark changes through `css-change` plus a body-class fallback.
 - `√` Implement drag start threshold, reparent, reorder, drop indicators, and hover-to-expand.
 - `√` Implement internal clipboard, cut, copy, and paste, plus system-clipboard text fallback.

@@ -80,7 +80,7 @@ export class SettingsTab extends PluginSettingTab {
       .setName(t("settings.defaultFont"))
       .setDesc(t("settings.defaultFontDesc"))
       .addText((text) => {
-        text.setPlaceholder(t("sidebar.themeDefault"));
+        text.setPlaceholder(t("sidebar.defaultValue"));
         text.setValue(settings.defaultFontFamily);
         text.onChange((value) => {
           settings.defaultFontFamily = value.trim();

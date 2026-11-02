@@ -53,6 +53,38 @@ function clickButton(host: HTMLElement, label: string): void {
   button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
 }
 
+/** Returns the tiles of the named icon group. */
+function tiles(host: HTMLElement, group: string): HTMLButtonElement[] {
+  const wrap = host.querySelector<HTMLElement>(`[role="group"][aria-label="${group}"]`)!;
+  return Array.from(wrap.querySelectorAll<HTMLButtonElement>(".simple-mind-sidebar-segment-item"));
+}
+
+/** Returns a stepper's field with its step and reset buttons. */
+function stepper(
+  host: HTMLElement,
+  field: string,
+): {
+  input: HTMLInputElement;
+  decrease: HTMLButtonElement;
+  increase: HTMLButtonElement;
+  reset: HTMLButtonElement;
+} {
+  const input = host.querySelector<HTMLInputElement>(`.simple-mind-sidebar-${field}`)!;
+  const wrap = input.closest(".simple-mind-sidebar-stepper")!;
+  return {
+    input,
+    decrease: wrap.querySelector<HTMLButtonElement>('[aria-label="Decrease"]')!,
+    increase: wrap.querySelector<HTMLButtonElement>('[aria-label="Increase"]')!,
+    reset: wrap.querySelector<HTMLButtonElement>(".simple-mind-sidebar-reset")!,
+  };
+}
+
+/** Sets a numeric field and commits it the way a blur would. */
+function commitNumber(input: HTMLInputElement, value: string): void {
+  input.value = value;
+  input.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
 function pressKey(target: Element | null, key: string, init: KeyboardEventInit = {}): void {
   target?.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, ...init }));
 }
@@ -478,36 +510,45 @@ describe("MapCanvas", () => {
 
   it("writes per-file layout and connector-shape overrides from the sidebar", () => {
     const { host, canvas, onChange } = createCanvas("# Root\n- A\n");
-    const layout = host.querySelector<HTMLSelectElement>(".simple-mind-sidebar-layout")!;
+    const layoutTiles = tiles(host, "Type");
     const connector = host.querySelector<HTMLSelectElement>(".simple-mind-sidebar-connector")!;
 
-    layout.value = "org";
-    layout.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(layoutTiles.map((tile) => tile.dataset.value)).toEqual([
+      "mindmap",
+      "tree-right",
+      "tree-left",
+      "org",
+    ]);
+    expect(layoutTiles[0].dataset.icon).toBe("layout-mindmap");
+    expect(layoutTiles[0].classList.contains("is-active")).toBe(true);
+
+    layoutTiles[3].click();
     connector.value = "orthogonal";
     connector.dispatchEvent(new Event("change", { bubbles: true }));
 
     expect(onChange).toHaveBeenCalledTimes(2);
     expect(canvas.getSource()).toContain("layout: org");
     expect(canvas.getSource()).toContain("connectorStyle: orthogonal");
+    expect(layoutTiles[3].classList.contains("is-active")).toBe(true);
+    expect(layoutTiles[0].classList.contains("is-active")).toBe(false);
 
     canvas.destroy();
     host.remove();
   });
 
-  it("switches between the style and text tabs", () => {
+  it("keeps node and text controls in one panel with no tabs", () => {
     const { host, canvas } = createCanvas("# Root\n- A\n");
-    const stylePane = host.querySelector<HTMLElement>(
-      '.simple-mind-sidebar-pane[data-tab="style"]',
-    )!;
-    const textPane = host.querySelector<HTMLElement>('.simple-mind-sidebar-pane[data-tab="text"]')!;
+    const paneButtons = Array.from(
+      host.querySelectorAll<HTMLButtonElement>(".simple-mind-sidebar-pane button"),
+    );
 
-    expect(stylePane.hidden).toBe(false);
-    expect(textPane.hidden).toBe(true);
-
-    clickButton(host, "Text");
-    expect(stylePane.hidden).toBe(true);
-    expect(textPane.hidden).toBe(false);
-    expect(host.querySelector(".simple-mind-sidebar-font-family")).not.toBeNull();
+    expect(host.querySelectorAll(".simple-mind-sidebar-pane")).toHaveLength(1);
+    expect(host.querySelector(".simple-mind-sidebar-font-family")).toBeNull();
+    expect(
+      paneButtons.filter((button) => /^(Style|Text)$/.test(button.textContent ?? "")),
+    ).toHaveLength(0);
+    expect(host.querySelector(".simple-mind-sidebar-node-fill")).not.toBeNull();
+    expect(host.querySelector(".simple-mind-sidebar-line-height")).not.toBeNull();
 
     canvas.destroy();
     host.remove();
@@ -531,47 +572,121 @@ describe("MapCanvas", () => {
 
   it("requires a selection before editing node and text styles", () => {
     const { host, canvas } = createCanvas("# Root\n- A\n");
-    const shape = host.querySelector<HTMLSelectElement>(".simple-mind-sidebar-node-shape")!;
+    const shapeTiles = tiles(host, "Node shape");
     const fill = host.querySelector<HTMLInputElement>(".simple-mind-sidebar-node-fill")!;
+    const width = stepper(host, "node-border-width");
     const hint = host.querySelector<HTMLElement>(".simple-mind-sidebar-hint")!;
 
-    expect(shape.disabled).toBe(true);
+    expect(shapeTiles.every((tile) => tile.disabled)).toBe(true);
     expect(fill.disabled).toBe(true);
+    expect(width.input.disabled).toBe(true);
+    expect(width.reset.disabled).toBe(true);
     expect(hint.hidden).toBe(false);
 
     selectNode(host, "n2");
-    expect(shape.disabled).toBe(false);
+    expect(shapeTiles.every((tile) => !tile.disabled)).toBe(true);
     expect(fill.disabled).toBe(false);
+    expect(width.input.disabled).toBe(false);
     expect(hint.hidden).toBe(true);
 
     canvas.destroy();
     host.remove();
   });
 
-  it("shows text alignment as icon tiles that reset to the theme value", () => {
+  it("shows node shape as pictogram tiles with a reset tile", () => {
     const { host, canvas } = createCanvas("# Root\n- A\n");
     selectNode(host, "n2");
-    const tiles = Array.from(
-      host.querySelectorAll<HTMLButtonElement>(".simple-mind-sidebar-segment-item"),
-    );
-    const reset = host.querySelector<HTMLButtonElement>(
-      ".simple-mind-sidebar-segment .simple-mind-sidebar-reset",
+    const shapeTiles = tiles(host, "Node shape");
+
+    expect(shapeTiles.map((tile) => tile.dataset.icon)).toEqual([
+      "reset",
+      "shape-rounded",
+      "shape-pill",
+      "shape-underline",
+      "shape-plain",
+    ]);
+    expect(shapeTiles[0].classList.contains("is-active")).toBe(true);
+
+    shapeTiles[2].click();
+    expect(canvas.getSource()).toContain('<!-- sm:{"shape":"pill"} -->');
+    expect(shapeTiles[2].getAttribute("aria-pressed")).toBe("true");
+
+    shapeTiles[0].click();
+    expect(canvas.getSource()).not.toContain("<!-- sm:");
+    expect(shapeTiles[0].classList.contains("is-active")).toBe(true);
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("steps numeric style values and returns them to the theme default", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    selectNode(host, "n2");
+    const fontSize = stepper(host, "font-size");
+
+    expect(fontSize.input.placeholder).toBe("Default");
+    expect(fontSize.input.value).toBe("");
+
+    fontSize.increase.click();
+    expect(canvas.getSource()).toContain('<!-- sm:{"fontSize":8} -->');
+    fontSize.increase.click();
+    expect(fontSize.input.value).toBe("9");
+    fontSize.decrease.click();
+    expect(fontSize.input.value).toBe("8");
+
+    commitNumber(fontSize.input, "99");
+    expect(fontSize.input.value).toBe("32");
+    expect(canvas.getSource()).toContain('"fontSize":32');
+
+    expect(fontSize.reset.disabled).toBe(false);
+    fontSize.reset.click();
+    expect(fontSize.input.value).toBe("");
+    expect(fontSize.reset.disabled).toBe(true);
+    expect(canvas.getSource()).not.toContain("<!-- sm:");
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("toggles bold, italic, and underline with icon buttons", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    selectNode(host, "n2");
+    const bold = host.querySelector<HTMLButtonElement>(
+      '.simple-mind-sidebar-toggle[aria-label="Bold"]',
     )!;
 
-    expect(tiles.map((tile) => tile.dataset.value)).toEqual(["left", "center", "right"]);
-    expect(tiles[1].classList.contains("is-active")).toBe(true);
-    expect(tiles[0].querySelector("svg.simple-mind-icon")).not.toBeNull();
-    expect(reset.disabled).toBe(true);
+    expect(bold.dataset.icon).toBe("bold");
+    expect(bold.getAttribute("aria-pressed")).toBe("false");
 
-    tiles[0].click();
+    bold.click();
+    expect(canvas.getSource()).toContain('<!-- sm:{"bold":true} -->');
+    expect(bold.classList.contains("is-active")).toBe(true);
+
+    bold.click();
+    expect(canvas.getSource()).toContain('<!-- sm:{"bold":false} -->');
+    expect(bold.getAttribute("aria-pressed")).toBe("false");
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("shows text alignment as three icon tiles that clear on the second click", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    selectNode(host, "n2");
+    const alignTiles = tiles(host, "Text alignment");
+
+    expect(alignTiles.map((tile) => tile.dataset.value)).toEqual(["left", "center", "right"]);
+    expect(alignTiles[1].classList.contains("is-active")).toBe(true);
+    expect(alignTiles[0].querySelector("svg.simple-mind-icon")).not.toBeNull();
+
+    alignTiles[0].click();
     expect(canvas.getSource()).toContain('- A <!-- sm:{"textAlign":"left"} -->');
-    expect(tiles[0].getAttribute("aria-pressed")).toBe("true");
-    expect(tiles[1].getAttribute("aria-pressed")).toBe("false");
-    expect(reset.disabled).toBe(false);
+    expect(alignTiles[0].getAttribute("aria-pressed")).toBe("true");
+    expect(alignTiles[1].getAttribute("aria-pressed")).toBe("false");
 
-    reset.click();
+    alignTiles[0].click();
     expect(canvas.getSource()).not.toContain("textAlign");
-    expect(tiles[1].getAttribute("aria-pressed")).toBe("true");
+    expect(alignTiles[1].getAttribute("aria-pressed")).toBe("true");
 
     canvas.destroy();
     host.remove();
@@ -586,34 +701,23 @@ describe("MapCanvas", () => {
       input.dispatchEvent(new Event("change", { bubbles: true }));
     };
 
-    const shape = host.querySelector<HTMLSelectElement>(".simple-mind-sidebar-node-shape")!;
-    shape.value = "pill";
-    shape.dispatchEvent(new Event("change", { bubbles: true }));
+    tiles(host, "Node shape")[2].click();
     change(".simple-mind-sidebar-node-fill", "#112233");
     change(".simple-mind-sidebar-node-border", "#223344");
     change(".simple-mind-sidebar-node-border-width", "3");
-
-    clickButton(host, "Text");
-    change(".simple-mind-sidebar-font-family", "Georgia");
     change(".simple-mind-sidebar-font-size", "16");
     change(".simple-mind-sidebar-text-color", "#778899");
-    for (const selector of [
-      ".simple-mind-sidebar-bold",
-      ".simple-mind-sidebar-italic",
-      ".simple-mind-sidebar-underline",
-    ]) {
-      const input = host.querySelector<HTMLInputElement>(selector)!;
-      input.checked = true;
-      input.dispatchEvent(new Event("change", { bubbles: true }));
+    for (const label of ["Bold", "Italic", "Underline"]) {
+      host
+        .querySelector<HTMLButtonElement>(`.simple-mind-sidebar-toggle[aria-label="${label}"]`)!
+        .click();
     }
-    host
-      .querySelector<HTMLButtonElement>('.simple-mind-sidebar-segment-item[data-value="right"]')!
-      .click();
+    tiles(host, "Text alignment")[2].click();
     change(".simple-mind-sidebar-line-height", "1.8");
 
     const source = canvas.getSource();
     expect(source).toContain(
-      '- A <!-- sm:{"shape":"pill","fill":"#112233","borderColor":"#223344","borderWidth":3,"fontFamily":"Georgia","fontSize":16,"textColor":"#778899","bold":true,"italic":true,"underline":true,"textAlign":"right","lineHeight":1.8} -->',
+      '- A <!-- sm:{"shape":"pill","fill":"#112233","borderColor":"#223344","borderWidth":3,"fontSize":16,"textColor":"#778899","bold":true,"italic":true,"underline":true,"textAlign":"right","lineHeight":1.8} -->',
     );
     expect(source).toContain("- B\n");
     expect(source).not.toContain("- B <!-- sm:");
@@ -624,7 +728,6 @@ describe("MapCanvas", () => {
     expect(node.style.getPropertyValue("--sm-node-bg")).toBe("#112233");
     expect(node.style.getPropertyValue("--sm-node-border")).toBe("#223344");
     expect(node.style.getPropertyValue("--sm-node-border-width")).toBe("3px");
-    expect(node.style.getPropertyValue("--sm-font")).toBe("Georgia");
     expect(node.style.getPropertyValue("--sm-font-size")).toBe("16px");
     expect(node.style.fontWeight).toBe("600");
     expect(node.style.getPropertyValue("--sm-font-style")).toBe("italic");

@@ -26,11 +26,10 @@
   flex: 1;
 }
 
-.simple-mind-toolbar-button,
-.simple-mind-toolbar-select {
-  min-width: 30px;
+.simple-mind-toolbar-button {
+  min-width: 28px;
   height: 28px;
-  padding: 0 12px;
+  padding: 0 8px;
   border: 1px solid var(--smui-edge);
   border-radius: var(--smui-radius);
   background: var(--smui-raised);
@@ -44,13 +43,7 @@
     color var(--smui-duration) ease-in-out;
 }
 
-.simple-mind-toolbar-select {
-  max-width: 150px;
-  padding: 0 8px;
-}
-
-.simple-mind-toolbar-button:hover,
-.simple-mind-toolbar-select:hover {
+.simple-mind-toolbar-button:hover {
   border-color: var(--smui-sage);
   background: var(--smui-hover);
   color: var(--smui-ink);
@@ -83,13 +76,15 @@
   display: none;
 }
 
-.simple-mind-map button:focus-visible,
-.simple-mind-map select:focus-visible,
-.simple-mind-map input:focus-visible,
+/* No focus rings anywhere in the chrome: a ring on a swatch or tile reads as a
+   selection state, and selection is already drawn inside the canvas. */
+.simple-mind-map :is(button, select, input):focus,
+.simple-mind-map :is(button, select, input):focus-visible,
+.simple-mind-settings :is(button, select, input):focus,
 .simple-mind-settings :is(button, select, input):focus-visible,
+.simple-mind-theme-editor :is(button, select, input):focus,
 .simple-mind-theme-editor :is(button, select, input):focus-visible {
-  outline: 2px solid var(--smui-sage);
-  outline-offset: 2px;
+  outline: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -115,8 +110,8 @@
 }
 
 .simple-mind-sidebar {
-  flex: 0 0 270px;
-  width: 270px;
+  flex: 0 0 288px;
+  width: 288px;
   min-height: 0;
   padding: 14px 16px 18px;
   overflow-y: auto;
@@ -160,44 +155,6 @@
 .simple-mind-sidebar-close:hover {
   background: var(--smui-hover);
   color: var(--smui-ink);
-}
-
-.simple-mind-sidebar-tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--smui-hairline);
-}
-
-.simple-mind-sidebar-tab {
-  flex: 1;
-  padding: 5px 0;
-  border: 1px solid transparent;
-  border-radius: var(--smui-radius);
-  background: transparent;
-  color: var(--smui-muted);
-  font-family: var(--smui-sans);
-  font-size: var(--font-ui-smaller);
-  cursor: pointer;
-  transition:
-    background-color var(--smui-duration) ease-in-out,
-    color var(--smui-duration) ease-in-out;
-}
-
-.simple-mind-sidebar-tab:hover {
-  background: var(--smui-hover);
-  color: var(--smui-ink);
-}
-
-.simple-mind-sidebar-tab.is-active {
-  border-color: var(--smui-accent);
-  background: var(--smui-accent);
-  color: var(--smui-accent-ink);
-}
-
-.simple-mind-sidebar-pane[hidden] {
-  display: none;
 }
 
 .simple-mind-sidebar-section {
@@ -245,19 +202,16 @@
 
 .simple-mind-sidebar-select:disabled,
 .simple-mind-sidebar-number:disabled,
-.simple-mind-sidebar-text:disabled,
-.simple-mind-sidebar-color:disabled,
-.simple-mind-sidebar-checkbox:disabled {
+.simple-mind-sidebar-color:disabled {
   opacity: 0.5;
   cursor: default;
 }
 
 .simple-mind-sidebar-select,
 .simple-mind-sidebar-number,
-.simple-mind-sidebar-text {
-  max-width: 150px;
+.simple-mind-sidebar-select-mirror {
   height: 28px;
-  padding: 0 10px;
+  padding: 0 6px;
   border: 1px solid var(--smui-edge);
   border-radius: var(--smui-radius);
   background-color: var(--smui-raised);
@@ -267,44 +221,51 @@
   text-align: center;
   text-align-last: center;
   box-sizing: border-box;
-  transition:
-    border-color var(--smui-duration) ease-in-out,
-    background-color var(--smui-duration) ease-in-out;
+  transition: border-color var(--smui-duration) ease-in-out;
 }
 
 .simple-mind-sidebar-select {
   appearance: none;
-  padding-right: 24px;
+  padding-right: 19px;
   background-image: var(--smui-chevron);
   background-repeat: no-repeat;
-  background-position: right 7px center;
+  background-position: right 4px center;
   background-size: 12px 12px;
 }
 
+/* The stepper buttons replace the native number arrows. */
+.simple-mind-sidebar-number {
+  appearance: textfield;
+}
+
+.simple-mind-sidebar-number::-webkit-outer-spin-button,
+.simple-mind-sidebar-number::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
 .simple-mind-sidebar-select:focus,
-.simple-mind-sidebar-number:focus,
-.simple-mind-sidebar-text:focus {
+.simple-mind-sidebar-number:focus {
   border-color: var(--smui-sage);
 }
 
-.simple-mind-sidebar-number {
-  width: 78px;
-  padding: 0 8px;
-}
-
-.simple-mind-sidebar-text {
-  width: 130px;
-}
-
-.simple-mind-sidebar-theme {
-  width: 100%;
-  max-width: none;
+/* Measures the current select label so the box can hug it. */
+.simple-mind-sidebar-select-mirror {
+  position: absolute;
+  top: 0;
+  left: -100000px;
+  padding-right: 19px;
+  border-color: transparent;
+  background: transparent;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: pre;
 }
 
 .simple-mind-sidebar-button {
-  width: 100%;
+  display: block;
   margin-top: 8px;
-  padding: 6px 12px;
+  padding: 4px 8px;
   border: 1px solid var(--smui-edge);
   border-radius: var(--smui-radius);
   background: var(--smui-raised);
@@ -324,10 +285,40 @@
   color: var(--smui-ink);
 }
 
-.simple-mind-sidebar-checkbox {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--smui-accent);
+.simple-mind-sidebar-toggle {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--smui-edge);
+  border-radius: var(--smui-radius);
+  background-color: var(--smui-raised);
+  color: var(--smui-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--smui-duration) ease-in-out,
+    border-color var(--smui-duration) ease-in-out,
+    color var(--smui-duration) ease-in-out;
+}
+
+.simple-mind-sidebar-toggle:hover:not(:disabled) {
+  border-color: var(--smui-sage);
+  background: var(--smui-hover);
+  color: var(--smui-ink);
+}
+
+.simple-mind-sidebar-toggle.is-active {
+  border-color: var(--smui-accent);
+  background: var(--smui-accent);
+  color: var(--smui-accent-ink);
+}
+
+.simple-mind-sidebar-toggle:disabled,
+.simple-mind-sidebar-step:disabled,
+.simple-mind-sidebar-segment-item:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .simple-mind-sidebar-colors {
@@ -347,6 +338,8 @@
 }
 
 .simple-mind-sidebar-reset {
+  display: grid;
+  place-items: center;
   width: 26px;
   height: 26px;
   padding: 0;
@@ -354,8 +347,6 @@
   border-radius: var(--smui-radius);
   background: var(--smui-raised);
   color: var(--smui-muted);
-  font-size: 14px;
-  line-height: 1;
   cursor: pointer;
   transition:
     background-color var(--smui-duration) ease-in-out,
@@ -378,7 +369,8 @@
 }
 
 .simple-mind-sidebar-segment-item,
-.simple-mind-sidebar-segment .simple-mind-sidebar-reset {
+.simple-mind-sidebar-step,
+.simple-mind-sidebar-stepper .simple-mind-sidebar-reset {
   display: grid;
   place-items: center;
   width: 26px;
@@ -395,7 +387,8 @@
 }
 
 .simple-mind-sidebar-segment-item:hover:not(:disabled),
-.simple-mind-sidebar-segment .simple-mind-sidebar-reset:hover:not(:disabled) {
+.simple-mind-sidebar-step:hover:not(:disabled),
+.simple-mind-sidebar-stepper .simple-mind-sidebar-reset:hover:not(:disabled) {
   background: var(--smui-hover);
   color: var(--smui-ink);
 }
@@ -405,10 +398,27 @@
   color: var(--smui-accent-ink);
 }
 
-.simple-mind-sidebar-segment-item:disabled,
-.simple-mind-sidebar-segment .simple-mind-sidebar-reset:disabled {
-  opacity: 0.5;
-  cursor: default;
+.simple-mind-sidebar-stepper {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--smui-edge);
+  border-radius: var(--smui-radius);
+  background-color: var(--smui-raised);
+}
+
+.simple-mind-sidebar-stepper .simple-mind-sidebar-number {
+  width: 54px;
+  height: 22px;
+  padding: 0 2px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+}
+
+.simple-mind-sidebar-stepper .simple-mind-sidebar-number:focus {
+  background: var(--smui-hover);
 }
 
 .simple-mind-icon {
@@ -420,6 +430,18 @@
   stroke-linecap: round;
   stroke-linejoin: round;
   pointer-events: none;
+}
+
+.simple-mind-icon-glyph {
+  fill: currentColor;
+  stroke: none;
+  font-family: var(--smui-serif);
+  font-size: 12px;
+}
+
+.simple-mind-sidebar-segment-item .simple-mind-icon {
+  width: 14px;
+  height: 14px;
 }
 
 .simple-mind-collapse .simple-mind-icon,
@@ -449,10 +471,6 @@
 
 .simple-mind-canvas.is-panning {
   cursor: grabbing;
-}
-
-.simple-mind-canvas:focus-visible {
-  box-shadow: inset 0 0 0 2px var(--smui-sage);
 }
 
 .simple-mind-inline-editor {

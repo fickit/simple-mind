@@ -39,28 +39,32 @@ export interface MapCanvasOptions {
 
 type ArrowKey = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight";
 
-/** Sidebar tabs. */
-type SidebarTab = "style" | "text";
-
 /** A color picker paired with a reset button. */
 interface SidebarColorControl {
   input: HTMLInputElement;
   reset: HTMLButtonElement;
 }
 
-/** A row of mutually exclusive icon buttons with a reset for the theme value. */
-interface SidebarIconGroup {
-  buttons: HTMLButtonElement[];
+/** Options for a sidebar stepper. */
+interface SidebarStepperOptions {
+  min: number;
+  max: number;
+  step: number;
+  placeholder: string;
+  onChange: (value: number | undefined) => void;
+}
+
+/** A numeric field with step buttons and a reset to the theme value. */
+interface SidebarStepper {
+  input: HTMLInputElement;
   reset: HTMLButtonElement;
 }
 
-/** Options for a sidebar number input. */
-interface SidebarNumberOptions {
-  min: number;
-  max: number;
-  onChange: (value: number | undefined) => void;
-  placeholder?: string;
-  step?: number;
+/** One tile inside an icon group. */
+interface SidebarTileItem {
+  value: string;
+  icon: IconName;
+  title: string;
 }
 
 /** Canvas component that owns the renderer, controller, toolbar, and editing. */
@@ -75,7 +79,6 @@ export class MapCanvas {
   private readonly drag: DragController;
   private theme: ThemeDefinition = OBSIDIAN_THEME;
   private effectiveTheme: ThemeDefinition = OBSIDIAN_THEME;
-  private activeTab: SidebarTab = "style";
   private settings: SimpleMindSettings;
   private readonly onSource: () => void;
   private readonly onChangeSource: (source: string) => void;
@@ -91,26 +94,24 @@ export class MapCanvas {
   private readonly zoomInButton: HTMLButtonElement;
   private readonly zoomOutButton: HTMLButtonElement;
   private readonly styleButton: HTMLButtonElement;
-  private sidebarStylePane!: HTMLElement;
-  private sidebarTextPane!: HTMLElement;
-  private readonly sidebarTabs = new Map<SidebarTab, HTMLButtonElement>();
+  private sidebarPane!: HTMLElement;
+  private sidebarSelectMirror!: HTMLSpanElement;
   private sidebarThemeSelect!: HTMLSelectElement;
-  private sidebarLayoutSelect!: HTMLSelectElement;
+  private sidebarLayoutButtons!: HTMLButtonElement[];
   private sidebarNodeHint!: HTMLElement;
   private sidebarTextHint!: HTMLElement;
-  private sidebarNodeShapeSelect!: HTMLSelectElement;
+  private sidebarShapeButtons!: HTMLButtonElement[];
   private sidebarNodeFill!: SidebarColorControl;
   private sidebarNodeBorder!: SidebarColorControl;
-  private sidebarNodeBorderWidthInput!: HTMLInputElement;
+  private sidebarNodeBorderWidth!: SidebarStepper;
   private sidebarConnectorSelect!: HTMLSelectElement;
-  private sidebarFontFamilyInput!: HTMLInputElement;
-  private sidebarFontSizeInput!: HTMLInputElement;
+  private sidebarFontSize!: SidebarStepper;
   private sidebarTextColor!: SidebarColorControl;
-  private sidebarBoldInput!: HTMLInputElement;
-  private sidebarItalicInput!: HTMLInputElement;
-  private sidebarUnderlineInput!: HTMLInputElement;
-  private sidebarTextAlign!: SidebarIconGroup;
-  private sidebarLineHeightInput!: HTMLInputElement;
+  private sidebarBoldButton!: HTMLButtonElement;
+  private sidebarItalicButton!: HTMLButtonElement;
+  private sidebarUnderlineButton!: HTMLButtonElement;
+  private sidebarTextAlignButtons!: HTMLButtonElement[];
+  private sidebarLineHeight!: SidebarStepper;
   private readonly keydownHandler: (event: KeyboardEvent) => void;
   private controller: MapController | null = null;
   private pendingAdd: PendingAdd | null = null;
@@ -332,7 +333,6 @@ export class MapCanvas {
   private buildSidebar(): void {
     const doc = this.sidebarEl.ownerDocument;
     this.sidebarEl.replaceChildren();
-    this.sidebarTabs.clear();
 
     const header = doc.createElement("div");
     header.className = "simple-mind-sidebar-header";
@@ -347,29 +347,15 @@ export class MapCanvas {
     header.append(title, close);
     this.sidebarEl.appendChild(header);
 
-    const tabs = doc.createElement("div");
-    tabs.className = "simple-mind-sidebar-tabs";
-    tabs.setAttribute("role", "tablist");
-    const definitions: Array<{ id: SidebarTab; label: string }> = [
-      { id: "style", label: t("sidebar.style") },
-      { id: "text", label: t("sidebar.text") },
-    ];
-    for (const definition of definitions) {
-      const tab = doc.createElement("button");
-      tab.type = "button";
-      tab.className = "simple-mind-sidebar-tab";
-      tab.textContent = definition.label;
-      tab.setAttribute("role", "tab");
-      tab.addEventListener("click", () => this.setSidebarTab(definition.id));
-      this.sidebarTabs.set(definition.id, tab);
-      tabs.appendChild(tab);
-    }
-    this.sidebarEl.appendChild(tabs);
+    this.sidebarSelectMirror = doc.createElement("span");
+    this.sidebarSelectMirror.className = "simple-mind-sidebar-select-mirror";
+    this.sidebarEl.appendChild(this.sidebarSelectMirror);
 
-    this.sidebarStylePane = this.createSidebarPane("style");
-    this.sidebarTextPane = this.createSidebarPane("text");
+    this.sidebarPane = doc.createElement("div");
+    this.sidebarPane.className = "simple-mind-sidebar-pane";
+    this.sidebarEl.appendChild(this.sidebarPane);
 
-    const themeSection = this.createSidebarSection(this.sidebarStylePane, t("sidebar.theme"));
+    const themeSection = this.createSidebarSection(this.sidebarPane, t("sidebar.theme"));
     this.sidebarThemeSelect = doc.createElement("select");
     this.sidebarThemeSelect.className = "simple-mind-sidebar-select simple-mind-sidebar-theme";
     this.sidebarThemeSelect.setAttribute("aria-label", t("sidebar.theme"));
@@ -386,35 +372,33 @@ export class MapCanvas {
       themeSection.appendChild(manage);
     }
 
-    const layoutSection = this.createSidebarSection(this.sidebarStylePane, t("sidebar.layout"));
-    this.sidebarLayoutSelect = this.createSidebarSelect(
+    const layoutSection = this.createSidebarSection(this.sidebarPane, t("sidebar.layout"));
+    this.sidebarLayoutButtons = this.createSidebarTiles(
       layoutSection,
       t("sidebar.layoutType"),
       [
-        { value: "mindmap", label: t("settings.layout.mindmap") },
-        { value: "tree-right", label: t("settings.layout.treeRight") },
-        { value: "tree-left", label: t("settings.layout.treeLeft") },
-        { value: "org", label: t("settings.layout.org") },
+        { value: "mindmap", icon: "layout-mindmap", title: t("settings.layout.mindmap") },
+        { value: "tree-right", icon: "layout-tree-right", title: t("settings.layout.treeRight") },
+        { value: "tree-left", icon: "layout-tree-left", title: t("settings.layout.treeLeft") },
+        { value: "org", icon: "layout-org", title: t("settings.layout.org") },
       ],
       (value) => this.updateMetaAndRender({ layout: value as LayoutKind }),
     );
-    this.sidebarLayoutSelect.classList.add("simple-mind-sidebar-layout");
 
-    const nodeSection = this.createSidebarSection(this.sidebarStylePane, t("sidebar.node"));
+    const nodeSection = this.createSidebarSection(this.sidebarPane, t("sidebar.node"));
     this.sidebarNodeHint = this.createSidebarHint(nodeSection, t("sidebar.selectNode"));
-    this.sidebarNodeShapeSelect = this.createSidebarSelect(
+    this.sidebarShapeButtons = this.createSidebarTiles(
       nodeSection,
       t("sidebar.nodeShape"),
       [
-        { value: "", label: t("sidebar.themeDefault") },
-        { value: "rounded", label: t("themeEditor.shape.rounded") },
-        { value: "pill", label: t("themeEditor.shape.pill") },
-        { value: "underline", label: t("themeEditor.shape.underline") },
-        { value: "plain", label: t("themeEditor.shape.plain") },
+        { value: "", icon: "reset", title: t("sidebar.defaultValue") },
+        { value: "rounded", icon: "shape-rounded", title: t("themeEditor.shape.rounded") },
+        { value: "pill", icon: "shape-pill", title: t("themeEditor.shape.pill") },
+        { value: "underline", icon: "shape-underline", title: t("themeEditor.shape.underline") },
+        { value: "plain", icon: "shape-plain", title: t("themeEditor.shape.plain") },
       ],
       (value) => this.updateSelectedNodeStyle({ shape: value ? (value as NodeShape) : undefined }),
     );
-    this.sidebarNodeShapeSelect.classList.add("simple-mind-sidebar-node-shape");
     this.sidebarNodeFill = this.createSidebarColor(nodeSection, t("sidebar.fill"), (value) =>
       this.updateSelectedNodeStyle({ fill: value }),
     );
@@ -425,27 +409,21 @@ export class MapCanvas {
       (value) => this.updateSelectedNodeStyle({ borderColor: value }),
     );
     this.sidebarNodeBorder.input.classList.add("simple-mind-sidebar-node-border");
-    this.sidebarNodeBorderWidthInput = this.createSidebarNumber(
-      nodeSection,
-      t("sidebar.borderWidth"),
-      {
-        min: LIMITS.nodeBorderWidth.min,
-        max: LIMITS.nodeBorderWidth.max,
-        placeholder: t("sidebar.defaultValue"),
-        onChange: (value) => this.updateSelectedNodeStyle({ borderWidth: value }),
-      },
-    );
-    this.sidebarNodeBorderWidthInput.classList.add("simple-mind-sidebar-node-border-width");
+    this.sidebarNodeBorderWidth = this.createSidebarStepper(nodeSection, t("sidebar.borderWidth"), {
+      min: LIMITS.nodeBorderWidth.min,
+      max: LIMITS.nodeBorderWidth.max,
+      step: 1,
+      placeholder: t("sidebar.defaultValue"),
+      onChange: (value) => this.updateSelectedNodeStyle({ borderWidth: value }),
+    });
+    this.sidebarNodeBorderWidth.input.classList.add("simple-mind-sidebar-node-border-width");
 
-    const connectorSection = this.createSidebarSection(
-      this.sidebarStylePane,
-      t("sidebar.connector"),
-    );
+    const connectorSection = this.createSidebarSection(this.sidebarPane, t("sidebar.connector"));
     this.sidebarConnectorSelect = this.createSidebarSelect(
       connectorSection,
       t("sidebar.connectorShape"),
       [
-        { value: "", label: t("sidebar.themeDefault") },
+        { value: "", label: t("sidebar.defaultValue") },
         { value: "curve", label: t("themeEditor.connector.curve") },
         { value: "orthogonal", label: t("themeEditor.connector.orthogonal") },
       ],
@@ -456,45 +434,39 @@ export class MapCanvas {
     );
     this.sidebarConnectorSelect.classList.add("simple-mind-sidebar-connector");
 
-    const fontSection = this.createSidebarSection(this.sidebarTextPane, t("sidebar.font"));
-    this.sidebarTextHint = this.createSidebarHint(fontSection, t("sidebar.selectNode"));
-    this.sidebarFontFamilyInput = this.createSidebarText(
-      fontSection,
-      t("themeEditor.fontFamily"),
-      t("sidebar.defaultValue"),
-      (value) => this.updateSelectedNodeStyle({ fontFamily: value.trim() || undefined }),
-    );
-    this.sidebarFontFamilyInput.classList.add("simple-mind-sidebar-font-family");
-    this.sidebarFontSizeInput = this.createSidebarNumber(fontSection, t("themeEditor.fontSize"), {
-      min: LIMITS.fontSize.min,
-      max: LIMITS.fontSize.max,
-      placeholder: t("sidebar.defaultValue"),
-      onChange: (value) => this.updateSelectedNodeStyle({ fontSize: value }),
-    });
-    this.sidebarFontSizeInput.classList.add("simple-mind-sidebar-font-size");
-
-    const textSection = this.createSidebarSection(this.sidebarTextPane, t("sidebar.text"));
+    const textSection = this.createSidebarSection(this.sidebarPane, t("sidebar.text"));
+    this.sidebarTextHint = this.createSidebarHint(textSection, t("sidebar.selectNode"));
     this.sidebarTextColor = this.createSidebarColor(textSection, t("sidebar.textColor"), (value) =>
       this.updateSelectedNodeStyle({ textColor: value }),
     );
     this.sidebarTextColor.input.classList.add("simple-mind-sidebar-text-color");
-    this.sidebarBoldInput = this.createSidebarCheckbox(textSection, t("sidebar.bold"), (value) =>
-      this.updateSelectedNodeStyle({ bold: value }),
+    this.sidebarFontSize = this.createSidebarStepper(textSection, t("themeEditor.fontSize"), {
+      min: LIMITS.fontSize.min,
+      max: LIMITS.fontSize.max,
+      step: 1,
+      placeholder: t("sidebar.defaultValue"),
+      onChange: (value) => this.updateSelectedNodeStyle({ fontSize: value }),
+    });
+    this.sidebarFontSize.input.classList.add("simple-mind-sidebar-font-size");
+    this.sidebarBoldButton = this.createSidebarToggle(
+      textSection,
+      t("sidebar.bold"),
+      "bold",
+      (value) => this.updateSelectedNodeStyle({ bold: value }),
     );
-    this.sidebarBoldInput.classList.add("simple-mind-sidebar-bold");
-    this.sidebarItalicInput = this.createSidebarCheckbox(
+    this.sidebarItalicButton = this.createSidebarToggle(
       textSection,
       t("sidebar.italic"),
+      "italic",
       (value) => this.updateSelectedNodeStyle({ italic: value }),
     );
-    this.sidebarItalicInput.classList.add("simple-mind-sidebar-italic");
-    this.sidebarUnderlineInput = this.createSidebarCheckbox(
+    this.sidebarUnderlineButton = this.createSidebarToggle(
       textSection,
       t("sidebar.underline"),
+      "underline",
       (value) => this.updateSelectedNodeStyle({ underline: value }),
     );
-    this.sidebarUnderlineInput.classList.add("simple-mind-sidebar-underline");
-    this.sidebarTextAlign = this.createSidebarIconGroup(
+    this.sidebarTextAlignButtons = this.createSidebarTiles(
       textSection,
       t("sidebar.textAlign"),
       [
@@ -506,42 +478,19 @@ export class MapCanvas {
         this.updateSelectedNodeStyle({
           textAlign: value ? (value as TextAlign) : undefined,
         }),
+      { clearable: true },
     );
-    this.sidebarLineHeightInput = this.createSidebarNumber(textSection, t("sidebar.lineHeight"), {
+    this.sidebarLineHeight = this.createSidebarStepper(textSection, t("sidebar.lineHeight"), {
       min: LIMITS.lineHeight.min,
       max: LIMITS.lineHeight.max,
       step: 0.1,
       placeholder: t("sidebar.defaultValue"),
       onChange: (value) => this.updateSelectedNodeStyle({ lineHeight: value }),
     });
-    this.sidebarLineHeightInput.classList.add("simple-mind-sidebar-line-height");
-
-    this.setSidebarTab(this.activeTab);
+    this.sidebarLineHeight.input.classList.add("simple-mind-sidebar-line-height");
   }
 
-  /** Creates one tab pane. */
-  private createSidebarPane(tab: SidebarTab): HTMLElement {
-    const pane = this.sidebarEl.ownerDocument.createElement("div");
-    pane.className = "simple-mind-sidebar-pane";
-    pane.dataset.tab = tab;
-    pane.setAttribute("role", "tabpanel");
-    this.sidebarEl.appendChild(pane);
-    return pane;
-  }
-
-  /** Shows one sidebar tab and hides the other. */
-  private setSidebarTab(tab: SidebarTab): void {
-    this.activeTab = tab;
-    for (const [id, button] of this.sidebarTabs) {
-      const active = id === tab;
-      button.classList.toggle("is-active", active);
-      button.setAttribute("aria-selected", String(active));
-    }
-    this.sidebarStylePane.hidden = tab !== "style";
-    this.sidebarTextPane.hidden = tab !== "text";
-  }
-
-  /** Creates a labeled sidebar section inside a pane. */
+  /** Creates a labeled sidebar section inside the pane. */
   private createSidebarSection(parent: HTMLElement, title: string): HTMLElement {
     const doc = this.sidebarEl.ownerDocument;
     const section = doc.createElement("section");
@@ -573,41 +522,101 @@ export class MapCanvas {
     section.appendChild(row);
   }
 
-  /** Adds a select control. */
+  /** Adds a select that is sized to its current value. */
   private createSidebarSelect(
     section: HTMLElement,
     label: string,
     options: Array<{ value: string; label: string }>,
     onChange: (value: string) => void,
   ): HTMLSelectElement {
-    const select = this.sidebarEl.ownerDocument.createElement("select");
+    const doc = this.sidebarEl.ownerDocument;
+    const select = doc.createElement("select");
     select.className = "simple-mind-sidebar-select";
     select.setAttribute("aria-label", label);
     for (const option of options) {
-      const item = this.sidebarEl.ownerDocument.createElement("option");
+      const item = doc.createElement("option");
       item.value = option.value;
       item.textContent = option.label;
       select.appendChild(item);
     }
-    select.addEventListener("change", () => onChange(select.value));
+    select.addEventListener("change", () => {
+      this.sizeSelect(select);
+      onChange(select.value);
+    });
     this.createSidebarRow(section, label, select);
     return select;
   }
 
-  /** Adds a number control that clears its override when emptied. */
-  private createSidebarNumber(
+  /**
+   * Sets a select's width to its current label, measured by the hidden mirror.
+   *
+   * @param select The select to size.
+   */
+  private sizeSelect(select: HTMLSelectElement): void {
+    if (!this.sidebarSelectMirror) return;
+    this.sidebarSelectMirror.textContent = select.options[select.selectedIndex]?.text ?? "";
+    select.style.width = `${this.sidebarSelectMirror.offsetWidth}px`;
+  }
+
+  /** Adds a numeric field with step buttons and a reset to the theme value. */
+  private createSidebarStepper(
     section: HTMLElement,
     label: string,
-    options: SidebarNumberOptions,
-  ): HTMLInputElement {
-    const input = this.sidebarEl.ownerDocument.createElement("input");
+    options: SidebarStepperOptions,
+  ): SidebarStepper {
+    const doc = this.sidebarEl.ownerDocument;
+    const wrap = doc.createElement("span");
+    wrap.className = "simple-mind-sidebar-stepper";
+
+    const decrease = doc.createElement("button");
+    decrease.type = "button";
+    decrease.className = "simple-mind-sidebar-step";
+    decrease.setAttribute("aria-label", t("sidebar.stepDown"));
+    setIcon(decrease, "minus");
+
+    const input = doc.createElement("input");
     input.type = "number";
     input.min = String(options.min);
     input.max = String(options.max);
-    input.placeholder = options.placeholder ?? "";
-    if (options.step !== undefined) input.step = String(options.step);
+    input.step = String(options.step);
+    input.placeholder = options.placeholder;
     input.className = "simple-mind-sidebar-number";
     input.setAttribute("aria-label", label);
+
+    const increase = doc.createElement("button");
+    increase.type = "button";
+    increase.className = "simple-mind-sidebar-step";
+    increase.setAttribute("aria-label", t("sidebar.stepUp"));
+    setIcon(increase, "plus");
+
+    const reset = doc.createElement("button");
+    reset.type = "button";
+    reset.className = "simple-mind-sidebar-reset";
+    reset.setAttribute("aria-label", t("sidebar.resetValue"));
+    setIcon(reset, "reset");
+
+    const commit = (value: number): void => {
+      const clamped = Math.min(options.max, Math.max(options.min, value));
+      input.value = String(roundToStep(clamped, options.step));
+      options.onChange(Number(input.value));
+    };
+
+    const step = (direction: number): void => {
+      const current = Number(input.value);
+      const base = input.value.trim() === "" || !Number.isFinite(current) ? null : current;
+      if (base === null) {
+        commit(options.min);
+        return;
+      }
+      commit(base + direction * options.step);
+    };
+
+    decrease.addEventListener("click", () => step(-1));
+    increase.addEventListener("click", () => step(1));
+    reset.addEventListener("click", () => {
+      input.value = "";
+      options.onChange(undefined);
+    });
     input.addEventListener("change", () => {
       if (input.value.trim() === "") {
         options.onChange(undefined);
@@ -618,42 +627,76 @@ export class MapCanvas {
         options.onChange(undefined);
         return;
       }
-      options.onChange(Math.min(options.max, Math.max(options.min, value)));
+      commit(value);
     });
-    this.createSidebarRow(section, label, input);
-    return input;
+
+    wrap.append(decrease, input, increase, reset);
+    this.createSidebarRow(section, label, wrap);
+    return { input, reset };
   }
 
-  /** Adds a text control. */
-  private createSidebarText(
+  /** Adds an on/off icon button that shows the effective state. */
+  private createSidebarToggle(
     section: HTMLElement,
     label: string,
-    placeholder: string,
-    onChange: (value: string) => void,
-  ): HTMLInputElement {
-    const input = this.sidebarEl.ownerDocument.createElement("input");
-    input.type = "text";
-    input.placeholder = placeholder;
-    input.className = "simple-mind-sidebar-text";
-    input.setAttribute("aria-label", label);
-    input.addEventListener("change", () => onChange(input.value));
-    this.createSidebarRow(section, label, input);
-    return input;
-  }
-
-  /** Adds a checkbox control. */
-  private createSidebarCheckbox(
-    section: HTMLElement,
-    label: string,
+    icon: IconName,
     onChange: (value: boolean) => void,
-  ): HTMLInputElement {
-    const input = this.sidebarEl.ownerDocument.createElement("input");
-    input.type = "checkbox";
-    input.className = "simple-mind-sidebar-checkbox";
-    input.setAttribute("aria-label", label);
-    input.addEventListener("change", () => onChange(input.checked));
-    this.createSidebarRow(section, label, input);
-    return input;
+  ): HTMLButtonElement {
+    const button = this.sidebarEl.ownerDocument.createElement("button");
+    button.type = "button";
+    button.className = "simple-mind-sidebar-toggle";
+    button.setAttribute("aria-label", label);
+    button.setAttribute("aria-pressed", "false");
+    setIcon(button, icon);
+    button.addEventListener("click", () => onChange(!button.classList.contains("is-active")));
+    this.createSidebarRow(section, label, button);
+    return button;
+  }
+
+  /**
+   * Adds a row of icon tiles where exactly one is active.
+   *
+   * @param section Section that receives the row.
+   * @param label Group label.
+   * @param items Tiles in display order; an empty value means the theme value.
+   * @param onChange Receives the picked value.
+   * @param options `clearable` returns to the theme value when the active tile
+   * is clicked again.
+   */
+  private createSidebarTiles(
+    section: HTMLElement,
+    label: string,
+    items: SidebarTileItem[],
+    onChange: (value: string) => void,
+    options: { clearable?: boolean } = {},
+  ): HTMLButtonElement[] {
+    const doc = this.sidebarEl.ownerDocument;
+    const wrap = doc.createElement("div");
+    wrap.className = "simple-mind-sidebar-segment";
+    wrap.setAttribute("role", "group");
+    wrap.setAttribute("aria-label", label);
+
+    const buttons = items.map((item) => {
+      const button = doc.createElement("button");
+      button.type = "button";
+      button.className = "simple-mind-sidebar-segment-item";
+      button.dataset.value = item.value;
+      button.setAttribute("aria-label", item.title);
+      button.setAttribute("aria-pressed", "false");
+      setIcon(button, item.icon);
+      button.addEventListener("click", () => {
+        if (options.clearable && button.classList.contains("is-active")) {
+          onChange("");
+          return;
+        }
+        onChange(item.value);
+      });
+      wrap.appendChild(button);
+      return button;
+    });
+
+    this.createSidebarRow(section, label, wrap);
+    return buttons;
   }
 
   /** Adds a color picker with a reset-to-theme button. */
@@ -676,53 +719,12 @@ export class MapCanvas {
     reset.type = "button";
     reset.className = "simple-mind-sidebar-reset";
     reset.setAttribute("aria-label", t("sidebar.resetColor"));
-    setIcon(reset, "close");
+    setIcon(reset, "reset");
     reset.addEventListener("click", () => onChange(undefined));
 
     wrap.append(input, reset);
     this.createSidebarRow(section, label, wrap);
     return { input, reset };
-  }
-
-  /**
-   * Adds a row of icon buttons where one is active, plus a reset back to the
-   * theme value.
-   */
-  private createSidebarIconGroup(
-    section: HTMLElement,
-    label: string,
-    items: Array<{ value: string; icon: IconName; title: string }>,
-    onChange: (value: string) => void,
-  ): SidebarIconGroup {
-    const doc = this.sidebarEl.ownerDocument;
-    const wrap = doc.createElement("div");
-    wrap.className = "simple-mind-sidebar-segment";
-    wrap.setAttribute("role", "group");
-    wrap.setAttribute("aria-label", label);
-
-    const buttons = items.map((item) => {
-      const button = doc.createElement("button");
-      button.type = "button";
-      button.className = "simple-mind-sidebar-segment-item";
-      button.dataset.value = item.value;
-      button.setAttribute("aria-label", item.title);
-      button.setAttribute("aria-pressed", "false");
-      setIcon(button, item.icon);
-      button.addEventListener("click", () => onChange(item.value));
-      wrap.appendChild(button);
-      return button;
-    });
-
-    const reset = doc.createElement("button");
-    reset.type = "button";
-    reset.className = "simple-mind-sidebar-reset";
-    reset.setAttribute("aria-label", t("sidebar.themeDefault"));
-    setIcon(reset, "close");
-    reset.addEventListener("click", () => onChange(""));
-    wrap.appendChild(reset);
-
-    this.createSidebarRow(section, label, wrap);
-    return { buttons, reset };
   }
 
   /** Rebuilds the theme choices in the sidebar. */
@@ -740,6 +742,7 @@ export class MapCanvas {
     this.sidebarThemeSelect.value = options.some((theme) => theme.id === current)
       ? current
       : DEFAULT_MINDMAP_META.theme;
+    this.sizeSelect(this.sidebarThemeSelect);
   }
 
   /** Synchronizes sidebar controls with the file metadata and selected node. */
@@ -754,31 +757,55 @@ export class MapCanvas {
     const hasSelection = node !== null;
 
     this.syncThemeOptions();
-    this.sidebarLayoutSelect.value = meta?.layout ?? this.settings.defaultLayout;
+    this.setTileActive(this.sidebarLayoutButtons, meta?.layout ?? this.settings.defaultLayout);
     this.sidebarConnectorSelect.value = meta?.connectorStyle ?? "";
+    this.sizeSelect(this.sidebarConnectorSelect);
 
-    this.sidebarNodeShapeSelect.value = style.shape ?? "";
+    this.setTileActive(this.sidebarShapeButtons, style.shape ?? "");
     this.syncColorControl(this.sidebarNodeFill, hasSelection, style.fill, visual.background);
     this.syncColorControl(this.sidebarNodeBorder, hasSelection, style.borderColor, visual.border);
-    this.sidebarNodeBorderWidthInput.value = optionalNumber(style.borderWidth);
-    this.sidebarFontFamilyInput.value = style.fontFamily ?? "";
-    this.sidebarFontSizeInput.value = optionalNumber(style.fontSize);
+    this.syncStepper(this.sidebarNodeBorderWidth, style.borderWidth);
+    this.syncStepper(this.sidebarFontSize, style.fontSize);
     this.syncColorControl(this.sidebarTextColor, hasSelection, style.textColor, visual.text);
-    this.sidebarBoldInput.checked = style.bold ?? visual.fontWeight >= 600;
-    this.sidebarItalicInput.checked = style.italic ?? visual.fontStyle === "italic";
-    this.sidebarUnderlineInput.checked = style.underline ?? visual.textDecoration === "underline";
-    const textAlign = style.textAlign ?? visual.textAlign;
-    for (const button of this.sidebarTextAlign.buttons) {
-      const active = button.dataset.value === textAlign;
-      button.classList.toggle("is-active", active);
-      button.setAttribute("aria-pressed", String(active));
-    }
-    this.sidebarTextAlign.reset.disabled = !hasSelection || style.textAlign === undefined;
-    this.sidebarLineHeightInput.value = optionalNumber(style.lineHeight);
+    this.syncToggle(this.sidebarBoldButton, style.bold, visual.fontWeight >= 600);
+    this.syncToggle(this.sidebarItalicButton, style.italic, visual.fontStyle === "italic");
+    this.syncToggle(
+      this.sidebarUnderlineButton,
+      style.underline,
+      visual.textDecoration === "underline",
+    );
+    this.setTileActive(this.sidebarTextAlignButtons, style.textAlign ?? visual.textAlign);
+    this.syncStepper(this.sidebarLineHeight, style.lineHeight);
 
     this.setNodeStyleControlsEnabled(hasSelection);
     this.sidebarNodeHint.hidden = hasSelection;
     this.sidebarTextHint.hidden = hasSelection;
+  }
+
+  /** Marks the tile that matches the value, or the theme tile when none does. */
+  private setTileActive(buttons: HTMLButtonElement[], value: string): void {
+    for (const button of buttons) {
+      const active = button.dataset.value === value;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    }
+  }
+
+  /** Shows a numeric override and enables its reset only when one exists. */
+  private syncStepper(stepper: SidebarStepper, override: number | undefined): void {
+    stepper.input.value = optionalNumber(override);
+    stepper.reset.disabled = override === undefined;
+  }
+
+  /** Shows an on/off state that follows the override, then the theme. */
+  private syncToggle(
+    button: HTMLButtonElement,
+    override: boolean | undefined,
+    effective: boolean,
+  ): void {
+    const active = override ?? effective;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-pressed", String(active));
   }
 
   /** Returns the selected live node, if any. */
@@ -789,18 +816,18 @@ export class MapCanvas {
 
   /** Enables or disables controls that require a selected node. */
   private setNodeStyleControlsEnabled(enabled: boolean): void {
-    const controls: Array<HTMLInputElement | HTMLSelectElement> = [
-      this.sidebarNodeShapeSelect,
-      this.sidebarNodeBorderWidthInput,
-      this.sidebarFontFamilyInput,
-      this.sidebarFontSizeInput,
-      this.sidebarBoldInput,
-      this.sidebarItalicInput,
-      this.sidebarUnderlineInput,
-      this.sidebarLineHeightInput,
-    ];
-    for (const control of controls) control.disabled = !enabled;
-    for (const button of this.sidebarTextAlign.buttons) button.disabled = !enabled;
+    const buttons = [...this.sidebarShapeButtons, ...this.sidebarTextAlignButtons];
+    buttons.push(this.sidebarBoldButton, this.sidebarItalicButton, this.sidebarUnderlineButton);
+    for (const button of buttons) button.disabled = !enabled;
+
+    for (const stepper of [
+      this.sidebarNodeBorderWidth,
+      this.sidebarFontSize,
+      this.sidebarLineHeight,
+    ]) {
+      stepper.input.disabled = !enabled;
+      if (!enabled) stepper.reset.disabled = true;
+    }
   }
 
   /** Shows the effective color and enables reset only for an available override. */
@@ -1510,6 +1537,12 @@ function isDarkDocument(doc: Document): boolean {
 /** Formats an optional numeric override for a sidebar input. */
 function optionalNumber(value: number | undefined): string {
   return value === undefined ? "" : String(value);
+}
+
+/** Rounds a stepped value so decimal steps keep exact labels. */
+function roundToStep(value: number, step: number): number {
+  const decimals = (String(step).split(".")[1] ?? "").length;
+  return Number(value.toFixed(decimals));
 }
 
 const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;

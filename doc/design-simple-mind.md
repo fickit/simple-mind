@@ -601,19 +601,27 @@ theme, so a file can pick any of the nine themes while the panel keeps one mater
   lichen accent, cool mist as the secondary, and low-saturation firefly amber for attention. No pure
   black, no neon, and no gradients on controls.
 - Every icon is an inline SVG drawn from a stroke table in `engine/render/icons.ts`: chevrons on the
-  collapse controls, a plus on the add control, a close on reset and dismiss, alignment marks on the
-  text row, and a chevron inside each select. No control uses a text character as its icon, and each
-  icon is `aria-hidden` while the button keeps its own label. `setIcon` skips a repeat, so controls
-  refreshed every frame do not rebuild their SVG.
-- Text alignment is a row of three icon tiles with a reset to the theme value, not a dropdown. Selects,
-  number fields, and text fields center their content and size to their value, so a control sits
-  tightly beside its icon instead of stretching across the panel.
+  collapse controls, a plus on the add control, a close on dismiss, letterforms for bold, italic, and
+  underline, pictograms for the four layout types and the four node shapes, and a chevron inside each
+  select. No control uses a text character as its icon, and each icon is `aria-hidden` while the button
+  keeps its own label. `setIcon` skips a repeat, so controls refreshed every frame do not rebuild
+  their SVG.
+- One affordance per job: bold, italic, and underline are icon toggles rather than checkboxes;
+  border width, font size, and line height are steppers (`− value +` plus a reset); a single wrap
+  arrow means "restore the default" on colors, steppers, and the leading node-shape tile. Text
+  alignment is three tiles with no reset tile—clicking the active one again clears the override—and
+  the label for an absent override is "Default" everywhere.
+- Selects, number fields, and buttons hug their content: a hidden mirror span measures the current
+  select label and the field takes that width, so a control sits tightly beside its icon instead of
+  stretching across the panel.
 - The canvas atmosphere is the one signature: a faint speckle in light, and three staggered star fields
   plus a mist band along the bottom in dark. It is static, sits behind the world layer, and does not
   move with pan or zoom.
 - Motion stays conservative because these controls are edge affordances: hover changes color only over
-  140 ms, there is no translate, scale, or ring, keyboard focus uses a sage outline, and
-  `prefers-reduced-motion` zeroes every transition.
+  140 ms, there is no translate, scale, or ring, and `prefers-reduced-motion` zeroes every transition.
+  The chrome draws no focus outline at all—on a swatch or a tile a ring reads as a selection state, and
+  selection is already drawn inside the canvas—so keyboard reachability stays while the visible cue is
+  the control's own active fill.
 - Text and surface pairs hold WCAG AA (4.5:1) in both modes. The theme token pairs are asserted in
   `presets.test.ts`; the chrome pairs are measured in the browser.
 
@@ -636,17 +644,25 @@ theme, so a file can pick any of the nine themes while the panel keeps one mater
 
 ### 11.2.1 Front-end style sidebar
 
-The map view includes a right-side style panel with two tabs:
+The map view includes a right-side style panel. It is one scrolling column of sections—Theme, Layout,
+Node, Connector, Text—with no tab switching, so a file-level change and a node-level change are visible
+at the same time.
 
-- **Style**: theme, layout type, and connector shape for the file;
-  node shape, fill, border color, and border width for the selected node.
-- **Text**: font family and size; text color, bold, italic, underline, text alignment, and line
-  height for the selected node.
+- **Theme / Layout / Connector**: the theme select, four layout pictograms, and the connector shape
+  select. These write to the file's frontmatter.
+- **Node**: node shape pictograms (led by a reset tile), fill, border color, and a border-width stepper.
+- **Text**: text color, a font-size stepper, bold, italic, and underline icon toggles, three alignment
+  tiles, and a line-height stepper.
 
 Node and text controls are disabled with a hint until a node is selected. Every edit is applied to
 that node only, written into its inline metadata marker, and reprocessed immediately. Color controls
-fall back to the node's effective theme color and expose a reset action that removes the override.
-The root is a node too, so the H1 line can carry its own style.
+fall back to the node's effective theme color and expose a reset action that removes the override;
+numeric fields do the same through their stepper's reset. The root is a node too, so the H1 line can
+carry its own style.
+
+Font family is not in the panel. It is a global default in the settings tab, because a per-node typeface
+splits one map across whatever fonts a machine happens to have; the inline marker still accepts
+`fontFamily` when a file carries one.
 
 Connector color and thickness are not per-map settings. They live in the plugin settings as global
 defaults; the sidebar keeps only the connector shape, which is stored in the file's frontmatter.
