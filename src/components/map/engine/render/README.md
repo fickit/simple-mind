@@ -18,6 +18,8 @@ separate from the parser and layout lets each layer be tested on its own.
 - `inlineMarkdown.ts`: safe inline Markdown rendering.
 - `connectors.ts`: curve and orthogonal SVG paths.
 - `culling.ts`: pure viewport-to-world math used to pick what stays mounted.
+- `icons.ts`: inline SVG icons for the chevrons, add, close, and alignment controls, drawn from a
+  stroke path table so no icon dependency is needed.
 
 ## Call flow
 

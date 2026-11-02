@@ -194,9 +194,11 @@ Branch: `feat/core`
 - `√` Fold the tree direction into the layout type (`tree-left` / `tree-right`) and drop the alignment
   option from the panel, the settings, and the frontmatter.
 - `√` Add the Meadow theme pair as the new default: Natural Organic light and a moonlit-forest dark.
-- `√` Give the chrome its own `--smui-*` tokens in both modes: pill controls, asymmetric container
-  radii, serif section labels without uppercase tracking, and a static canvas atmosphere (paper
-  speckle in light, staggered star fields with a mist band in dark).
+- `√` Give the chrome its own `--smui-*` tokens in both modes: small even radii, serif section labels
+  without uppercase tracking, and a static canvas atmosphere (paper speckle in light, staggered star
+  fields with a mist band in dark).
+- `√` Draw every control icon as inline SVG from a stroke table, replace the text-alignment dropdown
+  with icon tiles plus a reset, and center compact select, number, and text fields.
 - `√` Keep chrome motion color-only at 140 ms with a sage keyboard focus and a reduced-motion fallback,
   and re-sync the sidebar when Obsidian flips between light and dark.
 - `√` Refresh maps on Obsidian light/dark changes through `css-change` plus a body-class fallback.

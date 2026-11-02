@@ -13,7 +13,7 @@
 .simple-mind-theme-tab {
   padding: 5px 14px;
   border: 1px solid var(--smui-edge);
-  border-radius: var(--smui-radius-pill);
+  border-radius: var(--smui-radius);
   background: var(--smui-raised);
   color: var(--smui-body);
   font-family: var(--smui-sans);
@@ -71,7 +71,7 @@
   height: 26px;
   padding: 2px;
   border: 1px solid var(--smui-edge);
-  border-radius: var(--smui-radius-pill);
+  border-radius: var(--smui-radius);
   background: var(--smui-raised);
 }
 

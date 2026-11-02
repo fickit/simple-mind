@@ -15,6 +15,7 @@ import { layoutDocument, treeSideOf } from "../layout/layout";
 import type { LayoutBounds, LayoutResult, NodeMeasurer, PositionedNode } from "../layout/types";
 import { connectorPath } from "./connectors";
 import { intersectsWorldRect, visibleWorldRect, type WorldRect } from "./culling";
+import { type IconName, setIcon, setText } from "./icons";
 import { renderInlineMarkdown } from "./inlineMarkdown";
 import { DomNodeMeasurer } from "./measure";
 
@@ -605,11 +606,11 @@ export class MapRenderer {
     return [positioned.side === "left" ? "left" : "right"];
   }
 
-  /** Returns the rounded chevron for the current collapse state. */
-  private collapseGlyph(side: AddSide, collapsed: boolean): string {
-    if (side === "down") return collapsed ? "⌄" : "⌃";
-    if (side === "left") return collapsed ? "‹" : "›";
-    return collapsed ? "›" : "‹";
+  /** Returns the chevron icon for the current collapse state. */
+  private collapseIcon(side: AddSide, collapsed: boolean): IconName {
+    if (side === "down") return collapsed ? "chevron-down" : "chevron-up";
+    if (side === "left") return collapsed ? "chevron-left" : "chevron-right";
+    return collapsed ? "chevron-right" : "chevron-left";
   }
 
   /** Creates, removes, and updates the collapse controls on one node. */
@@ -660,11 +661,8 @@ export class MapRenderer {
       .filter(Boolean)
       .join(" ");
     button.dataset.collapsed = String(collapsed);
-    button.textContent = showsCount
-      ? count > 99
-        ? "99+"
-        : String(count)
-      : this.collapseGlyph(side, collapsed);
+    if (showsCount) setText(button, count > 99 ? "99+" : String(count));
+    else setIcon(button, this.collapseIcon(side, collapsed));
     const label = collapsed
       ? showsCount
         ? t("node.expandCount", { count: String(count) })
@@ -720,7 +718,7 @@ export class MapRenderer {
         .filter(Boolean)
         .join(" ");
       button.dataset.side = side;
-      button.textContent = "+";
+      setIcon(button, "plus");
       button.setAttribute("aria-label", t("command.addChild"));
       button.addEventListener("click", (event) => {
         event.stopPropagation();

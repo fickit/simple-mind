@@ -66,10 +66,10 @@ describe("Meadow theme", () => {
     }
   });
 
-  it("uses organic radii, a pill root, and serif labels", () => {
-    expect(MEADOW_THEME.light.node.radius).toBe(18);
-    expect(MEADOW_THEME.dark.node.radius).toBe(20);
-    expect(MEADOW_THEME.light.root.shape).toBe("pill");
+  it("uses small radii and serif labels", () => {
+    expect(MEADOW_THEME.light.node.radius).toBe(5);
+    expect(MEADOW_THEME.dark.node.radius).toBe(5);
+    expect(MEADOW_THEME.light.root.shape).toBe("rounded");
     expect(MEADOW_THEME.light.typography.family).toContain("serif");
   });
 

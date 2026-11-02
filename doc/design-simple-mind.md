@@ -594,11 +594,20 @@ carries its own `--smui-*` tokens in `src/styles/base.css`, declared on `.simple
 `data-sm-mode="light|dark"`, and the dialogs key off `body.theme-dark`. Map colors still come from the
 theme, so a file can pick any of the nine themes while the panel keeps one material.
 
-- Light is Natural Organic: cream paper, bark ink, sage and clay accents, hairline rules, serif section
-  labels in sentence case, and asymmetric container radii with pill controls.
+- Light is Natural Organic: cream paper, bark ink, sage and clay accents, hairline rules, and serif
+  section labels in sentence case. Radii stay small and even—4 px on controls and 5 px on containers,
+  banner, and nodes—so the panel reads organic without turning into pills.
 - Dark is the same system turned toward a forest at night: near-black green surfaces, moon-pale text, a
   lichen accent, cool mist as the secondary, and low-saturation firefly amber for attention. No pure
   black, no neon, and no gradients on controls.
+- Every icon is an inline SVG drawn from a stroke table in `engine/render/icons.ts`: chevrons on the
+  collapse controls, a plus on the add control, a close on reset and dismiss, alignment marks on the
+  text row, and a chevron inside each select. No control uses a text character as its icon, and each
+  icon is `aria-hidden` while the button keeps its own label. `setIcon` skips a repeat, so controls
+  refreshed every frame do not rebuild their SVG.
+- Text alignment is a row of three icon tiles with a reset to the theme value, not a dropdown. Selects,
+  number fields, and text fields center their content and size to their value, so a control sits
+  tightly beside its icon instead of stretching across the panel.
 - The canvas atmosphere is the one signature: a faint speckle in light, and three staggered star fields
   plus a mist band along the bottom in dark. It is static, sits behind the world layer, and does not
   move with pan or zoom.

@@ -102,7 +102,7 @@ describe("MapCanvas", () => {
     expect(canvas.getSource()).toBe("# Root\n- A\n- B\n");
 
     leftControl.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    expect(leftControl.textContent).toBe("›");
+    expect(leftControl.dataset.icon).toBe("chevron-right");
     expect(root.querySelector(".simple-mind-add.add-left")).not.toBeNull();
     expect(root.querySelector(".simple-mind-add.add-right")).toBeNull();
 
@@ -157,7 +157,7 @@ describe("MapCanvas", () => {
     org.host.remove();
   });
 
-  it("uses rounded chevrons and hides a node count when collapsed", () => {
+  it("draws chevron icons and a node count when collapsed", () => {
     const { host, canvas } = createCanvas("# Root\n- A\n  - A1\n  - A2\n- B\n");
     const root = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n1"]')!;
     const branch = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n2"]')!;
@@ -167,11 +167,13 @@ describe("MapCanvas", () => {
     )!;
     const branchCollapse = branch.querySelector<HTMLButtonElement>(".simple-mind-collapse")!;
 
-    expect(rootLeft.textContent).toBe("›");
-    expect(rootRight.textContent).toBe("‹");
-    expect(branchCollapse.textContent).toBe("›");
+    expect(rootLeft.dataset.icon).toBe("chevron-right");
+    expect(rootRight.dataset.icon).toBe("chevron-left");
+    expect(branchCollapse.dataset.icon).toBe("chevron-right");
+    expect(branchCollapse.querySelector("svg.simple-mind-icon")).not.toBeNull();
     branchCollapse.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     expect(branchCollapse.textContent).toBe("2");
+    expect(branchCollapse.dataset.icon).toBeUndefined();
     expect(branchCollapse.classList.contains("is-count")).toBe(true);
     expect(branchCollapse.dataset.collapsed).toBe("true");
     expect(branch.querySelector(".simple-mind-add")).toBeNull();
@@ -181,8 +183,8 @@ describe("MapCanvas", () => {
 
     const org = createCanvas("---\nmindmap:\n  layout: org\n---\n# Root\n- A\n- B\n");
     const orgRoot = org.host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n1"]')!;
-    expect(orgRoot.querySelector<HTMLButtonElement>(".simple-mind-collapse")?.textContent).toBe(
-      "⌃",
+    expect(orgRoot.querySelector<HTMLButtonElement>(".simple-mind-collapse")?.dataset.icon).toBe(
+      "chevron-up",
     );
     org.canvas.destroy();
     org.host.remove();
@@ -546,6 +548,35 @@ describe("MapCanvas", () => {
     host.remove();
   });
 
+  it("shows text alignment as icon tiles that reset to the theme value", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    selectNode(host, "n2");
+    const tiles = Array.from(
+      host.querySelectorAll<HTMLButtonElement>(".simple-mind-sidebar-segment-item"),
+    );
+    const reset = host.querySelector<HTMLButtonElement>(
+      ".simple-mind-sidebar-segment .simple-mind-sidebar-reset",
+    )!;
+
+    expect(tiles.map((tile) => tile.dataset.value)).toEqual(["left", "center", "right"]);
+    expect(tiles[1].classList.contains("is-active")).toBe(true);
+    expect(tiles[0].querySelector("svg.simple-mind-icon")).not.toBeNull();
+    expect(reset.disabled).toBe(true);
+
+    tiles[0].click();
+    expect(canvas.getSource()).toContain('- A <!-- sm:{"textAlign":"left"} -->');
+    expect(tiles[0].getAttribute("aria-pressed")).toBe("true");
+    expect(tiles[1].getAttribute("aria-pressed")).toBe("false");
+    expect(reset.disabled).toBe(false);
+
+    reset.click();
+    expect(canvas.getSource()).not.toContain("textAlign");
+    expect(tiles[1].getAttribute("aria-pressed")).toBe("true");
+
+    canvas.destroy();
+    host.remove();
+  });
+
   it("writes node and text overrides to the selected node", async () => {
     const { host, canvas } = createCanvas("# Root\n- A\n- B\n");
     selectNode(host, "n2");
@@ -575,7 +606,9 @@ describe("MapCanvas", () => {
       input.checked = true;
       input.dispatchEvent(new Event("change", { bubbles: true }));
     }
-    change(".simple-mind-sidebar-text-align", "right");
+    host
+      .querySelector<HTMLButtonElement>('.simple-mind-sidebar-segment-item[data-value="right"]')!
+      .click();
     change(".simple-mind-sidebar-line-height", "1.8");
 
     const source = canvas.getSource();

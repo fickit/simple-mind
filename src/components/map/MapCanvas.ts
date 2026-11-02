@@ -21,6 +21,7 @@ import {
 } from "./engine/interaction/MapController";
 import type { PositionedNode } from "./engine/layout/types";
 import { parseSource } from "./engine/parser/parser";
+import { type IconName, setIcon } from "./engine/render/icons";
 import { type AddSide, MapRenderer } from "./engine/render/MapRenderer";
 import { applyTheme, tokensForMode } from "./themes/applyTheme";
 import { nodeVisual } from "./themes/nodeVisual";
@@ -44,6 +45,12 @@ type SidebarTab = "style" | "text";
 /** A color picker paired with a reset button. */
 interface SidebarColorControl {
   input: HTMLInputElement;
+  reset: HTMLButtonElement;
+}
+
+/** A row of mutually exclusive icon buttons with a reset for the theme value. */
+interface SidebarIconGroup {
+  buttons: HTMLButtonElement[];
   reset: HTMLButtonElement;
 }
 
@@ -102,7 +109,7 @@ export class MapCanvas {
   private sidebarBoldInput!: HTMLInputElement;
   private sidebarItalicInput!: HTMLInputElement;
   private sidebarUnderlineInput!: HTMLInputElement;
-  private sidebarTextAlignSelect!: HTMLSelectElement;
+  private sidebarTextAlign!: SidebarIconGroup;
   private sidebarLineHeightInput!: HTMLInputElement;
   private readonly keydownHandler: (event: KeyboardEvent) => void;
   private controller: MapController | null = null;
@@ -183,8 +190,14 @@ export class MapCanvas {
     });
 
     this.fitButton = this.createToolbarButton(toolbar, t("toolbar.fit"), () => this.renderer.fit());
-    this.zoomOutButton = this.createToolbarButton(toolbar, "−", () => this.renderer.zoomBy(0.8));
-    this.zoomInButton = this.createToolbarButton(toolbar, "+", () => this.renderer.zoomBy(1.2));
+    this.zoomOutButton = this.createToolbarButton(toolbar, t("toolbar.zoomOut"), () =>
+      this.renderer.zoomBy(0.8),
+    );
+    this.zoomInButton = this.createToolbarButton(toolbar, t("toolbar.zoomIn"), () =>
+      this.renderer.zoomBy(1.2),
+    );
+    setIcon(this.zoomOutButton, "minus");
+    setIcon(this.zoomInButton, "plus");
     this.zoomOutButton.setAttribute("aria-label", t("toolbar.zoomOut"));
     this.zoomInButton.setAttribute("aria-label", t("toolbar.zoomIn"));
     this.createToolbarDivider(toolbar);
@@ -328,8 +341,8 @@ export class MapCanvas {
     const close = doc.createElement("button");
     close.type = "button";
     close.className = "simple-mind-sidebar-close";
-    close.textContent = "×";
     close.setAttribute("aria-label", t("sidebar.close"));
+    setIcon(close, "close");
     close.addEventListener("click", () => this.toggleSidebar());
     header.append(title, close);
     this.sidebarEl.appendChild(header);
@@ -481,21 +494,19 @@ export class MapCanvas {
       (value) => this.updateSelectedNodeStyle({ underline: value }),
     );
     this.sidebarUnderlineInput.classList.add("simple-mind-sidebar-underline");
-    this.sidebarTextAlignSelect = this.createSidebarSelect(
+    this.sidebarTextAlign = this.createSidebarIconGroup(
       textSection,
       t("sidebar.textAlign"),
       [
-        { value: "", label: t("sidebar.themeDefault") },
-        { value: "left", label: t("sidebar.textAlign.left") },
-        { value: "center", label: t("sidebar.textAlign.center") },
-        { value: "right", label: t("sidebar.textAlign.right") },
+        { value: "left", icon: "align-left", title: t("sidebar.textAlign.left") },
+        { value: "center", icon: "align-center", title: t("sidebar.textAlign.center") },
+        { value: "right", icon: "align-right", title: t("sidebar.textAlign.right") },
       ],
       (value) =>
         this.updateSelectedNodeStyle({
           textAlign: value ? (value as TextAlign) : undefined,
         }),
     );
-    this.sidebarTextAlignSelect.classList.add("simple-mind-sidebar-text-align");
     this.sidebarLineHeightInput = this.createSidebarNumber(textSection, t("sidebar.lineHeight"), {
       min: LIMITS.lineHeight.min,
       max: LIMITS.lineHeight.max,
@@ -664,13 +675,54 @@ export class MapCanvas {
     const reset = doc.createElement("button");
     reset.type = "button";
     reset.className = "simple-mind-sidebar-reset";
-    reset.textContent = "×";
     reset.setAttribute("aria-label", t("sidebar.resetColor"));
+    setIcon(reset, "close");
     reset.addEventListener("click", () => onChange(undefined));
 
     wrap.append(input, reset);
     this.createSidebarRow(section, label, wrap);
     return { input, reset };
+  }
+
+  /**
+   * Adds a row of icon buttons where one is active, plus a reset back to the
+   * theme value.
+   */
+  private createSidebarIconGroup(
+    section: HTMLElement,
+    label: string,
+    items: Array<{ value: string; icon: IconName; title: string }>,
+    onChange: (value: string) => void,
+  ): SidebarIconGroup {
+    const doc = this.sidebarEl.ownerDocument;
+    const wrap = doc.createElement("div");
+    wrap.className = "simple-mind-sidebar-segment";
+    wrap.setAttribute("role", "group");
+    wrap.setAttribute("aria-label", label);
+
+    const buttons = items.map((item) => {
+      const button = doc.createElement("button");
+      button.type = "button";
+      button.className = "simple-mind-sidebar-segment-item";
+      button.dataset.value = item.value;
+      button.setAttribute("aria-label", item.title);
+      button.setAttribute("aria-pressed", "false");
+      setIcon(button, item.icon);
+      button.addEventListener("click", () => onChange(item.value));
+      wrap.appendChild(button);
+      return button;
+    });
+
+    const reset = doc.createElement("button");
+    reset.type = "button";
+    reset.className = "simple-mind-sidebar-reset";
+    reset.setAttribute("aria-label", t("sidebar.themeDefault"));
+    setIcon(reset, "close");
+    reset.addEventListener("click", () => onChange(""));
+    wrap.appendChild(reset);
+
+    this.createSidebarRow(section, label, wrap);
+    return { buttons, reset };
   }
 
   /** Rebuilds the theme choices in the sidebar. */
@@ -715,7 +767,13 @@ export class MapCanvas {
     this.sidebarBoldInput.checked = style.bold ?? visual.fontWeight >= 600;
     this.sidebarItalicInput.checked = style.italic ?? visual.fontStyle === "italic";
     this.sidebarUnderlineInput.checked = style.underline ?? visual.textDecoration === "underline";
-    this.sidebarTextAlignSelect.value = style.textAlign ?? "";
+    const textAlign = style.textAlign ?? visual.textAlign;
+    for (const button of this.sidebarTextAlign.buttons) {
+      const active = button.dataset.value === textAlign;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    }
+    this.sidebarTextAlign.reset.disabled = !hasSelection || style.textAlign === undefined;
     this.sidebarLineHeightInput.value = optionalNumber(style.lineHeight);
 
     this.setNodeStyleControlsEnabled(hasSelection);
@@ -739,10 +797,10 @@ export class MapCanvas {
       this.sidebarBoldInput,
       this.sidebarItalicInput,
       this.sidebarUnderlineInput,
-      this.sidebarTextAlignSelect,
       this.sidebarLineHeightInput,
     ];
     for (const control of controls) control.disabled = !enabled;
+    for (const button of this.sidebarTextAlign.buttons) button.disabled = !enabled;
   }
 
   /** Shows the effective color and enables reset only for an available override. */

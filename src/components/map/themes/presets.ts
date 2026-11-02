@@ -11,7 +11,6 @@ interface TokenInput {
   palette: string[];
   fontFamily?: string;
   nodeShape?: NodeShape;
-  rootShape?: NodeShape;
   radius?: number;
   connector?: ConnectorStyle;
 }
@@ -36,9 +35,9 @@ function buildTokens(input: TokenInput): ThemeTokens {
       text: input.accentText,
       border: "transparent",
       borderWidth: 0,
-      radius: 12,
+      radius: input.radius ?? 12,
       shadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
-      shape: input.rootShape ?? input.nodeShape ?? "rounded",
+      shape: input.nodeShape ?? "rounded",
     },
     branch: {
       palette: input.palette,
@@ -123,8 +122,7 @@ export const MEADOW_THEME: ThemeDefinition = {
       "#8c5a3c",
     ],
     fontFamily: MEADOW_SERIF,
-    rootShape: "pill",
-    radius: 18,
+    radius: 5,
   }),
   dark: buildTokens({
     canvas: "#0f1714",
@@ -144,8 +142,7 @@ export const MEADOW_THEME: ThemeDefinition = {
       "#5f8f7d",
     ],
     fontFamily: MEADOW_SERIF,
-    rootShape: "pill",
-    radius: 20,
+    radius: 5,
   }),
 };
 

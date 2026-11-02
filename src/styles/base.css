@@ -25,9 +25,9 @@
     "Iowan Old Style", "Palatino Linotype", Palatino, "Source Han Serif SC", "Noto Serif CJK SC",
     "Songti SC", Georgia, serif;
   --smui-sans: ui-sans-serif, system-ui, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-  --smui-radius-panel: 24px 0 0 0;
-  --smui-radius-card: 22px 26px 20px 24px;
-  --smui-radius-pill: 999px;
+  --smui-radius: 4px;
+  --smui-radius-card: 5px;
+  --smui-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%237f9469' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.75 5.75 8 10l4.25-4.25'/%3E%3C/svg%3E");
   --smui-duration: 140ms;
   --smui-grain:
     radial-gradient(rgba(92, 64, 51, 0.05) 0.6px, transparent 0.7px),
@@ -70,6 +70,7 @@ body.theme-dark .simple-mind-theme-editor {
   --smui-sage: #8fc7a6;
   --smui-danger-bg: #2b2418;
   --smui-danger-ink: #e6bb6f;
+  --smui-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%238fc7a6' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.75 5.75 8 10l4.25-4.25'/%3E%3C/svg%3E");
   --smui-grain:
     radial-gradient(rgba(226, 236, 223, 0.15) 0.7px, transparent 0.8px),
     radial-gradient(rgba(226, 236, 223, 0.1) 1.1px, transparent 1.2px),

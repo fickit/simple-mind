@@ -32,7 +32,7 @@
   height: 28px;
   padding: 0 12px;
   border: 1px solid var(--smui-edge);
-  border-radius: var(--smui-radius-pill);
+  border-radius: var(--smui-radius);
   background: var(--smui-raised);
   color: var(--smui-body);
   font-family: var(--smui-sans);
@@ -121,7 +121,7 @@
   padding: 14px 16px 18px;
   overflow-y: auto;
   border-left: 1px solid var(--smui-hairline);
-  border-radius: var(--smui-radius-panel);
+  border-radius: var(--smui-radius-card);
   background: var(--smui-panel);
   box-sizing: border-box;
 }
@@ -146,7 +146,7 @@
   height: 26px;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: var(--smui-radius-pill);
+  border-radius: var(--smui-radius);
   background: transparent;
   color: var(--smui-muted);
   font-size: 16px;
@@ -174,7 +174,7 @@
   flex: 1;
   padding: 5px 0;
   border: 1px solid transparent;
-  border-radius: var(--smui-radius-pill);
+  border-radius: var(--smui-radius);
   background: transparent;
   color: var(--smui-muted);
   font-family: var(--smui-sans);
@@ -255,19 +255,30 @@
 .simple-mind-sidebar-select,
 .simple-mind-sidebar-number,
 .simple-mind-sidebar-text {
-  max-width: 130px;
+  max-width: 150px;
   height: 28px;
   padding: 0 10px;
   border: 1px solid var(--smui-edge);
-  border-radius: var(--smui-radius-pill);
-  background: var(--smui-raised);
+  border-radius: var(--smui-radius);
+  background-color: var(--smui-raised);
   color: var(--smui-ink);
   font-family: var(--smui-sans);
   font-size: var(--font-ui-smaller);
+  text-align: center;
+  text-align-last: center;
   box-sizing: border-box;
   transition:
     border-color var(--smui-duration) ease-in-out,
     background-color var(--smui-duration) ease-in-out;
+}
+
+.simple-mind-sidebar-select {
+  appearance: none;
+  padding-right: 24px;
+  background-image: var(--smui-chevron);
+  background-repeat: no-repeat;
+  background-position: right 7px center;
+  background-size: 12px 12px;
 }
 
 .simple-mind-sidebar-select:focus,
@@ -277,7 +288,7 @@
 }
 
 .simple-mind-sidebar-number {
-  width: 74px;
+  width: 78px;
   padding: 0 8px;
 }
 
@@ -295,7 +306,7 @@
   margin-top: 8px;
   padding: 6px 12px;
   border: 1px solid var(--smui-edge);
-  border-radius: var(--smui-radius-pill);
+  border-radius: var(--smui-radius);
   background: var(--smui-raised);
   color: var(--smui-body);
   font-family: var(--smui-sans);
@@ -330,7 +341,7 @@
   height: 26px;
   padding: 2px;
   border: 1px solid var(--smui-edge);
-  border-radius: var(--smui-radius-pill);
+  border-radius: var(--smui-radius);
   background: var(--smui-raised);
   cursor: pointer;
 }
@@ -340,7 +351,7 @@
   height: 26px;
   padding: 0;
   border: 1px solid var(--smui-edge);
-  border-radius: var(--smui-radius-pill);
+  border-radius: var(--smui-radius);
   background: var(--smui-raised);
   color: var(--smui-muted);
   font-size: 14px;
@@ -354,6 +365,67 @@
 .simple-mind-sidebar-reset:hover:not(:disabled) {
   background: var(--smui-hover);
   color: var(--smui-ink);
+}
+
+.simple-mind-sidebar-segment {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--smui-edge);
+  border-radius: var(--smui-radius);
+  background-color: var(--smui-raised);
+}
+
+.simple-mind-sidebar-segment-item,
+.simple-mind-sidebar-segment .simple-mind-sidebar-reset {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--smui-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--smui-duration) ease-in-out,
+    color var(--smui-duration) ease-in-out;
+}
+
+.simple-mind-sidebar-segment-item:hover:not(:disabled),
+.simple-mind-sidebar-segment .simple-mind-sidebar-reset:hover:not(:disabled) {
+  background: var(--smui-hover);
+  color: var(--smui-ink);
+}
+
+.simple-mind-sidebar-segment-item.is-active {
+  background: var(--smui-accent);
+  color: var(--smui-accent-ink);
+}
+
+.simple-mind-sidebar-segment-item:disabled,
+.simple-mind-sidebar-segment .simple-mind-sidebar-reset:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.simple-mind-icon {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.simple-mind-collapse .simple-mind-icon,
+.simple-mind-add .simple-mind-icon {
+  width: 11px;
+  height: 11px;
 }
 
 .simple-mind-sidebar-reset:disabled {
@@ -584,7 +656,7 @@
   background: var(--sm-control-bg, var(--sm-branch-color, var(--background-primary)));
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.22);
   color: var(--sm-control-text, #ffffff);
-  font-size: 18px;
+  font-size: 10px;
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
@@ -595,13 +667,7 @@
     filter 120ms ease;
 }
 
-.simple-mind-add {
-  font-size: 16px;
-  font-weight: 500;
-}
-
 .simple-mind-collapse.is-count {
-  font-size: 10px;
   letter-spacing: -0.02em;
 }
 
