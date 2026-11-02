@@ -29,20 +29,25 @@ const external = [
   ...builtinModules,
 ];
 
-const copyToTestVaultPlugin = {
-  name: "copy-to-test-vault",
+/**
+ * Copies one build's own outputs into the test vault when that build succeeds.
+ *
+ * Each context only touches the files it writes; copying all three from both
+ * builds races on a cold checkout, where the CSS build can run before main.js
+ * exists.
+ *
+ * @param {string[]} files Outputs owned by the build.
+ */
+const copyToTestVault = (files) => ({
+  name: `copy-${files.join("-")}-to-test-vault`,
   setup(build) {
     build.onEnd(async (result) => {
       if (result.errors.length > 0) return;
       await mkdir(testPluginDir, { recursive: true });
-      await Promise.all(
-        ["main.js", "manifest.json", "styles.css"].map((file) =>
-          copyFile(file, path.join(testPluginDir, file)),
-        ),
-      );
+      await Promise.all(files.map((file) => copyFile(file, path.join(testPluginDir, file))));
     });
   },
-};
+});
 
 const jsContext = await esbuild.context({
   banner: { js: banner },
@@ -56,7 +61,7 @@ const jsContext = await esbuild.context({
   treeShaking: true,
   outfile: "main.js",
   minify: prod,
-  plugins: [copyToTestVaultPlugin],
+  plugins: [copyToTestVault(["main.js", "manifest.json"])],
 });
 
 const cssContext = await esbuild.context({
@@ -65,7 +70,7 @@ const cssContext = await esbuild.context({
   logLevel: "info",
   outfile: "styles.css",
   minify: prod,
-  plugins: [copyToTestVaultPlugin],
+  plugins: [copyToTestVault(["styles.css"])],
 });
 
 if (prod) {
