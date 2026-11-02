@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.1 — 2026-11-03
+
+Community review fixes.
+
+- The settings tab uses Obsidian's heading settings instead of raw heading elements.
+- The settings tab reads its own settings type, so it no longer relies on `Plugin.settings`
+  (Obsidian 1.13+).
+- Static inline styles moved into stylesheets.
+- Removed the leaf detach from `onunload`.
+- Dropped the unused `builtin-modules` dependency.
+
 ## 0.1.0 — 2026-11-02
 
 First release.

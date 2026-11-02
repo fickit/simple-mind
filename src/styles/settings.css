@@ -57,6 +57,21 @@
   transform: none;
 }
 
+.simple-mind-theme-preview .simple-mind-preview-root {
+  left: 30px;
+  top: 80px;
+}
+
+.simple-mind-theme-preview .simple-mind-preview-child-a {
+  left: 210px;
+  top: 32px;
+}
+
+.simple-mind-theme-preview .simple-mind-preview-child-b {
+  left: 210px;
+  top: 126px;
+}
+
 .simple-mind-theme-preview-svg {
   position: absolute;
   inset: 0;

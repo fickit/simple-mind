@@ -1586,7 +1586,7 @@ function resolveColorInput(value: string, host: HTMLElement): string {
   const win = host.ownerDocument.defaultView;
   if (!win) return COLOR_INPUT_FALLBACK;
   const probe = host.ownerDocument.createElement("span");
-  probe.style.display = "none";
+  probe.className = "simple-mind-color-probe";
   probe.style.color = value;
   host.appendChild(probe);
   const computed = win.getComputedStyle(probe).color;

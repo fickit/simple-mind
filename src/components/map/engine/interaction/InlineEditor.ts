@@ -65,7 +65,6 @@ function copyComputedStyles(source: HTMLElement, target: HTMLElement): void {
   for (const property of MIRROR_STYLE_PROPS) {
     target.style.setProperty(kebab(property), style.getPropertyValue(kebab(property)));
   }
-  target.style.boxSizing = "border-box";
 }
 
 /** Converts a camelCase CSS property to kebab-case. */
@@ -215,9 +214,9 @@ export class InlineEditor {
     const value = this.input.value;
     const displayText = value || this.placeholder || " ";
 
-    this.mirror.style.whiteSpace = "pre";
-    this.mirror.style.width = "max-content";
-    this.mirror.style.maxWidth = "none";
+    this.mirror.classList.add("is-measuring");
+    this.mirror.classList.remove("is-wrapping");
+    this.mirror.style.removeProperty("width");
     this.mirror.textContent = displayText;
     const initial = this.firstResize;
     this.firstResize = false;
@@ -225,9 +224,9 @@ export class InlineEditor {
     const minimumWidth = initial ? this.baseWidth : 40;
     const width = Math.min(Math.max(minimumWidth, naturalWidth + (initial ? 0 : 1)), this.maxWidth);
 
-    this.mirror.style.whiteSpace = "pre-wrap";
+    this.mirror.classList.remove("is-measuring");
+    this.mirror.classList.add("is-wrapping");
     this.mirror.style.width = `${width}px`;
-    this.mirror.style.maxWidth = "none";
     const naturalHeight = this.mirror.offsetHeight || this.baseHeight;
     const height = Math.max(initial ? this.baseHeight : 30, naturalHeight);
 

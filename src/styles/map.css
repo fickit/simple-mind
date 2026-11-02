@@ -585,6 +585,21 @@
   word-break: break-word;
 }
 
+.simple-mind-editor-mirror.is-measuring {
+  white-space: pre;
+  width: max-content;
+  max-width: none;
+}
+
+.simple-mind-editor-mirror.is-wrapping {
+  white-space: pre-wrap;
+  max-width: none;
+}
+
+.simple-mind-color-probe {
+  display: none;
+}
+
 .simple-mind-world {
   position: absolute;
   top: 0;

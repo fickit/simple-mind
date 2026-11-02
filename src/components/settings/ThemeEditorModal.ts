@@ -258,26 +258,20 @@ export class ThemeEditorModal extends Modal {
     svg.appendChild(path);
     this.previewEl.appendChild(svg);
 
-    const root = this.previewEl.createDiv({
-      cls: `simple-mind-node is-root shape-${this.tokens.root.shape}`,
+    this.previewEl.createDiv({
+      cls: `simple-mind-node is-root shape-${this.tokens.root.shape} simple-mind-preview-root`,
       text: t("themeEditor.previewRoot"),
     });
-    root.style.left = "30px";
-    root.style.top = "80px";
 
-    const childA = this.previewEl.createDiv({
-      cls: `simple-mind-node shape-${this.tokens.node.shape}`,
+    this.previewEl.createDiv({
+      cls: `simple-mind-node shape-${this.tokens.node.shape} simple-mind-preview-child-a`,
       text: t("themeEditor.previewBranch"),
     });
-    childA.style.left = "210px";
-    childA.style.top = "32px";
 
-    const childB = this.previewEl.createDiv({
-      cls: `simple-mind-node shape-${this.tokens.node.shape}`,
+    this.previewEl.createDiv({
+      cls: `simple-mind-node shape-${this.tokens.node.shape} simple-mind-preview-child-b`,
       text: t("themeEditor.previewBranch"),
     });
-    childB.style.left = "210px";
-    childB.style.top = "126px";
   }
 
   /** Saves the draft theme. */

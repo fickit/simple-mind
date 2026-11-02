@@ -24,7 +24,7 @@
   --smui-serif:
     "Iowan Old Style", "Palatino Linotype", Palatino, "Source Han Serif SC", "Noto Serif CJK SC",
     "Songti SC", Georgia, serif;
-  --smui-sans: ui-sans-serif, system-ui, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --smui-sans: var(--font-interface, sans-serif);
   --smui-radius: 4px;
   --smui-radius-card: 5px;
   --smui-radius-frame: 8px;

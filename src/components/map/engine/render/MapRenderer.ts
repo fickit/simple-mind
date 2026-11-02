@@ -103,7 +103,7 @@ export class MapRenderer {
 
     this.world = doc.createElement("div");
     this.world.className = "simple-mind-world";
-    this.svg = doc.createElementNS(SVG_NS, "svg") as SVGSVGElement;
+    this.svg = doc.createElementNS(SVG_NS, "svg");
     this.svg.classList.add("simple-mind-edges");
     this.svg.setAttribute("aria-hidden", "true");
     this.nodesLayer = doc.createElement("div");
@@ -804,7 +804,7 @@ export class MapRenderer {
     const existing = this.edgeEls.get(childId);
     if (existing) return existing;
 
-    const path = this.canvas.ownerDocument.createElementNS(SVG_NS, "path") as SVGPathElement;
+    const path = this.canvas.ownerDocument.createElementNS(SVG_NS, "path");
     path.classList.add("simple-mind-edge");
     path.setAttribute("fill", "none");
     path.setAttribute("stroke-linecap", "round");

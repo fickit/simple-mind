@@ -16,7 +16,8 @@ import { ThemeEditorModal } from "./ThemeEditorModal";
 
 /** Settings tab for defaults, language, and themes. */
 export class SettingsTab extends PluginSettingTab {
-  private readonly host: SimpleMindSettingsHost & Plugin;
+  // Kept as the narrow host type so `settings` never resolves to Plugin.settings (Obsidian 1.13+).
+  private readonly host: SimpleMindSettingsHost;
   private saveTimer: number | null = null;
 
   /**
@@ -33,7 +34,7 @@ export class SettingsTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
     containerEl.addClass("simple-mind-settings");
-    containerEl.createEl("h2", { text: t("settings.title") });
+    new Setting(containerEl).setName(t("settings.title")).setHeading();
     this.renderGeneral(containerEl);
     this.renderThemes(containerEl);
   }
@@ -41,7 +42,7 @@ export class SettingsTab extends PluginSettingTab {
   /** Renders general defaults. */
   private renderGeneral(containerEl: HTMLElement): void {
     const settings = this.host.settings;
-    containerEl.createEl("h3", { text: t("settings.general") });
+    new Setting(containerEl).setName(t("settings.general")).setHeading();
 
     new Setting(containerEl)
       .setName(t("settings.language"))
@@ -198,7 +199,7 @@ export class SettingsTab extends PluginSettingTab {
 
   /** Renders built-in and custom theme management. */
   private renderThemes(containerEl: HTMLElement): void {
-    containerEl.createEl("h3", { text: t("settings.themes") });
+    new Setting(containerEl).setName(t("settings.themes")).setHeading();
     containerEl.createEl("p", {
       cls: "setting-item-description",
       text: t("settings.themesDesc"),
@@ -362,22 +363,26 @@ export class SettingsTab extends PluginSettingTab {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".json,application/json";
-    input.addEventListener("change", async () => {
+    input.addEventListener("change", () => {
       const file = input.files?.[0];
-      if (!file) return;
-      const imported = themeFromJson(await file.text());
-      if (!imported) {
-        new Notice(t("settings.themeImportError"));
-        return;
-      }
-      imported.id = createCustomThemeId(this.allThemes());
-      imported.name = imported.name.trim() || t("settings.newTheme");
-      this.host.settings.customThemes.push(imported);
-      await this.persist();
-      new Notice(t("settings.themeSaved"));
-      this.display();
+      if (file) void this.importThemeFile(file);
     });
     input.click();
+  }
+
+  /** Adds a theme from a picked JSON file. */
+  private async importThemeFile(file: File): Promise<void> {
+    const imported = themeFromJson(await file.text());
+    if (!imported) {
+      new Notice(t("settings.themeImportError"));
+      return;
+    }
+    imported.id = createCustomThemeId(this.allThemes());
+    imported.name = imported.name.trim() || t("settings.newTheme");
+    this.host.settings.customThemes.push(imported);
+    await this.persist();
+    new Notice(t("settings.themeSaved"));
+    this.display();
   }
 }
 

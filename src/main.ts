@@ -67,11 +67,6 @@ export default class SimpleMindPlugin extends Plugin implements SimpleMindSettin
     this.updateStatusBar();
   }
 
-  /** Closes plugin views when the plugin is disabled. */
-  onunload(): void {
-    this.app.workspace.detachLeavesOfType(VIEW_TYPE_MAP);
-  }
-
   /** Persists settings and per-file view states. */
   async saveSettings(): Promise<void> {
     await savePluginData(this, { settings: this.settings, viewStates: this.viewStates });

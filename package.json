@@ -1,6 +1,6 @@
 {
   "name": "simple-mind",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A Markdown-outline mind map editor for Obsidian.",
   "main": "main.js",
   "scripts": {
@@ -25,7 +25,6 @@
   "devDependencies": {
     "@biomejs/biome": "^2.6.4",
     "@types/node": "^26.6.6",
-    "builtin-modules": "^5.4.0",
     "esbuild": "^0.28.2",
     "jsdom": "^30.1.3",
     "obsidian": "^1.14.4",
