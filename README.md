@@ -57,8 +57,8 @@ The file opens as a map. The Source action switches the same tab to Obsidian's n
    npm run dev
    ```
 
-3. Open the `test-vault` folder as an Obsidian vault. The build writes the plugin to
-   `test-vault/.obsidian/plugins/simple-mind`.
+3. Open the `test-vault` folder as an Obsidian vault. It is a local, git-ignored vault, so create the
+   folder if it is missing; the build writes the plugin to `test-vault/.obsidian/plugins/simple-mind`.
 
 4. Reload Obsidian after rebuilding. Obsidian does not hot-reload community plugins by default.
 

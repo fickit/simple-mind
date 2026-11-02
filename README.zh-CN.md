@@ -54,8 +54,8 @@ mindmap:
    npm run dev
    ```
 
-3. 把 `test-vault` 作为 Obsidian 库打开。构建会把插件写入
-   `test-vault/.obsidian/plugins/simple-mind`。
+3. 把 `test-vault` 作为 Obsidian 库打开。它是本地库、已被 git 忽略，没有该目录时自行新建；
+   构建会把插件写入 `test-vault/.obsidian/plugins/simple-mind`。
 
 4. 重新构建后在 Obsidian 中重载插件。Obsidian 默认不会热重载社区插件。
 

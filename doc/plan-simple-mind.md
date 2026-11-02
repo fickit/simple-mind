@@ -218,6 +218,7 @@ Branch: `feat/core`
   floating menu glide instead of jumping.
 - `√` Round the map frame to an 8 px radius and clip its children so the canvas does not square off
   against Obsidian's pane.
+- `√` Stop tracking the local test vault; it stays on disk and is ignored by git.
 - `√` Replace the connector text select with curve and orthogonal pictograms, and fold the theme
   title, select, and a settings gear into a single row.
 - `√` Keep chrome motion color-only at 140 ms with a reduced-motion fallback and no focus outline
