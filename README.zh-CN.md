@@ -2,7 +2,9 @@
 
 一个面向 Obsidian 的 Markdown 大纲思维导图插件。
 
-> 状态：早期开发中。导图视图、编辑交互、主题和设置正在按 `doc/design-simple-mind.md` 实现。
+[github.com/fickit/simple-mind](https://github.com/fickit/simple-mind)
+
+> 状态：0.1.0。仅桌面端；需要 Obsidian 1.7.2 或更新版本。
 
 ## 它做什么
 

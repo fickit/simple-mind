@@ -341,7 +341,8 @@ node scripts/benchmark.mjs
 
 - `√` Update root `README.md`, `README.zh-CN.md`, and add `CHANGELOG.md`.
 - `√` Set the `manifest.json` author name and author URL (`fickit`). No funding URL.
-- `-` Add `repositoryUrl` to `manifest.json` once the repository exists.
+- `√` Record the repository URL in `package.json` and both READMEs; `manifest.json` has no
+  repository field.
 - `√` Set `version: 0.1.0` and update `versions.json`.
 - `√` Confirm the release bundle contains only `main.js`, `manifest.json`, and `styles.css`.
 - `√` Add a tag-triggered GitHub release workflow that verifies the bundle and uploads the three assets.
@@ -384,8 +385,9 @@ node scripts/benchmark.mjs
 - Phase 8 settings/i18n: settings tab (including global font and connector defaults), custom theme
   management, language switching, command re-registration, and English/Chinese UI are implemented.
 - Manual verification: completed in the test vault for every phase.
-- Release preparation: changelog written, release workflow added, and version metadata already at
-  `0.1.0`; only the repository URL and the first tag remain.
-- Next: publish the repository, fill `manifest.json` `repositoryUrl`, then push a tag to release.
+- Release preparation: changelog written, release workflow added, version metadata at `0.1.0`, and the
+  repository URL is recorded in the package and READMEs; only pushing the repository and the first tag
+  remain.
+- Next: push to `github.com/fickit/simple-mind`, then push a tag to release.
 - Test vault: local only and ignored by git; the build writes the plugin into it.
 - Author metadata: `fickit`; repository URL still pending.

@@ -2,8 +2,9 @@
 
 A Markdown-outline mind map editor for Obsidian.
 
-> Status: early development. The map view, editing interactions, themes, and settings are being built
-> against the design in `doc/design-simple-mind.md`.
+[github.com/fickit/simple-mind](https://github.com/fickit/simple-mind)
+
+> Status: 0.1.0. Desktop only; requires Obsidian 1.7.2 or newer.
 
 ## What it does
 

@@ -18,6 +18,10 @@
   ],
   "author": "fickit",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fickit/simple-mind.git"
+  },
   "devDependencies": {
     "@biomejs/biome": "^2.6.4",
     "@types/node": "^26.6.6",
