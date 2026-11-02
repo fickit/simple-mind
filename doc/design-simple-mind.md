@@ -613,7 +613,9 @@ theme, so a file can pick any of the nine themes while the panel keeps one mater
   wrap arrow means "restore the default", and it only remains on the color swatches.
 - Every chrome button is scoped past Obsidian's generic `button` skin (background, border, shadow,
   padding, radius): plugin styles load after the app's, but Obsidian's selectors outrank a single class,
-  so the map root prefixes these rules to keep tiles, step arrows, and the gear flat.
+  so the map root prefixes these rules to keep tiles, step arrows, and the gear flat. The stepper's
+  number field is flattened the same way on hover, focus, and press. Color wells are the exception: they
+  keep Obsidian's native input skin, as they always have.
 - Every control shows the effective value instead of a placeholder: a numeric field prints the theme's
   number when the node has no override, and the node-shape and connector rows highlight the tile the
   theme resolves to. Writing a value that equals the theme deletes the override, so there is no

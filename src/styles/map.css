@@ -314,8 +314,7 @@
   gap: 4px;
 }
 
-.simple-mind-map .simple-mind-sidebar-color {
-  box-shadow: none;
+.simple-mind-sidebar-color {
   width: 44px;
   height: 26px;
   padding: 2px;
@@ -435,7 +434,7 @@
   background-color: var(--smui-raised);
 }
 
-.simple-mind-sidebar-stepper .simple-mind-sidebar-number {
+.simple-mind-map .simple-mind-sidebar-stepper .simple-mind-sidebar-number {
   width: 34px;
   height: 24px;
   padding: 0;
@@ -449,8 +448,11 @@
   text-align-last: center;
 }
 
-.simple-mind-sidebar-stepper .simple-mind-sidebar-number:focus,
-.simple-mind-sidebar-stepper .simple-mind-sidebar-number:focus-visible {
+/* Obsidian tints inputs on hover and focus; the field stays flat. */
+.simple-mind-map .simple-mind-sidebar-stepper .simple-mind-sidebar-number:hover,
+.simple-mind-map .simple-mind-sidebar-stepper .simple-mind-sidebar-number:focus,
+.simple-mind-map .simple-mind-sidebar-stepper .simple-mind-sidebar-number:focus-visible,
+.simple-mind-map .simple-mind-sidebar-stepper .simple-mind-sidebar-number:active {
   border: none;
   outline: none;
   box-shadow: none;

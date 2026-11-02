@@ -208,6 +208,8 @@ Branch: `feat/core`
   reset tile.
 - `√` Scope every chrome button past Obsidian's generic `button` skin so tiles, step arrows, the gear,
   and the close control keep their own surface.
+- `√` Keep the color wells on Obsidian's native input skin and flatten the stepper field on hover,
+  focus, and press.
 - `√` Replace the connector text select with curve and orthogonal pictograms, and fold the theme
   title, select, and a settings gear into a single row.
 - `√` Keep chrome motion color-only at 140 ms with a reduced-motion fallback and no focus outline
