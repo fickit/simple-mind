@@ -606,11 +606,14 @@ theme, so a file can pick any of the nine themes while the panel keeps one mater
   the four node shapes, and both connector shapes, and a chevron inside each select. No control uses a
   text character as its icon, and each icon is `aria-hidden` while the button keeps its own label.
   `setIcon` skips a repeat, so controls refreshed every frame do not rebuild their SVG.
-- One affordance per job: bold, italic, and underline are one unlabeled row of icon toggles; text
-  alignment is another; both rows center their tiles and share the panel width as it changes, with a
-  16 px icon in a 30 px tile and 6 px between tiles. Numeric fields are steppers with the value on the
-  left and the two step chevrons stacked on the right. A single wrap arrow means "restore the default",
-  and it only remains on the color swatches.
+- One affordance per job: the Text section ends with a single "Text style" row holding two frameless
+  tile rows—bold/italic/underline, then alignment—stacked and centered on the right, with a 16 px icon
+  in a 30 px tile and 6 px between tiles. Numeric fields are steppers with the value centered and the
+  two step chevrons stacked on the right, sized to their content and carrying no hover fill. A single
+  wrap arrow means "restore the default", and it only remains on the color swatches.
+- Every chrome button is scoped past Obsidian's generic `button` skin (background, border, shadow,
+  padding, radius): plugin styles load after the app's, but Obsidian's selectors outrank a single class,
+  so the map root prefixes these rules to keep tiles, step arrows, and the gear flat.
 - Every control shows the effective value instead of a placeholder: a numeric field prints the theme's
   number when the node has no override, and the node-shape and connector rows highlight the tile the
   theme resolves to. Writing a value that equals the theme deletes the override, so there is no
@@ -658,8 +661,8 @@ at the same time.
 - **Layout / Connector**: four layout pictograms and two connector pictograms (curve, orthogonal), both
   writing to the file's frontmatter. The connector row replaced a text select.
 - **Node**: four node-shape pictograms, fill, border color, and a border-width stepper.
-- **Text**: text color, a font-size stepper, one unlabeled row of bold/italic/underline toggles, one
-  unlabeled row of alignment tiles, and a line-height stepper.
+- **Text**: text color, font size, and line height as steppers; the section ends with one "Text
+  style" row that stacks the bold/italic/underline toggles over the alignment tiles, frameless.
 
 Node and text controls are disabled with a hint until a node is selected. Every edit is applied to
 that node only, written into its inline metadata marker, and reprocessed immediately. Color controls

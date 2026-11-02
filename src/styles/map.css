@@ -26,7 +26,8 @@
   flex: 1;
 }
 
-.simple-mind-toolbar-button {
+.simple-mind-map .simple-mind-toolbar-button {
+  box-shadow: none;
   min-width: 28px;
   height: 28px;
   padding: 0 8px;
@@ -136,7 +137,8 @@
   font-weight: 600;
 }
 
-.simple-mind-sidebar-close {
+.simple-mind-map .simple-mind-sidebar-close {
+  box-shadow: none;
   width: 26px;
   height: 26px;
   padding: 0;
@@ -152,7 +154,7 @@
     color var(--smui-duration) ease-in-out;
 }
 
-.simple-mind-sidebar-close:hover {
+.simple-mind-map .simple-mind-sidebar-close:hover {
   background: var(--smui-hover);
   color: var(--smui-ink);
 }
@@ -278,7 +280,8 @@
   margin-left: auto;
 }
 
-.simple-mind-sidebar-gear {
+.simple-mind-map .simple-mind-sidebar-gear {
+  box-shadow: none;
   display: grid;
   place-items: center;
   width: 26px;
@@ -294,7 +297,7 @@
     color var(--smui-duration) ease-in-out;
 }
 
-.simple-mind-sidebar-gear:hover {
+.simple-mind-map .simple-mind-sidebar-gear:hover {
   background: var(--smui-hover);
   color: var(--smui-ink);
 }
@@ -311,7 +314,8 @@
   gap: 4px;
 }
 
-.simple-mind-sidebar-color {
+.simple-mind-map .simple-mind-sidebar-color {
+  box-shadow: none;
   width: 44px;
   height: 26px;
   padding: 2px;
@@ -321,7 +325,8 @@
   cursor: pointer;
 }
 
-.simple-mind-sidebar-reset {
+.simple-mind-map .simple-mind-sidebar-reset {
+  box-shadow: none;
   display: grid;
   place-items: center;
   width: 26px;
@@ -337,7 +342,7 @@
     color var(--smui-duration) ease-in-out;
 }
 
-.simple-mind-sidebar-reset:hover:not(:disabled) {
+.simple-mind-map .simple-mind-sidebar-reset:hover:not(:disabled) {
   background: var(--smui-hover);
   color: var(--smui-ink);
 }
@@ -353,8 +358,9 @@
   background-color: var(--smui-raised);
 }
 
-.simple-mind-sidebar-segment-item,
-.simple-mind-sidebar-step {
+/* Scoped past Obsidian's own `button` rules, which would otherwise paint these. */
+.simple-mind-sidebar .simple-mind-sidebar-segment-item,
+.simple-mind-sidebar .simple-mind-sidebar-step {
   display: grid;
   place-items: center;
   width: 26px;
@@ -363,6 +369,7 @@
   border: none;
   border-radius: 3px;
   background: transparent;
+  box-shadow: none;
   color: var(--smui-muted);
   cursor: pointer;
   transition:
@@ -370,71 +377,94 @@
     color var(--smui-duration) ease-in-out;
 }
 
-.simple-mind-sidebar-segment-item:hover:not(:disabled),
-.simple-mind-sidebar-step:hover:not(:disabled) {
+.simple-mind-sidebar .simple-mind-sidebar-segment-item:hover:not(:disabled) {
   background: var(--smui-hover);
   color: var(--smui-ink);
 }
 
-.simple-mind-sidebar-segment-item.is-active {
+/* The step arrows keep no hover fill; the field already shows where they act. */
+.simple-mind-sidebar .simple-mind-sidebar-step:hover:not(:disabled) {
+  background: transparent;
+  color: var(--smui-muted);
+}
+
+.simple-mind-sidebar .simple-mind-sidebar-step:active:not(:disabled) {
+  background: transparent;
+  color: var(--smui-ink);
+}
+
+.simple-mind-sidebar .simple-mind-sidebar-segment-item.is-active {
   background: var(--smui-accent);
   color: var(--smui-accent-ink);
 }
 
-/* Unlabeled rows center their tiles, which share the row width as it changes. */
-.simple-mind-sidebar-segment.is-wide {
-  justify-content: center;
-  gap: 6px;
-  margin: 2px 0 8px;
+/* Two frameless tile rows stacked under one row label. */
+.simple-mind-sidebar-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
 
-.simple-mind-sidebar-segment.is-wide .simple-mind-sidebar-segment-item {
-  flex: 1 1 0;
-  width: auto;
-  max-width: 56px;
-  height: 30px;
+.simple-mind-sidebar-segment.is-bare {
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.simple-mind-sidebar-segment.is-bare .simple-mind-sidebar-segment-item {
+  width: 30px;
+  height: 26px;
   border-radius: 4px;
 }
 
-.simple-mind-sidebar-segment.is-wide .simple-mind-icon {
+.simple-mind-sidebar-segment.is-bare .simple-mind-icon {
   width: 16px;
   height: 16px;
 }
 
-/* Value on the left, stacked arrows on the right. */
+/* Value centered, stacked arrows on the right. */
 .simple-mind-sidebar-stepper {
   display: flex;
   align-items: center;
   height: 28px;
-  padding: 0 2px 0 6px;
+  padding: 0 1px 0 4px;
   border: 1px solid var(--smui-edge);
   border-radius: var(--smui-radius);
   background-color: var(--smui-raised);
 }
 
 .simple-mind-sidebar-stepper .simple-mind-sidebar-number {
-  width: 42px;
+  width: 34px;
   height: 24px;
   padding: 0;
   border: none;
-  border-radius: 3px;
+  border-radius: 0;
   background: transparent;
   color: var(--smui-ink);
   font-family: var(--smui-sans);
   font-size: var(--font-ui-smaller);
-  text-align: left;
-  text-align-last: left;
+  text-align: center;
+  text-align-last: center;
+}
+
+.simple-mind-sidebar-stepper .simple-mind-sidebar-number:focus,
+.simple-mind-sidebar-stepper .simple-mind-sidebar-number:focus-visible {
+  border: none;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
 }
 
 .simple-mind-sidebar-arrows {
   display: flex;
   flex-direction: column;
-  padding-left: 2px;
-  border-left: 1px solid var(--smui-hairline);
+  padding-left: 1px;
 }
 
 .simple-mind-sidebar-arrows .simple-mind-sidebar-step {
-  width: 20px;
+  width: 18px;
   height: 11px;
 }
 
@@ -472,7 +502,7 @@
   height: 11px;
 }
 
-.simple-mind-sidebar-reset:disabled {
+.simple-mind-map .simple-mind-sidebar-reset:disabled {
   opacity: 0.35;
   cursor: default;
 }

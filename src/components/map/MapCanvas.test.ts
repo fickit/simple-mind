@@ -685,16 +685,21 @@ describe("MapCanvas", () => {
     host.remove();
   });
 
-  it("toggles bold, italic, and underline as one unlabeled row of icon tiles", () => {
+  it("groups bold, italic, alignment under one text-style row", () => {
     const { host, canvas } = createCanvas("# Root\n- A\n");
     selectNode(host, "n2");
     const styleTiles = tiles(host, "Text style");
+    const alignTiles = tiles(host, "Text alignment");
+    const stack = host.querySelector(".simple-mind-sidebar-stack")!;
     const labels = Array.from(host.querySelectorAll(".simple-mind-sidebar-row > span")).map(
       (label) => label.textContent,
     );
 
     expect(styleTiles.map((tile) => tile.dataset.icon)).toEqual(["bold", "italic", "underline"]);
-    expect(host.querySelectorAll(".simple-mind-sidebar-segment.is-wide")).toHaveLength(2);
+    expect(styleTiles[0].closest(".simple-mind-sidebar-stack")).toBe(stack);
+    expect(alignTiles[0].closest(".simple-mind-sidebar-stack")).toBe(stack);
+    expect(host.querySelectorAll(".simple-mind-sidebar-segment.is-bare")).toHaveLength(2);
+    expect(labels).toContain("Text style");
     expect(labels).not.toContain("Bold");
     expect(labels).not.toContain("Text alignment");
 

@@ -475,8 +475,21 @@ export class MapCanvas {
         }),
     });
     this.sidebarFontSize.input.classList.add("simple-mind-sidebar-font-size");
+    this.sidebarLineHeight = this.createSidebarStepper(textSection, t("sidebar.lineHeight"), {
+      min: LIMITS.lineHeight.min,
+      max: LIMITS.lineHeight.max,
+      step: 0.1,
+      onChange: (value) =>
+        this.updateSelectedNodeStyle({
+          lineHeight: this.withoutOverride(value, this.effectiveVisual().lineHeight),
+        }),
+    });
+    this.sidebarLineHeight.input.classList.add("simple-mind-sidebar-line-height");
+
+    const textStyleStack = doc.createElement("span");
+    textStyleStack.className = "simple-mind-sidebar-stack";
     const [bold, italic, underline] = this.createSidebarToggles(
-      textSection,
+      textStyleStack,
       t("sidebar.textStyle"),
       [
         { value: "bold", icon: "bold", title: t("sidebar.bold") },
@@ -493,7 +506,7 @@ export class MapCanvas {
     this.sidebarItalicButton = italic;
     this.sidebarUnderlineButton = underline;
     this.sidebarTextAlignButtons = this.createSidebarTiles(
-      textSection,
+      textStyleStack,
       t("sidebar.textAlign"),
       [
         { value: "left", icon: "align-left", title: t("sidebar.textAlign.left") },
@@ -504,18 +517,9 @@ export class MapCanvas {
         this.updateSelectedNodeStyle({
           textAlign: value ? (value as TextAlign) : undefined,
         }),
-      { clearable: true, wide: true },
+      { clearable: true, row: false },
     );
-    this.sidebarLineHeight = this.createSidebarStepper(textSection, t("sidebar.lineHeight"), {
-      min: LIMITS.lineHeight.min,
-      max: LIMITS.lineHeight.max,
-      step: 0.1,
-      onChange: (value) =>
-        this.updateSelectedNodeStyle({
-          lineHeight: this.withoutOverride(value, this.effectiveVisual().lineHeight),
-        }),
-    });
-    this.sidebarLineHeight.input.classList.add("simple-mind-sidebar-line-height");
+    this.createSidebarRow(textSection, t("sidebar.textStyle"), textStyleStack);
   }
 
   /** Creates a sidebar section; without a title the heading row is left out. */
@@ -629,20 +633,20 @@ export class MapCanvas {
   }
 
   /**
-   * Adds one centered row of independent icon toggles.
+   * Adds one row of independent icon toggles without a frame or label row.
    *
-   * @param section Section that receives the row.
+   * @param parent Section or stack that receives the group.
    * @param label Group label for assistive tech.
    * @param items Toggles in display order.
    * @param onChange Receives the toggled value and its new state.
    */
   private createSidebarToggles(
-    section: HTMLElement,
+    parent: HTMLElement,
     label: string,
     items: SidebarTileItem[],
     onChange: (value: string, active: boolean) => void,
   ): HTMLButtonElement[] {
-    const buttons = this.createSidebarSegment(section, label, items, { wide: true });
+    const buttons = this.createSidebarSegment(parent, label, items, { row: false });
     for (const button of buttons) {
       button.addEventListener("click", () => {
         onChange(button.dataset.value ?? "", !button.classList.contains("is-active"));
@@ -654,21 +658,21 @@ export class MapCanvas {
   /**
    * Adds a row of icon tiles where at most one is active.
    *
-   * @param section Section that receives the row.
+   * @param parent Section or stack that receives the group.
    * @param label Group label.
    * @param items Tiles in display order.
    * @param onChange Receives the picked value.
    * @param options `clearable` returns to the theme value when the active tile
-   * is clicked again; `wide` centers the group on its own unlabeled row.
+   * is clicked again; `row: false` appends a frameless group.
    */
   private createSidebarTiles(
-    section: HTMLElement,
+    parent: HTMLElement,
     label: string,
     items: SidebarTileItem[],
     onChange: (value: string) => void,
-    options: { clearable?: boolean; wide?: boolean } = {},
+    options: { clearable?: boolean; row?: boolean } = {},
   ): HTMLButtonElement[] {
-    const buttons = this.createSidebarSegment(section, label, items, options);
+    const buttons = this.createSidebarSegment(parent, label, items, options);
     for (const button of buttons) {
       button.addEventListener("click", () => {
         if (options.clearable && button.classList.contains("is-active")) {
@@ -682,24 +686,23 @@ export class MapCanvas {
   }
 
   /**
-   * Builds a tile group, labeled on a row or centered and unlabeled when wide.
+   * Builds a tile group, labeled on its own row or frameless inside a parent.
    *
-   * @param section Section that receives the group.
+   * @param parent Section or stack that receives the group.
    * @param label Group label for assistive tech.
    * @param items Tiles in display order.
-   * @param options `wide` drops the label row and spreads the tiles.
+   * @param options `row: false` appends a frameless group instead of a labeled row.
    */
   private createSidebarSegment(
-    section: HTMLElement,
+    parent: HTMLElement,
     label: string,
     items: SidebarTileItem[],
-    options: { wide?: boolean } = {},
+    options: { row?: boolean } = {},
   ): HTMLButtonElement[] {
     const doc = this.sidebarEl.ownerDocument;
     const wrap = doc.createElement("div");
-    wrap.className = options.wide
-      ? "simple-mind-sidebar-segment is-wide"
-      : "simple-mind-sidebar-segment";
+    wrap.className =
+      options.row === false ? "simple-mind-sidebar-segment is-bare" : "simple-mind-sidebar-segment";
     wrap.setAttribute("role", "group");
     wrap.setAttribute("aria-label", label);
 
@@ -715,8 +718,8 @@ export class MapCanvas {
       return button;
     });
 
-    if (options.wide) section.appendChild(wrap);
-    else this.createSidebarRow(section, label, wrap);
+    if (options.row === false) parent.appendChild(wrap);
+    else this.createSidebarRow(parent, label, wrap);
     return buttons;
   }
 

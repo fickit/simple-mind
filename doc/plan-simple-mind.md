@@ -200,11 +200,14 @@ Branch: `feat/core`
   fields that size to their own content.
 - `√` Merge the Style and Text panes into one scrolling column and move the font family to the
   settings page.
-- `√` Turn bold, italic, and underline into one centered unlabeled row of icon toggles, give alignment
-  its own unlabeled row, and enlarge both rows for the wider panel.
-- `√` Show the effective value everywhere: numeric steppers put the value on the left and stack the
-  step chevrons on the right, node shape and connector shape highlight the tile the theme resolves to,
-  and writing a value equal to the theme drops the override instead of offering a reset tile.
+- `√` Group bold, italic, underline, and alignment under one frameless "Text style" row at the end of
+  the Text section, with centred 16 px tiles.
+- `√` Show the effective value everywhere: numeric steppers centre the value and stack the step
+  chevrons on the right without a hover fill, node shape and connector shape highlight the tile the
+  theme resolves to, and writing a value equal to the theme drops the override instead of offering a
+  reset tile.
+- `√` Scope every chrome button past Obsidian's generic `button` skin so tiles, step arrows, the gear,
+  and the close control keep their own surface.
 - `√` Replace the connector text select with curve and orthogonal pictograms, and fold the theme
   title, select, and a settings gear into a single row.
 - `√` Keep chrome motion color-only at 140 ms with a reduced-motion fallback and no focus outline
