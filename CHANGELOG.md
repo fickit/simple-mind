@@ -1,26 +1,43 @@
 # Changelog
 
-## 0.1.1 — 2026-11-03
+## 1.0.0 — 2026-11-03
 
-Community review fixes.
+First stable release.
 
-- The settings tab uses Obsidian's heading settings instead of raw heading elements.
-- The settings tab reads its own settings type, so it no longer relies on `Plugin.settings`
-  (Obsidian 1.13+).
-- Static inline styles moved into stylesheets.
-- Removed the leaf detach from `onunload`.
-- Dropped the unused `builtin-modules` dependency.
+### Map and editing
 
-## 0.1.0 — 2026-11-02
-
-First release.
-
-- Markdown-outline `.mindmap` files open as a map and round-trip to the native Markdown editor.
+- `.mindmap` files open as an interactive map in the same tab and round-trip to Obsidian's native
+  Markdown editor.
+- Markdown-outline source: frontmatter holds the theme, layout, spacing, and connector shape, and
+  per-node styles are stored inline as `<!-- sm:{...} -->` markers.
 - Four layouts: mind map, tree to the right, tree to the left, and organization chart.
-- Inline editing, drag to reorganize, collapse with count bubbles, and side-aware add buttons.
-- Nine built-in themes with automatic light/dark switching and a custom theme editor.
-- One style panel for the file's theme, layout, and connector shape plus the selected node's shape,
-  colors, and text; font family, connector color, and thickness live in settings.
+- Direct editing: add, rename, delete, collapse, drag to reorganize, copy and paste, and undo/redo.
+- Collapse chevrons sit on the connector bundle, add buttons sit between the child lines, collapsed
+  groups become count bubbles, and branch sides persist so left and right additions stay put.
+- Curved connectors leave the parent in one sweep; orthogonal connectors branch after a short lead.
 - Each file remembers its pan, zoom, and selection.
-- English and Chinese UI.
+
+### Style and themes
+
+- One scrolling style panel: theme, layout, and connector shape for the file; shape, fill, border
+  color, border width, text color, font size, bold, italic, underline, alignment, and line height
+  for the selected node.
+- Nine built-in themes with automatic light/dark switching and a custom theme editor with a live
+  preview, plus import and export.
+- Font family, connector color, and connector thickness live in the plugin settings.
+- Frameless icon rows, content-hugging controls, and pictograms for layouts, node shapes, and
+  connectors; every control shows the theme's effective value.
+
+### Interface
+
+- A floating menu over the canvas with fit, style, and source actions.
+- The style panel folds with an eased transition and the map frame is rounded against Obsidian's pane.
+- English and Chinese interface.
 - Frame-batched redraws and viewport culling keep large maps responsive.
+
+### Fixes
+
+- Settings use Obsidian's heading settings and no longer rely on `Plugin.settings`, so the plugin
+  passes the community review.
+- Static inline styles moved into stylesheets, the leaf detach was removed from `onunload`, and the
+  unused `builtin-modules` dependency was dropped.
