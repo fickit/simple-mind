@@ -3,6 +3,8 @@
   flex: 1;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
+  border-radius: var(--smui-radius-frame);
 }
 
 /* Floating menu pinned to the canvas's top-right corner. */
@@ -82,6 +84,7 @@
   .simple-mind-map *::before,
   .simple-mind-map *::after {
     transition-duration: 0ms;
+    transition-delay: 0ms;
   }
 }
 
@@ -104,16 +107,40 @@
   flex: 0 0 288px;
   width: 288px;
   min-height: 0;
-  padding: 14px 16px 18px;
-  overflow-y: auto;
+  overflow: hidden;
   border-left: 1px solid var(--smui-hairline);
   border-radius: var(--smui-radius-card);
   background: var(--smui-panel);
   box-sizing: border-box;
+  transition:
+    flex-basis var(--smui-duration-panel) var(--smui-ease),
+    width var(--smui-duration-panel) var(--smui-ease),
+    opacity 150ms ease;
 }
 
-.simple-mind-sidebar[hidden] {
-  display: none;
+/* Fixed width so the panel clips instead of reflowing while it folds. */
+.simple-mind-sidebar-inner {
+  width: 288px;
+  height: 100%;
+  padding: 14px 16px 18px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Collapsed, the panel keeps its place in the DOM and folds its width away. */
+.simple-mind-sidebar.is-collapsed {
+  flex-basis: 0;
+  width: 0;
+  border-left-width: 0;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    flex-basis var(--smui-duration-panel) var(--smui-ease),
+    width var(--smui-duration-panel) var(--smui-ease),
+    opacity 150ms ease,
+    visibility 0s linear var(--smui-duration-panel);
 }
 
 .simple-mind-sidebar-header {

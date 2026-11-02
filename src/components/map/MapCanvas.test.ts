@@ -330,11 +330,12 @@ describe("MapCanvas", () => {
 
     const style = buttons[1];
     expect(style.getAttribute("aria-pressed")).toBe("true");
+    expect(sidebar.classList.contains("is-collapsed")).toBe(false);
     style.click();
-    expect(sidebar.hidden).toBe(true);
+    expect(sidebar.classList.contains("is-collapsed")).toBe(true);
     expect(style.getAttribute("aria-pressed")).toBe("false");
     style.click();
-    expect(sidebar.hidden).toBe(false);
+    expect(sidebar.classList.contains("is-collapsed")).toBe(false);
     expect(style.classList.contains("is-active")).toBe(true);
 
     canvas.destroy();

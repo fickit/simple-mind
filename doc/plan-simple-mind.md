@@ -214,6 +214,10 @@ Branch: `feat/core`
   top-right corner; opening the style panel carries it left with the canvas.
 - `√` Drop the zoom, add, delete, undo, and redo buttons and their labels; those actions stay on the
   keyboard, the node controls, and the command palette.
+- `√` Ease the style panel's fold (width, padding, and opacity over 220 ms) so the canvas and the
+  floating menu glide instead of jumping.
+- `√` Round the map frame to an 8 px radius and clip its children so the canvas does not square off
+  against Obsidian's pane.
 - `√` Replace the connector text select with curve and orthogonal pictograms, and fold the theme
   title, select, and a settings gear into a single row.
 - `√` Keep chrome motion color-only at 140 ms with a reduced-motion fallback and no focus outline

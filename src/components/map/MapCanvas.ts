@@ -309,6 +309,10 @@ export class MapCanvas {
     const doc = this.sidebarEl.ownerDocument;
     this.sidebarEl.replaceChildren();
 
+    const inner = doc.createElement("div");
+    inner.className = "simple-mind-sidebar-inner";
+    this.sidebarEl.appendChild(inner);
+
     const header = doc.createElement("div");
     header.className = "simple-mind-sidebar-header";
     const title = doc.createElement("span");
@@ -320,15 +324,15 @@ export class MapCanvas {
     setIcon(close, "close");
     close.addEventListener("click", () => this.toggleSidebar());
     header.append(title, close);
-    this.sidebarEl.appendChild(header);
+    inner.appendChild(header);
 
     this.sidebarSelectMirror = doc.createElement("span");
     this.sidebarSelectMirror.className = "simple-mind-sidebar-select-mirror";
-    this.sidebarEl.appendChild(this.sidebarSelectMirror);
+    inner.appendChild(this.sidebarSelectMirror);
 
     this.sidebarPane = doc.createElement("div");
     this.sidebarPane.className = "simple-mind-sidebar-pane";
-    this.sidebarEl.appendChild(this.sidebarPane);
+    inner.appendChild(this.sidebarPane);
 
     const themeSection = this.createSidebarSection(this.sidebarPane);
     const themeRow = doc.createElement("div");
@@ -913,7 +917,7 @@ export class MapCanvas {
 
   /** Shows or hides the style sidebar. */
   private toggleSidebar(): void {
-    this.sidebarEl.hidden = !this.sidebarEl.hidden;
+    this.sidebarEl.classList.toggle("is-collapsed");
     this.updateToolbar();
   }
 
@@ -1475,7 +1479,7 @@ export class MapCanvas {
 
   /** Mirrors the sidebar state on the style toggle. */
   private updateToolbar(): void {
-    const open = !this.sidebarEl.hidden;
+    const open = !this.sidebarEl.classList.contains("is-collapsed");
     this.styleButton.classList.toggle("is-active", open);
     this.styleButton.setAttribute("aria-pressed", String(open));
   }

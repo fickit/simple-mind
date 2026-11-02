@@ -639,11 +639,16 @@ theme, so a file can pick any of the nine themes while the panel keeps one mater
 - The canvas atmosphere is the one signature: a faint speckle in light, and three staggered star fields
   plus a mist band along the bottom in dark. It is static, sits behind the world layer, and does not
   move with pan or zoom.
+- The map frame is rounded: the root clips its children at an 8 px radius, and the view host no longer
+  paints its own background, so the corners show Obsidian's pane instead of a square fill that squares
+  off against it.
 - Motion stays conservative because these controls are edge affordances: hover changes color only over
-  140 ms, there is no translate, scale, or ring, and `prefers-reduced-motion` zeroes every transition.
-  The chrome draws no focus outline at all—on a swatch or a tile a ring reads as a selection state, and
-  selection is already drawn inside the canvas—so keyboard reachability stays while the visible cue is
-  the control's own active fill.
+  140 ms, there is no translate, scale, or ring, and `prefers-reduced-motion` zeroes every transition
+  and delay. The one larger motion is the style panel folding: it is a width, padding, and opacity
+  transition over 220 ms on an ease-out curve, so the canvas (and the floating menu riding on it) glides
+  instead of jumping. The chrome draws no focus outline at all—on a swatch or a tile a ring reads as a
+  selection state, and selection is already drawn inside the canvas—so keyboard reachability stays while
+  the visible cue is the control's own active fill.
 - Text and surface pairs hold WCAG AA (4.5:1) in both modes. The theme token pairs are asserted in
   `presets.test.ts`; the chrome pairs are measured in the browser.
 
@@ -668,7 +673,9 @@ theme, so a file can pick any of the nine themes while the panel keeps one mater
 
 The map view includes a right-side style panel. It is one scrolling column of sections—Theme, Layout,
 Node, Connector, Text—with no tab switching, so a file-level change and a node-level change are visible
-at the same time.
+at the same time. The style toggle folds the panel away by easing its width, padding, and opacity over
+220 ms rather than removing it from the layout in one step; the collapsed panel stays in the DOM with
+`visibility: hidden` so it leaves the tab order.
 
 - **Theme**: one row holding the section title, the theme select, and a gear that opens the settings
   tab. The earlier "Manage themes" button is gone; the gear is the only entry.
@@ -728,8 +735,9 @@ The map keeps only three actions above the canvas: fit to window, toggle the sty
 the source editor. All three are icon buttons with an `aria-label` and no visible text, grouped in a
 small panel-toned strip pinned to the canvas's top-right corner. The strip lives inside the canvas host,
 so opening the style panel narrows the host and carries the menu left with it; closing the panel returns
-it to the corner. Node actions (add, delete, undo, redo, zoom) stay on the map's own controls, the
-keyboard shortcuts, and the command palette.
+it to the corner. Both directions use the panel's own fold easing, so the menu glides with it. Node
+actions (add, delete, undo, redo, zoom) stay on the map's own controls, the keyboard shortcuts, and the
+command palette.
 
 ### 11.3 Status bar
 
