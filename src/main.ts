@@ -1,4 +1,4 @@
-import { Notice, Plugin, type TFile } from "obsidian";
+import { MarkdownView, Notice, Plugin, type TFile, View } from "obsidian";
 import { loadPluginData, savePluginData } from "./api/obsidian/settings";
 import { SettingsTab } from "./components/settings/SettingsTab";
 import { isSourceMode } from "./components/source/SourceModeGuard";
@@ -288,19 +288,19 @@ export default class SimpleMindPlugin extends Plugin implements SimpleMindSettin
    * @param file File that was opened.
    */
   private async openMapIfNeeded(file: TFile): Promise<void> {
-    const leaf = this.app.workspace.activeLeaf;
+    const view = this.app.workspace.getActiveViewOfType(View);
     const activeFile = this.app.workspace.getActiveFile();
-    if (!leaf || !activeFile || activeFile.path !== file.path) return;
-    if (leaf.view.getViewType() !== "markdown") {
+    if (!view || !activeFile || activeFile.path !== file.path) return;
+    if (!(view instanceof MarkdownView)) {
       this.updateStatusBar();
       return;
     }
-    if (isSourceMode(leaf, activeFile.path)) {
+    if (isSourceMode(view.leaf, activeFile.path)) {
       this.updateStatusBar();
       return;
     }
 
-    await switchToMap(leaf, activeFile);
+    await switchToMap(view.leaf, activeFile);
     this.updateStatusBar();
   }
 
@@ -310,18 +310,17 @@ export default class SimpleMindPlugin extends Plugin implements SimpleMindSettin
    * @param showNotice Whether to explain why nothing happened when no map file is active.
    */
   private async toggleActiveLeaf(showNotice = false): Promise<void> {
-    const leaf = this.app.workspace.activeLeaf;
+    const view = this.app.workspace.getActiveViewOfType(View);
     const file = this.app.workspace.getActiveFile();
-    if (!leaf || !file || file.extension !== FILE_EXTENSION) {
+    if (!view || !file || file.extension !== FILE_EXTENSION) {
       if (showNotice) new Notice(t("notice.openMapFirst"));
       return;
     }
 
-    const viewType = leaf.view.getViewType();
-    if (viewType === VIEW_TYPE_MAP) {
-      await switchToSource(leaf, file);
-    } else if (viewType === "markdown") {
-      await switchToMap(leaf, file);
+    if (view instanceof MindMapView) {
+      await switchToSource(view.leaf, file);
+    } else if (view instanceof MarkdownView) {
+      await switchToMap(view.leaf, file);
     } else if (showNotice) {
       new Notice(t("notice.unsupportedView"));
     }
@@ -332,10 +331,9 @@ export default class SimpleMindPlugin extends Plugin implements SimpleMindSettin
   private updateStatusBar(): void {
     if (!this.statusBarEl) return;
 
-    const leaf = this.app.workspace.activeLeaf;
+    const view = this.app.workspace.getActiveViewOfType(View);
     const file = this.app.workspace.getActiveFile();
-    const visible =
-      !!file && file.extension === FILE_EXTENSION && leaf?.view.getViewType() === "markdown";
+    const visible = !!file && file.extension === FILE_EXTENSION && view instanceof MarkdownView;
     this.statusBarEl.style.display = visible ? "" : "none";
   }
 }

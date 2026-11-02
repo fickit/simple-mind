@@ -1,7 +1,7 @@
 .simple-mind-theme-editor h2,
 .simple-mind-theme-editor h3 {
   color: var(--smui-ink);
-  font-family: var(--smui-serif);
+  font-family: var(--smui-font-serif);
 }
 
 .simple-mind-theme-tabs {
@@ -16,7 +16,7 @@
   border-radius: var(--smui-radius);
   background: var(--smui-raised);
   color: var(--smui-body);
-  font-family: var(--smui-sans);
+  font-family: var(--smui-font-sans);
   font-size: var(--font-ui-smaller);
   cursor: pointer;
   transition:

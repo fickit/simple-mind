@@ -21,10 +21,10 @@
   --smui-sage: #7f9469;
   --smui-danger-bg: #f3e2d4;
   --smui-danger-ink: #7a3c17;
-  --smui-serif:
+  --smui-font-serif:
     "Iowan Old Style", "Palatino Linotype", Palatino, "Source Han Serif SC", "Noto Serif CJK SC",
     "Songti SC", Georgia, serif;
-  --smui-sans: var(--font-interface, sans-serif);
+  --smui-font-sans: var(--font-interface, sans-serif);
   --smui-radius: 4px;
   --smui-radius-card: 5px;
   --smui-radius-frame: 8px;
@@ -53,7 +53,7 @@
 .simple-mind-map {
   color: var(--smui-ink);
   background: var(--smui-paper);
-  font-family: var(--smui-sans);
+  font-family: var(--smui-font-sans);
 }
 
 /* Moonlit forest: still water, cool mist, and stars above the canvas. */

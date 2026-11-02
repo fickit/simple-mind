@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.1 — 2026-11-03
+
+Review warning clean-up.
+
+- Renamed the chrome font tokens so the stylesheet no longer trips the unsupported-feature check.
+- Replaced the deprecated `activeLeaf` lookups with `getActiveViewOfType`.
+- Removed the deprecated slider tooltips.
+- Destructive buttons keep Obsidian's warning style through the standard `mod-warning` class.
+
 ## 1.0.0 — 2026-11-03
 
 First stable release.

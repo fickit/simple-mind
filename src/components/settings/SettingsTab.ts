@@ -116,7 +116,7 @@ export class SettingsTab extends PluginSettingTab {
         slider
           .setLimits(LIMITS.lineWidth.min, LIMITS.lineWidth.max, 1)
           .setValue(settings.defaultLineWidth)
-          .setDynamicTooltip()
+
           .onChange((value) => {
             settings.defaultLineWidth = value;
             this.schedulePersist();
@@ -143,7 +143,7 @@ export class SettingsTab extends PluginSettingTab {
       slider
         .setLimits(LIMITS.spacingX.min, LIMITS.spacingX.max, 1)
         .setValue(settings.defaultSpacingX)
-        .setDynamicTooltip()
+
         .onChange((value) => {
           settings.defaultSpacingX = value;
           this.schedulePersist();
@@ -154,7 +154,7 @@ export class SettingsTab extends PluginSettingTab {
       slider
         .setLimits(LIMITS.spacingY.min, LIMITS.spacingY.max, 1)
         .setValue(settings.defaultSpacingY)
-        .setDynamicTooltip()
+
         .onChange((value) => {
           settings.defaultSpacingY = value;
           this.schedulePersist();
@@ -234,12 +234,10 @@ export class SettingsTab extends PluginSettingTab {
             void this.exportTheme(theme);
           }),
         )
-        .addButton((button) =>
-          button
-            .setButtonText(t("settings.delete"))
-            .setWarning()
-            .onClick(() => this.confirmDeleteTheme(theme)),
-        );
+        .addButton((button) => {
+          button.buttonEl.addClass("mod-warning");
+          button.setButtonText(t("settings.delete")).onClick(() => this.confirmDeleteTheme(theme));
+        });
     }
 
     new Setting(containerEl)
@@ -412,15 +410,13 @@ class ConfirmDeleteModal extends Modal {
     this.contentEl.createEl("p", { text: this.message });
     new Setting(this.contentEl)
       .addButton((button) => button.setButtonText(t("settings.cancel")).onClick(() => this.close()))
-      .addButton((button) =>
-        button
-          .setButtonText(t("settings.confirmDelete"))
-          .setWarning()
-          .onClick(async () => {
-            await this.onConfirm();
-            this.close();
-          }),
-      );
+      .addButton((button) => {
+        button.buttonEl.addClass("mod-warning");
+        button.setButtonText(t("settings.confirmDelete")).onClick(async () => {
+          await this.onConfirm();
+          this.close();
+        });
+      });
   }
 
   /** Clears modal content. */
