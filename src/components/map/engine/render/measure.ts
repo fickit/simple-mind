@@ -24,10 +24,9 @@ export class DomNodeMeasurer {
    * @param tokens Active theme tokens.
    */
   constructor(container: HTMLElement, meta: MindMapMeta, tokens: ThemeTokens) {
-    const doc = container.ownerDocument;
-    this.host = doc.createElement("div");
+    this.host = createDiv();
     this.host.className = "simple-mind-measure";
-    this.inner = doc.createElement("div");
+    this.inner = createDiv();
     this.inner.className = "simple-mind-measure-inner";
     this.host.appendChild(this.inner);
     container.appendChild(this.host);

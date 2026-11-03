@@ -390,6 +390,7 @@ node scripts/benchmark.mjs
 - The release workflow publishes the `CHANGELOG.md` section for the tag as the release body.
 - 1.0.1 clears the fixable review warnings (font token names, `activeLeaf`, slider tooltips,
   `setWarning`); the declarative settings warnings stay because that API requires Obsidian 1.13.
+- 1.0.2 creates elements through Obsidian's global DOM helpers, with a jsdom shim for the tests.
 - Next: submit the plugin to the Obsidian community list when ready.
 - Test vault: local only and ignored by git; the build writes the plugin into it.
 - Author metadata: `fickit`; repository `https://github.com/fickit/simple-mind`.

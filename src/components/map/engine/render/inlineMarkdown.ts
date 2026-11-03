@@ -11,7 +11,7 @@
  * @param doc Document used to create nodes.
  */
 export function renderInlineMarkdown(text: string, doc: Document = document): DocumentFragment {
-  const fragment = doc.createDocumentFragment();
+  const fragment = createFragment();
   appendInline(text, fragment, doc);
   return fragment;
 }
@@ -44,7 +44,7 @@ function appendInline(text: string, parent: Node, doc: Document): void {
     if (char === "`") {
       const end = text.indexOf("`", index + 1);
       if (end > index + 1) {
-        const code = doc.createElement("code");
+        const code = createEl("code");
         code.textContent = text.slice(index + 1, end);
         parent.appendChild(code);
         index = end + 1;
@@ -55,7 +55,7 @@ function appendInline(text: string, parent: Node, doc: Document): void {
     if (text.startsWith("**", index)) {
       const end = text.indexOf("**", index + 2);
       if (end > index + 2) {
-        const strong = doc.createElement("strong");
+        const strong = createEl("strong");
         appendInline(text.slice(index + 2, end), strong, doc);
         parent.appendChild(strong);
         index = end + 2;
@@ -66,7 +66,7 @@ function appendInline(text: string, parent: Node, doc: Document): void {
     if (text.startsWith("~~", index)) {
       const end = text.indexOf("~~", index + 2);
       if (end > index + 2) {
-        const del = doc.createElement("del");
+        const del = createEl("del");
         appendInline(text.slice(index + 2, end), del, doc);
         parent.appendChild(del);
         index = end + 2;
@@ -77,7 +77,7 @@ function appendInline(text: string, parent: Node, doc: Document): void {
     if (char === "*" || char === "_") {
       const end = text.indexOf(char, index + 1);
       if (end > index + 1) {
-        const em = doc.createElement("em");
+        const em = createEl("em");
         appendInline(text.slice(index + 1, end), em, doc);
         parent.appendChild(em);
         index = end + 1;
@@ -92,7 +92,7 @@ function appendInline(text: string, parent: Node, doc: Document): void {
         const label = text.slice(index + 1, labelEnd);
         const url = text.slice(labelEnd + 2, urlEnd).trim();
         if (isSafeUrl(url)) {
-          const link = doc.createElement("a");
+          const link = createEl("a");
           link.href = url;
           link.target = "_blank";
           link.rel = "noopener noreferrer";

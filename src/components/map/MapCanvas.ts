@@ -140,32 +140,32 @@ export class MapCanvas {
     this.settings = options.settings ?? DEFAULT_SETTINGS;
     this.dark = isDarkDocument(doc);
 
-    this.rootEl = doc.createElement("div");
+    this.rootEl = createDiv();
     this.rootEl.className = "simple-mind-map";
     this.rootEl.style.setProperty("--sm-control-size", `${NODE_CONTROL_SIZE}px`);
     this.rootEl.style.setProperty("--sm-control-gap", `${NODE_CONTROL_GAP}px`);
     this.rootEl.style.setProperty("--sm-control-spacing", `${NODE_CONTROL_SPACING}px`);
     container.replaceChildren(this.rootEl);
 
-    this.bannerEl = doc.createElement("div");
+    this.bannerEl = createDiv();
     this.bannerEl.className = "simple-mind-banner";
     this.bannerEl.hidden = true;
     this.bannerEl.setAttribute("role", "alert");
     this.rootEl.appendChild(this.bannerEl);
 
-    this.contentRow = doc.createElement("div");
+    this.contentRow = createDiv();
     this.contentRow.className = "simple-mind-content";
     this.rootEl.appendChild(this.contentRow);
 
-    const canvasHost = doc.createElement("div");
+    const canvasHost = createDiv();
     canvasHost.className = "simple-mind-canvas-host";
     this.contentRow.appendChild(canvasHost);
 
-    this.canvasEl = doc.createElement("div");
+    this.canvasEl = createDiv();
     this.canvasEl.className = "simple-mind-canvas";
     canvasHost.appendChild(this.canvasEl);
 
-    this.sidebarEl = doc.createElement("aside");
+    this.sidebarEl = createEl("aside");
     this.sidebarEl.className = "simple-mind-sidebar";
     this.contentRow.appendChild(this.sidebarEl);
 
@@ -190,7 +190,7 @@ export class MapCanvas {
       drop: (sourceId, targetId, position) => this.dropNode(sourceId, targetId, position),
     });
 
-    const menu = doc.createElement("div");
+    const menu = createDiv();
     menu.className = "simple-mind-menu";
     canvasHost.appendChild(menu);
     this.fitButton = this.createToolbarButton(menu, t("toolbar.fit"), "fit", () =>
@@ -324,18 +324,17 @@ export class MapCanvas {
 
   /** Rebuilds sidebar controls so labels follow the active language. */
   private buildSidebar(): void {
-    const doc = this.sidebarEl.ownerDocument;
     this.sidebarEl.replaceChildren();
 
-    const inner = doc.createElement("div");
+    const inner = createDiv();
     inner.className = "simple-mind-sidebar-inner";
     this.sidebarEl.appendChild(inner);
 
-    const header = doc.createElement("div");
+    const header = createDiv();
     header.className = "simple-mind-sidebar-header";
-    const title = doc.createElement("span");
+    const title = createSpan();
     title.textContent = t("sidebar.style");
-    const close = doc.createElement("button");
+    const close = createEl("button");
     close.type = "button";
     close.className = "simple-mind-sidebar-close";
     close.setAttribute("aria-label", t("sidebar.close"));
@@ -344,23 +343,23 @@ export class MapCanvas {
     header.append(title, close);
     inner.appendChild(header);
 
-    this.sidebarSelectMirror = doc.createElement("span");
+    this.sidebarSelectMirror = createSpan();
     this.sidebarSelectMirror.className = "simple-mind-sidebar-select-mirror";
     inner.appendChild(this.sidebarSelectMirror);
 
-    this.sidebarPane = doc.createElement("div");
+    this.sidebarPane = createDiv();
     this.sidebarPane.className = "simple-mind-sidebar-pane";
     inner.appendChild(this.sidebarPane);
 
     const themeSection = this.createSidebarSection(this.sidebarPane);
-    const themeRow = doc.createElement("div");
+    const themeRow = createDiv();
     themeRow.className = "simple-mind-sidebar-theme-row";
-    const themeTitle = doc.createElement("span");
+    const themeTitle = createSpan();
     themeTitle.className = "simple-mind-sidebar-section-title";
     themeTitle.textContent = t("sidebar.theme");
     themeRow.appendChild(themeTitle);
 
-    this.sidebarThemeSelect = doc.createElement("select");
+    this.sidebarThemeSelect = createEl("select");
     this.sidebarThemeSelect.className = "simple-mind-sidebar-select simple-mind-sidebar-theme";
     this.sidebarThemeSelect.setAttribute("aria-label", t("sidebar.theme"));
     this.sidebarThemeSelect.addEventListener("change", () => {
@@ -369,7 +368,7 @@ export class MapCanvas {
     themeRow.appendChild(this.sidebarThemeSelect);
 
     if (this.onOpenSettings) {
-      const gear = doc.createElement("button");
+      const gear = createEl("button");
       gear.type = "button";
       gear.className = "simple-mind-sidebar-gear";
       gear.setAttribute("aria-label", t("sidebar.openSettings"));
@@ -477,7 +476,7 @@ export class MapCanvas {
     });
     this.sidebarLineHeight.input.classList.add("simple-mind-sidebar-line-height");
 
-    const textStyleStack = doc.createElement("span");
+    const textStyleStack = createSpan();
     textStyleStack.className = "simple-mind-sidebar-stack";
     const [bold, italic, underline] = this.createSidebarToggles(
       textStyleStack,
@@ -515,11 +514,10 @@ export class MapCanvas {
 
   /** Creates a sidebar section; without a title the heading row is left out. */
   private createSidebarSection(parent: HTMLElement, title?: string): HTMLElement {
-    const doc = this.sidebarEl.ownerDocument;
-    const section = doc.createElement("section");
+    const section = createEl("section");
     section.className = "simple-mind-sidebar-section";
     if (title) {
-      const heading = doc.createElement("h4");
+      const heading = createEl("h4");
       heading.textContent = title;
       section.appendChild(heading);
     }
@@ -529,7 +527,7 @@ export class MapCanvas {
 
   /** Adds a muted hint inside a section. */
   private createSidebarHint(parent: HTMLElement, text: string): HTMLElement {
-    const hint = this.sidebarEl.ownerDocument.createElement("p");
+    const hint = createEl("p");
     hint.className = "simple-mind-sidebar-hint";
     hint.textContent = text;
     parent.appendChild(hint);
@@ -538,10 +536,9 @@ export class MapCanvas {
 
   /** Appends a label/control row and returns the control. */
   private createSidebarRow(section: HTMLElement, label: string, control: HTMLElement): void {
-    const doc = this.sidebarEl.ownerDocument;
-    const row = doc.createElement("div");
+    const row = createDiv();
     row.className = "simple-mind-sidebar-row";
-    const span = doc.createElement("span");
+    const span = createSpan();
     span.textContent = label;
     row.append(span, control);
     section.appendChild(row);
@@ -564,11 +561,10 @@ export class MapCanvas {
     label: string,
     options: SidebarStepperOptions,
   ): SidebarStepper {
-    const doc = this.sidebarEl.ownerDocument;
-    const wrap = doc.createElement("span");
+    const wrap = createSpan();
     wrap.className = "simple-mind-sidebar-stepper";
 
-    const input = doc.createElement("input");
+    const input = createEl("input");
     input.type = "number";
     input.min = String(options.min);
     input.max = String(options.max);
@@ -576,7 +572,7 @@ export class MapCanvas {
     input.className = "simple-mind-sidebar-number";
     input.setAttribute("aria-label", label);
 
-    const arrows = doc.createElement("span");
+    const arrows = createSpan();
     arrows.className = "simple-mind-sidebar-arrows";
     const up = this.createSidebarStepButton(t("sidebar.stepUp"), "chevron-up");
     const down = this.createSidebarStepButton(t("sidebar.stepDown"), "chevron-down");
@@ -615,7 +611,7 @@ export class MapCanvas {
 
   /** Creates one arrow button inside a stepper. */
   private createSidebarStepButton(label: string, icon: IconName): HTMLButtonElement {
-    const button = this.sidebarEl.ownerDocument.createElement("button");
+    const button = createEl("button");
     button.type = "button";
     button.className = "simple-mind-sidebar-step";
     button.setAttribute("aria-label", label);
@@ -690,15 +686,14 @@ export class MapCanvas {
     items: SidebarTileItem[],
     options: { row?: boolean } = {},
   ): HTMLButtonElement[] {
-    const doc = this.sidebarEl.ownerDocument;
-    const wrap = doc.createElement("div");
+    const wrap = createDiv();
     wrap.className =
       options.row === false ? "simple-mind-sidebar-segment is-bare" : "simple-mind-sidebar-segment";
     wrap.setAttribute("role", "group");
     wrap.setAttribute("aria-label", label);
 
     const buttons = items.map((item) => {
-      const button = doc.createElement("button");
+      const button = createEl("button");
       button.type = "button";
       button.className = "simple-mind-sidebar-segment-item";
       button.dataset.value = item.value;
@@ -720,17 +715,16 @@ export class MapCanvas {
     label: string,
     onChange: (value: string | undefined) => void,
   ): SidebarColorControl {
-    const doc = this.sidebarEl.ownerDocument;
-    const wrap = doc.createElement("span");
+    const wrap = createSpan();
     wrap.className = "simple-mind-sidebar-colors";
 
-    const input = doc.createElement("input");
+    const input = createEl("input");
     input.type = "color";
     input.className = "simple-mind-sidebar-color";
     input.setAttribute("aria-label", label);
     input.addEventListener("change", () => onChange(input.value));
 
-    const reset = doc.createElement("button");
+    const reset = createEl("button");
     reset.type = "button";
     reset.className = "simple-mind-sidebar-reset";
     reset.setAttribute("aria-label", t("sidebar.resetColor"));
@@ -749,7 +743,7 @@ export class MapCanvas {
     const current = this.controller?.getDocument().meta.theme ?? this.settings.defaultTheme;
     this.sidebarThemeSelect.replaceChildren();
     for (const theme of options) {
-      const option = this.sidebarEl.ownerDocument.createElement("option");
+      const option = createEl("option");
       option.value = theme.id;
       option.textContent = theme.name;
       this.sidebarThemeSelect.appendChild(option);
@@ -1150,7 +1144,7 @@ export class MapCanvas {
     icon: IconName,
     action: () => void,
   ): HTMLButtonElement {
-    const button = menu.ownerDocument.createElement("button");
+    const button = createEl("button");
     button.type = "button";
     button.className = "simple-mind-menu-button";
     button.setAttribute("aria-label", label);
@@ -1585,7 +1579,7 @@ function resolveColorInput(value: string, host: HTMLElement): string {
 
   const win = host.ownerDocument.defaultView;
   if (!win) return COLOR_INPUT_FALLBACK;
-  const probe = host.ownerDocument.createElement("span");
+  const probe = createSpan();
   probe.className = "simple-mind-color-probe";
   probe.style.color = value;
   host.appendChild(probe);

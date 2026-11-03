@@ -246,10 +246,10 @@ export class ThemeEditorModal extends Modal {
     this.previewEl.empty();
     applyTheme(this.previewEl, this.draft, this.variant === "dark");
 
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const svg = createSvg("svg");
     svg.setAttribute("viewBox", "0 0 360 190");
     svg.classList.add("simple-mind-theme-preview-svg");
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    const path = createSvg("path");
     path.setAttribute("d", "M 110 95 C 150 95 160 48 210 48 M 110 95 C 150 95 160 142 210 142");
     path.setAttribute("fill", "none");
     path.setAttribute("stroke", this.tokens.branch.palette[0] ?? this.tokens.selection.outline);

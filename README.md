@@ -4,7 +4,7 @@ A Markdown-outline mind map editor for Obsidian.
 
 [github.com/fickit/simple-mind](https://github.com/fickit/simple-mind)
 
-> Status: 1.0.1. Desktop only; requires Obsidian 1.7.2 or newer.
+> Status: 1.0.2. Desktop only; requires Obsidian 1.7.2 or newer.
 
 ## What it does
 

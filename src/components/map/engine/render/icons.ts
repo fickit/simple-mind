@@ -34,8 +34,6 @@ type IconShape =
   | { d: string }
   | { glyph: string; bold?: boolean; italic?: boolean; under?: boolean };
 
-const SVG_NS = "http://www.w3.org/2000/svg";
-
 /** Icon drawings on a 16 by 16 grid. */
 const SHAPES: Record<IconName, IconShape[]> = {
   "align-left": [{ d: "M3 4.5h10" }, { d: "M3 8h6.5" }, { d: "M3 11.5h8.5" }],
@@ -132,7 +130,7 @@ export function iconNames(): IconName[] {
 export function setIcon(element: HTMLElement, name: IconName): void {
   if (element.dataset.icon === name && element.firstElementChild) return;
   const doc = element.ownerDocument;
-  const svg = doc.createElementNS(SVG_NS, "svg");
+  const svg = createSvg("svg");
   svg.setAttribute("class", "simple-mind-icon");
   svg.setAttribute("viewBox", "0 0 16 16");
   svg.setAttribute("aria-hidden", "true");
@@ -155,7 +153,7 @@ export function setText(element: HTMLElement, value: string): void {
 
 /** Creates one stroked path. */
 function drawPath(doc: Document, d: string): SVGPathElement {
-  const path = doc.createElementNS(SVG_NS, "path");
+  const path = createSvg("path");
   path.setAttribute("d", d);
   return path;
 }
@@ -165,7 +163,7 @@ function drawGlyph(
   doc: Document,
   shape: { glyph: string; bold?: boolean; italic?: boolean; under?: boolean },
 ): SVGTextElement {
-  const text = doc.createElementNS(SVG_NS, "text");
+  const text = createSvg("text");
   text.setAttribute("class", "simple-mind-icon-glyph");
   text.setAttribute("x", "8");
   text.setAttribute("y", "11.5");

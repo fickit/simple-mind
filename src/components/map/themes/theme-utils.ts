@@ -35,7 +35,7 @@ export function toHexColor(value: string): string {
 
   const doc = typeof document === "undefined" ? null : document;
   if (!doc) return "#000000";
-  const probe = doc.createElement("div");
+  const probe = createDiv();
   probe.style.color = trimmed;
   doc.body.appendChild(probe);
   const computed = getComputedStyle(probe).color;

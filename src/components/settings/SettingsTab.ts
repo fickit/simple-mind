@@ -349,7 +349,7 @@ export class SettingsTab extends PluginSettingTab {
     }
     const blob = new Blob([data], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    const link = createEl("a");
     link.href = url;
     link.download = `${theme.name}.json`;
     link.click();
@@ -358,7 +358,7 @@ export class SettingsTab extends PluginSettingTab {
 
   /** Opens a file picker and imports a valid theme JSON. */
   private importTheme(): void {
-    const input = document.createElement("input");
+    const input = createEl("input");
     input.type = "file";
     input.accept = ".json,application/json";
     input.addEventListener("change", () => {

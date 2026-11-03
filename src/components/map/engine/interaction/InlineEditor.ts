@@ -116,7 +116,6 @@ export class InlineEditor {
   ): void {
     this.close();
 
-    const doc = this.world.ownerDocument;
     this.position = position;
     this.maxWidth = Math.max(40, options.maxWidth ?? 280);
     this.placeholder = options.placeholder ?? "";
@@ -129,7 +128,7 @@ export class InlineEditor {
     this.callbacks = callbacks;
     this.onResize = options.onResize ?? null;
 
-    const input = doc.createElement("textarea");
+    const input = createEl("textarea");
     input.className = "simple-mind-inline-editor";
     input.rows = 1;
     input.wrap = "soft";
@@ -137,7 +136,7 @@ export class InlineEditor {
     input.placeholder = this.placeholder;
     input.spellcheck = false;
 
-    const mirror = doc.createElement("div");
+    const mirror = createDiv();
     mirror.className = "simple-mind-editor-mirror";
 
     if (options.nodeElement) {

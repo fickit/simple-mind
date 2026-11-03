@@ -4,7 +4,7 @@
 
 [github.com/fickit/simple-mind](https://github.com/fickit/simple-mind)
 
-> 状态：1.0.1。仅桌面端；需要 Obsidian 1.7.2 或更新版本。
+> 状态：1.0.2。仅桌面端；需要 Obsidian 1.7.2 或更新版本。
 
 ## 它做什么
 

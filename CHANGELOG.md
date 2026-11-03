@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.2 — 2026-11-03
+
+Review helper clean-up.
+
+- Elements are created through Obsidian's global DOM helpers (`createEl`, `createDiv`, `createSpan`,
+  `createSvg`, `createFragment`) instead of `document.createElement`.
+- The test runner installs a small jsdom shim for those helpers.
+
 ## 1.0.1 — 2026-11-03
 
 Review warning clean-up.

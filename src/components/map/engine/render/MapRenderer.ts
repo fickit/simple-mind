@@ -19,7 +19,6 @@ import { type IconName, setIcon, setText } from "./icons";
 import { renderInlineMarkdown } from "./inlineMarkdown";
 import { DomNodeMeasurer } from "./measure";
 
-const SVG_NS = "http://www.w3.org/2000/svg";
 const FIT_PADDING = 48;
 const SVG_PADDING = 80;
 
@@ -87,7 +86,6 @@ export class MapRenderer {
     dark: boolean,
     options: MapRendererOptions = {},
   ) {
-    const doc = canvas.ownerDocument;
     this.canvas = canvas;
     this.theme = theme;
     this.dark = dark;
@@ -101,12 +99,12 @@ export class MapRenderer {
     this.canvas.tabIndex = 0;
     this.canvas.setAttribute("role", "tree");
 
-    this.world = doc.createElement("div");
+    this.world = createDiv();
     this.world.className = "simple-mind-world";
-    this.svg = doc.createElementNS(SVG_NS, "svg");
+    this.svg = createSvg("svg");
     this.svg.classList.add("simple-mind-edges");
     this.svg.setAttribute("aria-hidden", "true");
-    this.nodesLayer = doc.createElement("div");
+    this.nodesLayer = createDiv();
     this.nodesLayer.className = "simple-mind-nodes";
     this.world.append(this.svg, this.nodesLayer);
     this.canvas.appendChild(this.world);
@@ -494,14 +492,13 @@ export class MapRenderer {
     const existing = this.nodeEls.get(nodeId);
     if (existing) return existing;
 
-    const doc = this.canvas.ownerDocument;
-    const element = doc.createElement("div");
+    const element = createDiv();
     element.className = "simple-mind-node";
     element.dataset.nodeId = nodeId;
     element.setAttribute("role", "treeitem");
     element.setAttribute("aria-selected", "false");
 
-    const label = doc.createElement("div");
+    const label = createDiv();
     label.className = "simple-mind-node-label";
     element.appendChild(label);
 
@@ -653,7 +650,7 @@ export class MapRenderer {
 
     for (const side of sides) {
       if (element.querySelector(`.simple-mind-collapse[data-side="${side}"]`)) continue;
-      const button = this.canvas.ownerDocument.createElement("button");
+      const button = createEl("button");
       button.type = "button";
       button.className = `simple-mind-collapse collapse-${side}`;
       button.dataset.side = side;
@@ -728,7 +725,7 @@ export class MapRenderer {
 
     for (const side of sides) {
       if (element.querySelector(`.simple-mind-add[data-side="${side}"]`)) continue;
-      const button = this.canvas.ownerDocument.createElement("button");
+      const button = createEl("button");
       button.type = "button";
       button.className = [
         "simple-mind-add",
@@ -804,7 +801,7 @@ export class MapRenderer {
     const existing = this.edgeEls.get(childId);
     if (existing) return existing;
 
-    const path = this.canvas.ownerDocument.createElementNS(SVG_NS, "path");
+    const path = createSvg("path");
     path.classList.add("simple-mind-edge");
     path.setAttribute("fill", "none");
     path.setAttribute("stroke-linecap", "round");
