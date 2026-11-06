@@ -4,19 +4,18 @@ A Markdown-outline mind map editor for Obsidian.
 
 [github.com/fickit/simple-mind](https://github.com/fickit/simple-mind)
 
-> Status: 1.0.3. Free and open source. Desktop only; requires Obsidian 1.7.2 or newer.
+> Status: 1.0.3
 
 Simple Mind turns a plain `.mindmap` file into a polished, interactive map — and keeps it a plain
 Markdown outline underneath. No account, no network calls, no lock-in.
 
 ![Simple Mind map view in the Meadow theme](doc/images/map-light.png)
 
-*Screenshot: the map view in the Meadow theme (light).*
+![The same map in dark mode](doc/images/map-dark.png)
 
 ## Why Simple Mind
 
-- **Free, all of it.** Every layout, every theme, every style control. No paid tier, no feature
-  locked behind a subscription.
+- **Free, all of it.** Four layouts, nine themes.
 - **Beautiful by default.** Nine hand-tuned themes, from a warm Natural Organic light mode to a
   moonlit-forest dark mode, and the map follows Obsidian's light/dark switch on its own.
 - **Complete, not a toy.** Four layouts, inline editing, drag to reorganize, collapse, undo/redo,
@@ -36,10 +35,6 @@ Markdown outline underneath. No account, no network calls, no lock-in.
   branch belongs to.
 - Each file remembers its pan, zoom, and selected node.
 
-![The four layouts](doc/images/layouts.png)
-
-*Screenshot: mind map, tree to the right, tree to the left, and organization chart.*
-
 ### Styling without a design degree
 
 - One style panel for the file's theme, layout, and connector shape, plus the selected node's shape,
@@ -49,32 +44,14 @@ Markdown outline underneath. No account, no network calls, no lock-in.
 - A custom theme editor with a live preview, and theme import/export.
 - Font family, connector color, and connector thickness are global defaults in the settings tab.
 
-![The style panel](doc/images/style-panel.png)
-
-*Screenshot: the style panel open beside a selected node.*
-
-### Small touches
-
-- A floating menu over the canvas: fit to window, style panel, and source toggle.
-- The style panel folds with an eased motion and the map frame is rounded against Obsidian's pane.
-- English and Chinese interface.
-
-![The same map in dark mode](doc/images/map-dark.png)
-
-*Screenshot: the same map in the moonlit-forest dark mode.*
-
 ## Usage
 
 1. **Create a map.** Click the ribbon icon or run the **New mind map** command. An existing Markdown
    outline also works — just rename it to `.mindmap`.
-2. **Type directly.** With a node selected, start typing:
-   - **Space** starts appending to the current label.
-   - **Any other character** replaces the label, starting with what you typed.
+2. **Type directly.** With a node selected:
+   - **Space** appends to the current label.
+   - **Any other character** replaces the label with what you typed.
    - **Clear the whole label** and commit to delete the node (the root keeps at least one character).
-
-   ![Typing on a selected node](doc/images/typing.png)
-
-   *Screenshot: editing a node in place while the rest of the map reflows around it.*
 3. **Keys.**
 
    | Key | Action |
