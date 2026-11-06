@@ -4,7 +4,6 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  border-radius: var(--smui-radius-frame);
 }
 
 /* Floating menu pinned to the canvas's top-right corner. */

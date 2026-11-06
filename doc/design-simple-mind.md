@@ -641,9 +641,9 @@ theme, so a file can pick any of the nine themes while the panel keeps one mater
 - The canvas atmosphere is the one signature: a faint speckle in light, and three staggered star fields
   plus a mist band along the bottom in dark. It is static, sits behind the world layer, and does not
   move with pan or zoom.
-- The map frame is rounded: the root clips its children at an 8 px radius, and the view host no longer
-  paints its own background, so the corners show Obsidian's pane instead of a square fill that squares
-  off against it.
+- The map fills the pane edge to edge: the view removes Obsidian's default view padding and overflow,
+  the root is square, and the canvas grain reaches the tab header and the window frame, the way the
+  Markdown view does.
 - Motion stays conservative because these controls are edge affordances: hover changes color only over
   140 ms, there is no translate, scale, or ring, and `prefers-reduced-motion` zeroes every transition
   and delay. The one larger motion is the style panel folding: it is a width, padding, and opacity

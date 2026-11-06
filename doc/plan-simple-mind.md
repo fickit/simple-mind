@@ -393,6 +393,7 @@ node scripts/benchmark.mjs
 - 1.0.2 creates elements through Obsidian's global DOM helpers, with a jsdom shim for the tests.
 - 1.0.3 lets a selected node be edited by typing (Space appends, a character replaces, clearing the
   label deletes the node) and rewrites the README around features and usage.
+- 1.0.4 removes Obsidian's view padding and the rounded frame so the map fills the pane edge to edge.
 - Next: submit the plugin to the Obsidian community list when ready.
 - Test vault: local only and ignored by git; the build writes the plugin into it.
 - Author metadata: `fickit`; repository `https://github.com/fickit/simple-mind`.

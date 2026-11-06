@@ -27,7 +27,6 @@
   --smui-font-sans: var(--font-interface, sans-serif);
   --smui-radius: 4px;
   --smui-radius-card: 5px;
-  --smui-radius-frame: 8px;
   --smui-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%237f9469' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.75 5.75 8 10l4.25-4.25'/%3E%3C/svg%3E");
   --smui-duration: 140ms;
   --smui-duration-panel: 220ms;
@@ -42,6 +41,12 @@
 
 /* The map root paints the surface; leaving the host transparent keeps the
    rounded frame visible against Obsidian's own pane. */
+/* The map fills the pane edge to edge, the way the Markdown view does. */
+.workspace-leaf-content[data-type="simple-mind-map"] .view-content {
+  padding: 0;
+  overflow: hidden;
+}
+
 .simple-mind-view {
   display: flex;
   flex-direction: column;
