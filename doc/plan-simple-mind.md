@@ -393,7 +393,7 @@ node scripts/benchmark.mjs
 - 1.0.2 creates elements through Obsidian's global DOM helpers, with a jsdom shim for the tests.
 - 1.0.3 lets a selected node be edited by typing (Space appends, a character replaces, clearing the
   label deletes the node) and rewrites the README around features and usage.
-- Unreleased: the map fills the pane edge to edge, without Obsidian's view padding, view header, or
+- 1.0.4 makes the map fill the pane edge to edge, without Obsidian's view padding, view header, or
   the rounded frame.
 - Next: submit the plugin to the Obsidian community list when ready.
 - Test vault: local only and ignored by git; the build writes the plugin into it.

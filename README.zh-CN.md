@@ -4,7 +4,7 @@
 
 [github.com/fickit/simple-mind](https://github.com/fickit/simple-mind)
 
-> 状态：1.0.3
+> 状态：1.0.4
 
 Simple Mind 把一个 `.mindmap` 文件变成精致、可交互的导图，底层仍然是一份普通 Markdown 大纲。
 不需要账号、不联网、也没有格式锁定。
