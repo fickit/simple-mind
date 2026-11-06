@@ -24,6 +24,8 @@ export interface InlineEditorOptions {
   placeholder?: string;
   nodeElement?: HTMLElement | null;
   onResize?: (rect: EditorRect) => void;
+  /** Selects the whole label on open; false puts the caret at the end. */
+  selectAll?: boolean;
 }
 
 const MIRROR_STYLE_PROPS = [
@@ -179,7 +181,11 @@ export class InlineEditor {
     this.world.append(input, mirror);
     this.resize();
     input.focus();
-    input.select();
+    if (options.selectAll === false) {
+      input.setSelectionRange(input.value.length, input.value.length);
+    } else {
+      input.select();
+    }
   }
 
   /** Commits the current value and reports the next action. */

@@ -4,105 +4,107 @@ A Markdown-outline mind map editor for Obsidian.
 
 [github.com/fickit/simple-mind](https://github.com/fickit/simple-mind)
 
-> Status: 1.0.2. Desktop only; requires Obsidian 1.7.2 or newer.
+> Status: 1.0.3. Free and open source. Desktop only; requires Obsidian 1.7.2 or newer.
 
-## What it does
+Simple Mind turns a plain `.mindmap` file into a polished, interactive map — and keeps it a plain
+Markdown outline underneath. No account, no network calls, no lock-in.
 
-Simple Mind stores a mind map as a readable `.mindmap` file:
+## Why Simple Mind
+
+- **Free, all of it.** Every layout, every theme, every style control. No paid tier, no feature
+  locked behind a subscription.
+- **Beautiful by default.** Nine hand-tuned themes, from a warm Natural Organic light mode to a
+  moonlit-forest dark mode, and the map follows Obsidian's light/dark switch on its own.
+- **Complete, not a toy.** Four layouts, inline editing, drag to reorganize, collapse, undo/redo,
+  clipboard, per-node styling, a custom theme editor, and per-file view state.
+- **Fast and quiet.** No network requests and no telemetry. Redraws are frame-batched and off-screen
+  nodes are culled, so maps with hundreds of nodes stay responsive.
+- **Your data stays yours.** A `.mindmap` file is Markdown plus a small frontmatter block; it opens
+  in the source editor at any time and syncs like any other note.
+
+## Features
+
+### Maps that fit the way you think
+
+- Four layouts: mind map, tree to the right, tree to the left, and organization chart.
+- Inline editing, drag to reorganize, copy and paste subtrees, undo and redo.
+- Collapse a branch into a count bubble; add buttons follow the layout and remember which side a
+  branch belongs to.
+- Each file remembers its pan, zoom, and selected node.
+
+### Styling without a design degree
+
+- One style panel for the file's theme, layout, and connector shape, plus the selected node's shape,
+  fill, border, and text styling (size, color, bold, italic, underline, alignment, line height).
+- Nine built-in themes: Meadow, Obsidian Native, Paper, Graphite, Nord, Solarized, Forest, Ocean, and
+  Sakura.
+- A custom theme editor with a live preview, and theme import/export.
+- Font family, connector color, and connector thickness are global defaults in the settings tab.
+
+### Small touches
+
+- A floating menu over the canvas: fit to window, style panel, and source toggle.
+- The style panel folds with an eased motion and the map frame is rounded against Obsidian's pane.
+- English and Chinese interface.
+
+## Usage
+
+1. **Create a map.** Click the ribbon icon or run the **New mind map** command. An existing Markdown
+   outline also works — just rename it to `.mindmap`.
+2. **Type directly.** With a node selected, start typing:
+   - **Space** starts appending to the current label.
+   - **Any other character** replaces the label, starting with what you typed.
+   - **Clear the whole label** and commit to delete the node (the root keeps at least one character).
+3. **Keys.**
+
+   | Key | Action |
+   | --- | --- |
+   | `Tab` / `Enter` | Add a child / add a sibling |
+   | `F2` or double-click | Edit the selected node |
+   | `Delete` / `Backspace` | Delete the selected node, except the root |
+   | Arrow keys | Move the selection |
+   | `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z` | Undo / redo |
+   | `Ctrl/Cmd+C`, `X`, `V` | Copy, cut, paste |
+
+4. **Style it.** Open the style panel from the floating menu and pick a theme, layout, and connector
+   shape for the file, or restyle the selected node.
+5. **Edit the source.** The source button switches the same tab to Obsidian's Markdown editor, and
+   back to the map when you are done.
+
+## Installation
+
+Install from **Settings → Community plugins → Browse → Simple Mind** once the plugin is listed.
+
+Manual install: download `main.js`, `manifest.json`, and `styles.css` from the latest release, put
+them in `<vault>/.obsidian/plugins/simple-mind/`, then enable Simple Mind in the community plugins
+settings.
+
+## File format
+
+A map is a Markdown outline with a small frontmatter block; per-node styles live inline, so the file
+stays readable and diffs stay small.
 
 ```markdown
 ---
 mindmap:
-  version: 1
   theme: meadow
   layout: mindmap
-  spacingX: 64
-  spacingY: 18
-  maxWidth: 280
+  connectorStyle: curve
 ---
+
 # Product plan
 - Discovery
-  - User interviews
-  - Competitive scan
-- Delivery
-  - Core editor
-  - Theme system
+  - Interviews
+  - Survey
+- Launch <!-- sm:{"shape":"pill","bold":true} -->
 ```
 
-The file opens as a map. The Source action switches the same tab to Obsidian's native Markdown editor.
+## Compatibility
 
-## Target features
-
-- Four layouts: mind map, tree to the right, tree to the left, and organization chart.
-- Direct editing: add, edit, delete, collapse, drag, copy/paste, undo, and redo.
-- Nine built-in themes with automatic light/dark switching and a custom theme editor.
-- One style panel that edits the file's theme, layout, and connector shape together with the selected
-  node's shape, colors, and text; connector color, thickness, and font family live in settings.
-- Hover controls: connector-colored collapse chevrons, hidden-node count bubbles, and side-aware
-  floating add buttons.
-- English and Chinese UI.
-- Desktop-first performance target of 1,000 nodes per map.
-
-## Install for development
-
-1. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-2. Build once, or start watch mode:
-
-   ```bash
-   npm run build
-   npm run dev
-   ```
-
-3. Open the `test-vault` folder as an Obsidian vault. It is a local, git-ignored vault, so create the
-   folder if it is missing; the build writes the plugin to `test-vault/.obsidian/plugins/simple-mind`.
-
-4. Reload Obsidian after rebuilding. Obsidian does not hot-reload community plugins by default.
-
-## Source rules
-
-- Exactly one H1 root.
-- One nested unordered list under the root.
-- Node labels are single-line basic inline Markdown.
-- Per-node styles live in a trailing `<!-- sm:{...} -->` comment on the node's line.
-- Invalid source shows a line-numbered error and locks map editing to prevent data loss.
-- Blank lines and list-marker style are normalized when the map writes the file.
-
-## Development commands
-
-```bash
-npm run dev        # watch TypeScript and CSS; sync the test vault
-npm run build      # production bundle
-npm run typecheck  # TypeScript check
-npm run lint       # Biome check
-npm run test       # unit tests
-node scripts/benchmark.mjs  # synthetic performance report
-```
-
-## Architecture
-
-- `src/pages`: Obsidian view lifecycle.
-- `src/components`: map canvas, settings, source switching, and the map engine.
-- `src/types`: shared TypeScript types.
-- `src/styles`: CSS source, bundled to `styles.css`.
-- `src/api`: Obsidian adapters.
-- `src/config`: constants, defaults, and i18n.
-
-The map uses HTML nodes and SVG connectors. Layout, rendering, and editing are implemented locally
-without a mind-map runtime dependency.
-
-## Documentation
-
-- `doc/prd.md`
-- `doc/design-simple-mind.md`
-- `doc/plan-simple-mind.md`
-- `doc/benchmark-simple-mind.md`
-- `CHANGELOG.md`
+- Obsidian 1.7.2 or newer, desktop only.
+- Light and dark follow Obsidian; every setting is stored in the vault's plugin data, never sent
+  anywhere.
 
 ## License
 
-MIT. Copyright (c) 2026 fickit.
+MIT.

@@ -954,6 +954,52 @@ describe("MapCanvas", () => {
     host.remove();
   });
 
+  it("starts appending on Space and replacing on a typed character", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    const canvasEl = host.querySelector(".simple-mind-canvas");
+    selectNode(host, "n2");
+
+    pressKey(canvasEl, " ");
+    let input = host.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor")!;
+    expect(input.value).toBe("A");
+    expect(input.selectionStart).toBe(1);
+    expect(input.selectionEnd).toBe(1);
+    pressKey(input, "Escape");
+
+    selectNode(host, "n2");
+    pressKey(canvasEl, "Z");
+    input = host.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor")!;
+    expect(input.value).toBe("Z");
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("deletes a node when its label is cleared, but keeps the root", () => {
+    const { host, canvas, onChange, onNotice } = createCanvas("# Root\n- A\n");
+    const canvasEl = host.querySelector(".simple-mind-canvas");
+
+    selectNode(host, "n2");
+    pressKey(canvasEl, "F2");
+    const input = host.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor")!;
+    input.value = "";
+    pressKey(input, "Enter");
+    expect(onChange).toHaveBeenCalledOnce();
+    expect(canvas.getSource()).not.toContain("- A");
+    expect(host.querySelectorAll(".simple-mind-node")).toHaveLength(1);
+
+    selectNode(host, "n1");
+    pressKey(canvasEl, "F2");
+    const rootInput = host.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor")!;
+    rootInput.value = "";
+    pressKey(rootInput, "Enter");
+    expect(onNotice).toHaveBeenCalledWith("A node label cannot be empty.");
+    expect(canvas.getSource()).toContain("# Root");
+
+    canvas.destroy();
+    host.remove();
+  });
+
   it("disables editing when source errors exist", () => {
     const { host, canvas, onChange, onNotice } = createCanvas("# Root\nhello\n");
     selectNode(host, "n1");

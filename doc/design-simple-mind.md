@@ -407,7 +407,9 @@ While the canvas has focus:
 - Shift+Tab: move selection to the parent.
 - Enter: add a sibling after the selected node and start editing.
 - Delete/Backspace: delete the selected node, except the root.
-- F2 or double-click: edit the selected node.
+- F2 or double-click: edit the selected node with the whole label selected.
+- Space: edit the selected node with the caret at the end, so typing appends.
+- Any other single character: edit with that character replacing the label.
 - Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z: undo/redo map commands.
 - Ctrl/Cmd+C/X/V: copy, cut, paste a subtree.
 - Escape: clear selection.
@@ -420,8 +422,8 @@ While the inline editor is focused:
 - Escape: cancel the edit.
 - Blur: commit without starting another node.
 
-Collapse and expand are available from the node badge. The keyboard collapse shortcut is deferred, and
-Space is reserved for text input.
+Collapse and expand are available from the node badge. The keyboard collapse shortcut is deferred.
+Committing an empty label deletes the node; the root keeps its text and shows a notice instead.
 
 ### 8.2 Inline editor
 

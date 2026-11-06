@@ -962,9 +962,16 @@ export class MapCanvas {
       this.onNotice(t("notice.rootDelete"));
       return;
     }
+    this.deleteNodeById(this.selectedId);
+  }
 
-    const parentId = this.controller.findParent(this.selectedId)?.parent.id ?? null;
-    this.controller.deleteNode(this.selectedId);
+  /** Deletes one node and selects its parent. */
+  private deleteNodeById(nodeId: string): void {
+    const controller = this.controller;
+    if (!controller) return;
+    const parentId = controller.findParent(nodeId)?.parent.id ?? null;
+    controller.deleteNode(nodeId);
+    this.renderer.setEditingNode(null);
     this.rerender(false);
     this.renderer.selectNode(parentId);
     this.renderer.focus();
@@ -1188,8 +1195,24 @@ export class MapCanvas {
     this.openEditor(nodeId, node.text, false);
   }
 
+  /**
+   * Starts editing the selected node from a typed key.
+   *
+   * Space keeps the label and puts the caret at the end; any other key
+   * replaces the label with that character.
+   *
+   * @param seed Typed character, or null for Space (append mode).
+   */
+  private startTyping(seed: string | null): void {
+    const nodeId = this.selectedId;
+    if (!nodeId || this.readOnly || !this.controller) return;
+    const node = this.controller.findNode(nodeId);
+    if (!node) return;
+    this.openEditor(nodeId, seed ?? node.text, false, false);
+  }
+
   /** Positions the input over a node and wires commit/cancel. */
-  private openEditor(nodeId: string, text: string, isNew: boolean): void {
+  private openEditor(nodeId: string, text: string, isNew: boolean, selectAll = true): void {
     this.drag.cancel();
     this.renderer.selectNode(nodeId);
     this.renderer.setEditingNode(nodeId);
@@ -1212,6 +1235,7 @@ export class MapCanvas {
         initialWidth: isNew ? NEW_NODE_EDITOR_WIDTH : undefined,
         nodeElement: this.renderer.getNodeElement(nodeId),
         onResize: (rect) => this.scheduleEditorLayout(nodeId, rect),
+        selectAll,
       },
     );
     this.updateToolbar();
@@ -1288,11 +1312,15 @@ export class MapCanvas {
     }
 
     if (value.trim() === "") {
-      this.onNotice(t("notice.emptyLabel"));
-      this.renderer.setEditingNode(null);
-      this.rerender(false);
-      this.renderer.selectNode(nodeId);
-      this.renderer.focus();
+      if (controller.isRoot(nodeId)) {
+        this.onNotice(t("notice.emptyLabel"));
+        this.renderer.setEditingNode(null);
+        this.rerender(false);
+        this.renderer.selectNode(nodeId);
+        this.renderer.focus();
+        return;
+      }
+      this.deleteNodeById(nodeId);
       return;
     }
 
@@ -1486,6 +1514,11 @@ export class MapCanvas {
     ) {
       event.preventDefault();
       this.moveSelection(event.key);
+      return;
+    }
+    if (this.selectedId !== null && event.key.length === 1 && !event.altKey) {
+      event.preventDefault();
+      this.startTyping(event.key === " " ? null : event.key);
     }
   }
 

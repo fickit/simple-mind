@@ -94,11 +94,13 @@ mindmap:
 - Copy, cut, and paste a node subtree.
 - Keyboard navigation and shortcuts: Tab, Enter, Shift+Tab, Delete, F2, arrow keys,
   Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, Ctrl/Cmd+C/X/V.
+- Typing on a selected node edits it: Space appends with the caret at the end, and any other single
+  character replaces the label with what was typed.
 - Enter commits an inline edit and starts a sibling; Tab commits and starts a child;
   Shift+Enter and Shift+Tab commit without starting another node.
-- Collapse and expand are available from the node badge. A keyboard collapse shortcut is deferred, and
-  Space is reserved for text input.
-- The root node cannot be deleted.
+- Collapse and expand are available from the node badge. A keyboard collapse shortcut is deferred.
+- The root node cannot be deleted. Committing an empty label deletes the node; the root keeps its
+  text and shows a notice instead.
 - Empty new nodes are discarded if editing is cancelled.
 
 ### 5.4 Layout

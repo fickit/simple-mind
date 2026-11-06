@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.3 — 2026-11-03
+
+- Typing on a selected node edits it: Space appends to the label, any other character replaces it,
+  and clearing the label deletes the node.
+- The README now focuses on features and usage instead of the development setup.
+
 ## 1.0.2 — 2026-11-03
 
 Review helper clean-up.
