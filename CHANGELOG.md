@@ -1,9 +1,9 @@
 # Changelog
 
-## 1.0.4 — 2026-11-06
+## Unreleased
 
-- The map fills the view edge to edge: Obsidian's default view padding is removed and the rounded
-  frame is gone, so the canvas meets the tab header and window frame without a margin.
+- The map fills the view edge to edge: Obsidian's view padding and view header are hidden and the
+  rounded frame is gone, so the canvas meets the window frame on every side.
 
 ## 1.0.3 — 2026-11-03
 

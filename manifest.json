@@ -1,7 +1,7 @@
 {
   "id": "simple-mind",
   "name": "Simple Mind",
-  "version": "1.0.4",
+  "version": "1.0.3",
   "minAppVersion": "1.7.2",
   "description": "Edit Markdown-outline mind maps with themes and a source view.",
   "author": "fickit",

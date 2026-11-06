@@ -39,10 +39,14 @@
   --smui-grain-repeat: repeat, repeat;
 }
 
-/* The map root paints the surface; leaving the host transparent keeps the
-   rounded frame visible against Obsidian's own pane. */
-/* The map fills the pane edge to edge, the way the Markdown view does. */
+/* The map fills the pane edge to edge, the way the Markdown view does. The
+   view header would otherwise keep a band of chrome above the canvas. */
+.workspace-leaf-content[data-type="simple-mind-map"] .view-header {
+  display: none;
+}
+
 .workspace-leaf-content[data-type="simple-mind-map"] .view-content {
+  height: 100%;
   padding: 0;
   overflow: hidden;
 }

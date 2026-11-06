@@ -1,6 +1,6 @@
 {
   "name": "simple-mind",
-  "version": "1.0.4",
+  "version": "1.0.3",
   "description": "A Markdown-outline mind map editor for Obsidian.",
   "main": "main.js",
   "scripts": {
