@@ -1,4 +1,4 @@
-import { Notice, Scope, TextFileView, type WorkspaceLeaf } from "obsidian";
+import { Notice, Platform, Scope, TextFileView, type WorkspaceLeaf } from "obsidian";
 import { createInlineResourceHost } from "../api/obsidian/inlineResources";
 import { MapCanvas } from "../components/map/MapCanvas";
 import { switchToSource } from "../components/source/SourceSwitch";
@@ -98,6 +98,7 @@ export class MindMapView extends TextFileView {
       onOpenSettings: this.onOpenSettings,
       settings: this.getSettings(),
       inlineResources: createInlineResourceHost(this.app, () => this.file?.path ?? ""),
+      isMac: Platform.isMacOS,
     });
     if (this.data) {
       this.canvas.setSource(this.data);

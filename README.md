@@ -4,7 +4,7 @@ A Markdown-outline mind map editor for Obsidian.
 
 [github.com/fickit/simple-mind](https://github.com/fickit/simple-mind)
 
-> Status: 1.1.1
+> Status: 1.1.2
 
 Simple Mind turns a plain `.mindmap` file into a polished, interactive map — and keeps it a plain
 Markdown outline underneath. No account, no lock-in.
@@ -132,7 +132,7 @@ mindmap:
 
 ## Compatibility
 
-- Obsidian 1.7.2 or newer, desktop only.
+- Obsidian 1.13.0 or newer, desktop only.
 - Light and dark follow Obsidian; every setting is stored in the vault's plugin data, never sent
   anywhere. The plugin makes no network requests. Note links and vault images stay local; external
   images you embed are loaded by Obsidian's image renderer.

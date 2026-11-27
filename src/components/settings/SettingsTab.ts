@@ -6,6 +6,7 @@ import {
   PluginSettingTab,
   Setting,
   type SettingDefinitionItem,
+  type SettingDefinitionRender,
 } from "obsidian";
 import { LIMITS } from "../../config/constants";
 import { DEFAULT_SETTINGS } from "../../config/defaults";
@@ -37,252 +38,273 @@ export class SettingsTab extends PluginSettingTab {
     this.host = host;
   }
 
-  /** Fallback for Obsidian versions before declarative settings. */
-  display(): void {
-    const { containerEl } = this;
-    containerEl.empty();
-    this.renderInto(containerEl);
-  }
-
-  /** Declarative entry so the tab is indexed by settings search. */
+  /** Declarative settings rendered by Obsidian 1.13 and newer. */
   getSettingDefinitions(): SettingDefinitionItem[] {
+    const settings = this.host.settings;
     return [
       {
-        name: t("settings.title"),
-        render: (setting) => {
-          setting.settingEl.empty();
-          setting.settingEl.addClass("simple-mind-settings-host");
-          this.renderInto(setting.settingEl);
-        },
+        type: "group",
+        heading: t("settings.general"),
+        items: [
+          {
+            name: t("settings.language"),
+            desc: t("settings.languageDesc"),
+            render: (setting) => {
+              setting.addDropdown((dropdown) =>
+                dropdown
+                  .addOption("en", t("settings.english"))
+                  .addOption("zh", t("settings.chinese"))
+                  .setValue(settings.language)
+                  .onChange((value) => {
+                    settings.language = value as Language;
+                    setLanguage(settings.language);
+                    void this.host.saveSettings().then(() => {
+                      this.host.refreshLanguage();
+                      this.update();
+                    });
+                  }),
+              );
+            },
+          },
+          {
+            name: t("settings.defaultTheme"),
+            desc: t("settings.defaultThemeDesc"),
+            render: (setting) => {
+              setting.addDropdown((dropdown) => {
+                for (const theme of this.allThemes()) {
+                  dropdown.addOption(theme.id, theme.name);
+                }
+                const exists = this.allThemes().some((theme) => theme.id === settings.defaultTheme);
+                if (!exists) settings.defaultTheme = "obsidian";
+                dropdown.setValue(settings.defaultTheme).onChange((value) => {
+                  settings.defaultTheme = value;
+                  void this.persist();
+                });
+              });
+            },
+          },
+          {
+            name: t("settings.defaultFont"),
+            desc: t("settings.defaultFontDesc"),
+            render: (setting) => {
+              setting.addText((text) => {
+                text.setPlaceholder(t("sidebar.defaultValue"));
+                text.setValue(settings.defaultFontFamily);
+                text.onChange((value) => {
+                  settings.defaultFontFamily = value.trim();
+                  this.schedulePersist();
+                });
+              });
+            },
+          },
+          {
+            name: t("settings.connectorColor"),
+            desc: t("settings.connectorColorDesc"),
+            render: (setting) => {
+              setting
+                .addColorPicker((picker) => {
+                  picker.setValue(
+                    settings.defaultConnectorColor || toHexColor("var(--interactive-accent)"),
+                  );
+                  picker.onChange((value) => {
+                    settings.defaultConnectorColor = value;
+                    this.schedulePersist();
+                  });
+                })
+                .addExtraButton((button) => {
+                  button.setIcon("rotate-ccw");
+                  button.setTooltip(t("settings.useThemeColors"));
+                  button.onClick(async () => {
+                    settings.defaultConnectorColor = "";
+                    await this.persist();
+                    this.update();
+                  });
+                });
+            },
+          },
+          {
+            name: t("settings.lineWidth"),
+            desc: t("settings.lineWidthDesc"),
+            render: (setting) => {
+              setting.addSlider((slider) =>
+                slider
+                  .setLimits(LIMITS.lineWidth.min, LIMITS.lineWidth.max, 1)
+                  .setValue(settings.defaultLineWidth)
+                  .onChange((value) => {
+                    settings.defaultLineWidth = value;
+                    this.schedulePersist();
+                  }),
+              );
+            },
+          },
+          {
+            name: t("settings.defaultLayout"),
+            desc: t("settings.defaultLayoutDesc"),
+            render: (setting) => {
+              setting.addDropdown((dropdown) =>
+                dropdown
+                  .addOption("mindmap", t("settings.layout.mindmap"))
+                  .addOption("tree-right", t("settings.layout.treeRight"))
+                  .addOption("tree-left", t("settings.layout.treeLeft"))
+                  .addOption("org", t("settings.layout.org"))
+                  .setValue(settings.defaultLayout)
+                  .onChange((value) => {
+                    settings.defaultLayout = value as LayoutKind;
+                    void this.persist();
+                  }),
+              );
+            },
+          },
+          {
+            name: t("settings.spacingX"),
+            render: (setting) => {
+              setting.addSlider((slider) =>
+                slider
+                  .setLimits(LIMITS.spacingX.min, LIMITS.spacingX.max, 1)
+                  .setValue(settings.defaultSpacingX)
+                  .onChange((value) => {
+                    settings.defaultSpacingX = value;
+                    this.schedulePersist();
+                  }),
+              );
+            },
+          },
+          {
+            name: t("settings.spacingY"),
+            render: (setting) => {
+              setting.addSlider((slider) =>
+                slider
+                  .setLimits(LIMITS.spacingY.min, LIMITS.spacingY.max, 1)
+                  .setValue(settings.defaultSpacingY)
+                  .onChange((value) => {
+                    settings.defaultSpacingY = value;
+                    this.schedulePersist();
+                  }),
+              );
+            },
+          },
+          {
+            name: t("settings.maxWidth"),
+            desc: t("settings.maxWidthDesc"),
+            render: (setting) => {
+              setting.addText((text) => {
+                text.inputEl.type = "number";
+                text.setValue(String(settings.defaultMaxWidth));
+                text.onChange((value) => {
+                  const parsed = Number(value);
+                  if (!Number.isFinite(parsed)) return;
+                  settings.defaultMaxWidth = Math.min(
+                    LIMITS.maxWidth.max,
+                    Math.max(LIMITS.maxWidth.min, parsed),
+                  );
+                  this.schedulePersist();
+                });
+              });
+            },
+          },
+          {
+            name: t("settings.reset"),
+            desc: t("settings.resetDesc"),
+            render: (setting) => {
+              setting.addButton((button) =>
+                button.setButtonText(t("settings.resetButton")).onClick(async () => {
+                  settings.defaultTheme = DEFAULT_SETTINGS.defaultTheme;
+                  settings.defaultFontFamily = DEFAULT_SETTINGS.defaultFontFamily;
+                  settings.defaultConnectorColor = DEFAULT_SETTINGS.defaultConnectorColor;
+                  settings.defaultLineWidth = DEFAULT_SETTINGS.defaultLineWidth;
+                  settings.defaultLayout = DEFAULT_SETTINGS.defaultLayout;
+                  settings.defaultSpacingX = DEFAULT_SETTINGS.defaultSpacingX;
+                  settings.defaultSpacingY = DEFAULT_SETTINGS.defaultSpacingY;
+                  settings.defaultMaxWidth = DEFAULT_SETTINGS.defaultMaxWidth;
+                  await this.persist();
+                  this.update();
+                }),
+              );
+            },
+          },
+        ],
+      },
+      {
+        type: "group",
+        heading: t("settings.themes"),
+        items: [
+          {
+            name: t("settings.themesDesc"),
+            render: (setting) => {
+              setting.settingEl.empty();
+              setting.settingEl.createEl("p", {
+                cls: "setting-item-description",
+                text: t("settings.themesDesc"),
+              });
+            },
+          },
+          ...BUILT_IN_THEMES.map(
+            (theme): SettingDefinitionRender => ({
+              name: theme.name,
+              desc: t("settings.builtIn"),
+              render: (setting) => {
+                setting.addButton((button) =>
+                  button
+                    .setButtonText(t("settings.duplicate"))
+                    .onClick(() => this.openNewTheme(theme)),
+                );
+                setting.addButton((button) =>
+                  button.setButtonText(t("settings.export")).onClick(() => {
+                    void this.exportTheme(theme);
+                  }),
+                );
+              },
+            }),
+          ),
+          ...settings.customThemes.map(
+            (theme): SettingDefinitionRender => ({
+              name: theme.name,
+              desc: t("settings.custom"),
+              render: (setting) => {
+                setting.addButton((button) =>
+                  button.setButtonText(t("settings.edit")).onClick(() => this.editTheme(theme)),
+                );
+                setting.addButton((button) =>
+                  button
+                    .setButtonText(t("settings.duplicate"))
+                    .onClick(() => this.duplicateTheme(theme)),
+                );
+                setting.addButton((button) =>
+                  button.setButtonText(t("settings.export")).onClick(() => {
+                    void this.exportTheme(theme);
+                  }),
+                );
+                setting.addButton((button) => {
+                  button.buttonEl.addClass("mod-warning");
+                  button
+                    .setButtonText(t("settings.delete"))
+                    .onClick(() => this.confirmDeleteTheme(theme));
+                });
+              },
+            }),
+          ),
+          {
+            name: t("settings.newTheme"),
+            render: (setting) => {
+              setting.addButton((button) =>
+                button
+                  .setButtonText(t("settings.newTheme"))
+                  .setCta()
+                  .onClick(() => this.openNewTheme(null)),
+              );
+            },
+          },
+          {
+            name: t("settings.importTheme"),
+            render: (setting) => {
+              setting.addButton((button) =>
+                button.setButtonText(t("settings.importTheme")).onClick(() => this.importTheme()),
+              );
+            },
+          },
+        ],
       },
     ];
-  }
-
-  /** Renders the whole settings body into one container. */
-  private renderInto(containerEl: HTMLElement): void {
-    containerEl.addClass("simple-mind-settings");
-    new Setting(containerEl).setName(t("settings.title")).setHeading();
-    this.renderGeneral(containerEl);
-    this.renderThemes(containerEl);
-  }
-
-  /** Refreshes the active settings surface. */
-  private refresh(): void {
-    if (typeof this.update === "function") this.update();
-    else this.display();
-  }
-
-  /** Renders general defaults. */
-  private renderGeneral(containerEl: HTMLElement): void {
-    const settings = this.host.settings;
-    new Setting(containerEl).setName(t("settings.general")).setHeading();
-
-    new Setting(containerEl)
-      .setName(t("settings.language"))
-      .setDesc(t("settings.languageDesc"))
-      .addDropdown((dropdown) =>
-        dropdown
-          .addOption("en", t("settings.english"))
-          .addOption("zh", t("settings.chinese"))
-          .setValue(settings.language)
-          .onChange((value) => {
-            settings.language = value as Language;
-            setLanguage(settings.language);
-            void this.host.saveSettings().then(() => {
-              this.host.refreshLanguage();
-              this.refresh();
-            });
-          }),
-      );
-
-    new Setting(containerEl)
-      .setName(t("settings.defaultTheme"))
-      .setDesc(t("settings.defaultThemeDesc"))
-      .addDropdown((dropdown) => {
-        for (const theme of this.allThemes()) {
-          dropdown.addOption(theme.id, theme.name);
-        }
-        const exists = this.allThemes().some((theme) => theme.id === settings.defaultTheme);
-        if (!exists) settings.defaultTheme = "obsidian";
-        dropdown.setValue(settings.defaultTheme).onChange((value) => {
-          settings.defaultTheme = value;
-          void this.persist();
-        });
-      });
-
-    new Setting(containerEl)
-      .setName(t("settings.defaultFont"))
-      .setDesc(t("settings.defaultFontDesc"))
-      .addText((text) => {
-        text.setPlaceholder(t("sidebar.defaultValue"));
-        text.setValue(settings.defaultFontFamily);
-        text.onChange((value) => {
-          settings.defaultFontFamily = value.trim();
-          this.schedulePersist();
-        });
-      });
-
-    new Setting(containerEl)
-      .setName(t("settings.connectorColor"))
-      .setDesc(t("settings.connectorColorDesc"))
-      .addColorPicker((picker) => {
-        picker.setValue(settings.defaultConnectorColor || toHexColor("var(--interactive-accent)"));
-        picker.onChange((value) => {
-          settings.defaultConnectorColor = value;
-          this.schedulePersist();
-        });
-      })
-      .addExtraButton((button) => {
-        button.setIcon("rotate-ccw");
-        button.setTooltip(t("settings.useThemeColors"));
-        button.onClick(async () => {
-          settings.defaultConnectorColor = "";
-          await this.persist();
-          this.refresh();
-        });
-      });
-
-    new Setting(containerEl)
-      .setName(t("settings.lineWidth"))
-      .setDesc(t("settings.lineWidthDesc"))
-      .addSlider((slider) =>
-        slider
-          .setLimits(LIMITS.lineWidth.min, LIMITS.lineWidth.max, 1)
-          .setValue(settings.defaultLineWidth)
-
-          .onChange((value) => {
-            settings.defaultLineWidth = value;
-            this.schedulePersist();
-          }),
-      );
-
-    new Setting(containerEl)
-      .setName(t("settings.defaultLayout"))
-      .setDesc(t("settings.defaultLayoutDesc"))
-      .addDropdown((dropdown) =>
-        dropdown
-          .addOption("mindmap", t("settings.layout.mindmap"))
-          .addOption("tree-right", t("settings.layout.treeRight"))
-          .addOption("tree-left", t("settings.layout.treeLeft"))
-          .addOption("org", t("settings.layout.org"))
-          .setValue(settings.defaultLayout)
-          .onChange((value) => {
-            settings.defaultLayout = value as LayoutKind;
-            void this.persist();
-          }),
-      );
-
-    new Setting(containerEl).setName(t("settings.spacingX")).addSlider((slider) =>
-      slider
-        .setLimits(LIMITS.spacingX.min, LIMITS.spacingX.max, 1)
-        .setValue(settings.defaultSpacingX)
-
-        .onChange((value) => {
-          settings.defaultSpacingX = value;
-          this.schedulePersist();
-        }),
-    );
-
-    new Setting(containerEl).setName(t("settings.spacingY")).addSlider((slider) =>
-      slider
-        .setLimits(LIMITS.spacingY.min, LIMITS.spacingY.max, 1)
-        .setValue(settings.defaultSpacingY)
-
-        .onChange((value) => {
-          settings.defaultSpacingY = value;
-          this.schedulePersist();
-        }),
-    );
-
-    new Setting(containerEl)
-      .setName(t("settings.maxWidth"))
-      .setDesc(t("settings.maxWidthDesc"))
-      .addText((text) => {
-        text.inputEl.type = "number";
-        text.setValue(String(settings.defaultMaxWidth));
-        text.onChange((value) => {
-          const parsed = Number(value);
-          if (!Number.isFinite(parsed)) return;
-          settings.defaultMaxWidth = Math.min(
-            LIMITS.maxWidth.max,
-            Math.max(LIMITS.maxWidth.min, parsed),
-          );
-          this.schedulePersist();
-        });
-      });
-
-    new Setting(containerEl)
-      .setName(t("settings.reset"))
-      .setDesc(t("settings.resetDesc"))
-      .addButton((button) =>
-        button.setButtonText(t("settings.resetButton")).onClick(async () => {
-          this.host.settings.defaultTheme = DEFAULT_SETTINGS.defaultTheme;
-          this.host.settings.defaultFontFamily = DEFAULT_SETTINGS.defaultFontFamily;
-          this.host.settings.defaultConnectorColor = DEFAULT_SETTINGS.defaultConnectorColor;
-          this.host.settings.defaultLineWidth = DEFAULT_SETTINGS.defaultLineWidth;
-          this.host.settings.defaultLayout = DEFAULT_SETTINGS.defaultLayout;
-          this.host.settings.defaultSpacingX = DEFAULT_SETTINGS.defaultSpacingX;
-          this.host.settings.defaultSpacingY = DEFAULT_SETTINGS.defaultSpacingY;
-          this.host.settings.defaultMaxWidth = DEFAULT_SETTINGS.defaultMaxWidth;
-          await this.persist();
-          this.refresh();
-        }),
-      );
-  }
-
-  /** Renders built-in and custom theme management. */
-  private renderThemes(containerEl: HTMLElement): void {
-    new Setting(containerEl).setName(t("settings.themes")).setHeading();
-    containerEl.createEl("p", {
-      cls: "setting-item-description",
-      text: t("settings.themesDesc"),
-    });
-
-    for (const theme of BUILT_IN_THEMES) {
-      new Setting(containerEl)
-        .setName(theme.name)
-        .setDesc(t("settings.builtIn"))
-        .addButton((button) =>
-          button.setButtonText(t("settings.duplicate")).onClick(() => this.openNewTheme(theme)),
-        )
-        .addButton((button) =>
-          button.setButtonText(t("settings.export")).onClick(() => {
-            void this.exportTheme(theme);
-          }),
-        );
-    }
-
-    for (const theme of this.host.settings.customThemes) {
-      new Setting(containerEl)
-        .setName(theme.name)
-        .setDesc(t("settings.custom"))
-        .addButton((button) =>
-          button.setButtonText(t("settings.edit")).onClick(() => this.editTheme(theme)),
-        )
-        .addButton((button) =>
-          button.setButtonText(t("settings.duplicate")).onClick(() => this.duplicateTheme(theme)),
-        )
-        .addButton((button) =>
-          button.setButtonText(t("settings.export")).onClick(() => {
-            void this.exportTheme(theme);
-          }),
-        )
-        .addButton((button) => {
-          button.buttonEl.addClass("mod-warning");
-          button.setButtonText(t("settings.delete")).onClick(() => this.confirmDeleteTheme(theme));
-        });
-    }
-
-    new Setting(containerEl)
-      .addButton((button) =>
-        button
-          .setButtonText(t("settings.newTheme"))
-          .setCta()
-          .onClick(() => this.openNewTheme(null)),
-      )
-      .addButton((button) =>
-        button.setButtonText(t("settings.importTheme")).onClick(() => this.importTheme()),
-      );
   }
 
   /** Returns all built-in and custom themes. */
@@ -319,7 +341,7 @@ export class SettingsTab extends PluginSettingTab {
         this.host.settings.customThemes.push(saved);
         await this.persist();
         new Notice(t("settings.themeSaved"));
-        this.refresh();
+        this.update();
       },
     }).open();
   }
@@ -337,7 +359,7 @@ export class SettingsTab extends PluginSettingTab {
         else themes.push(saved);
         await this.persist();
         new Notice(t("settings.themeSaved"));
-        this.refresh();
+        this.update();
       },
     }).open();
   }
@@ -362,7 +384,7 @@ export class SettingsTab extends PluginSettingTab {
         }
         await this.persist();
         new Notice(t("settings.themeDeleted"));
-        this.refresh();
+        this.update();
       },
     ).open();
   }
@@ -413,7 +435,7 @@ export class SettingsTab extends PluginSettingTab {
     this.host.settings.customThemes.push(imported);
     await this.persist();
     new Notice(t("settings.themeSaved"));
-    this.refresh();
+    this.update();
   }
 }
 

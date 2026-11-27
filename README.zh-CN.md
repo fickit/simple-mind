@@ -4,7 +4,7 @@
 
 [github.com/fickit/simple-mind](https://github.com/fickit/simple-mind)
 
-> 状态：1.1.1
+> 状态：1.1.2
 
 Simple Mind 把一个 `.mindmap` 文件变成精致、可交互的导图，底层仍然是一份普通 Markdown 大纲。
 不需要账号，也没有格式锁定。
@@ -124,7 +124,7 @@ mindmap:
 
 ## 兼容性
 
-- Obsidian 1.7.2 或更新版本，仅桌面端。
+- Obsidian 1.13.0 或更新版本，仅桌面端。
 - 明暗跟随 Obsidian；所有设置只存在库的插件数据里，不会发往任何地方。插件自身不发网络请求，
   笔记链接和库内图片都留在本地；你主动嵌入的外链图片由 Obsidian 的图片渲染器加载。
 

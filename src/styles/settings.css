@@ -1,9 +1,3 @@
-.simple-mind-settings-host {
-  display: block;
-  padding: 0;
-  border: 0;
-}
-
 .simple-mind-theme-editor h2,
 .simple-mind-theme-editor h3 {
   color: var(--smui-ink);

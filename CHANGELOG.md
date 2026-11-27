@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.2 — 2026-11-28
+
+- Read the platform modifier from Obsidian's Platform API instead of the browser navigator.
+- Move the settings tab fully to declarative definitions, which removes the deprecated display renderer and the unsupported-API error. This raises the minimum Obsidian version to 1.13.0.
+
 ## 1.1.1 — 2026-11-28
 
 - Move the drag ghost and editor chrome to CSS classes and Obsidian CSS helpers, clearing the community review error.

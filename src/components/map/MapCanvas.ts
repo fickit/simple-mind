@@ -46,6 +46,8 @@ export interface MapCanvasOptions {
   settings?: SimpleMindSettings;
   /** Resolves note links and vault images inside node labels. */
   inlineResources?: InlineResourceHost;
+  /** Whether the host runs on macOS, for shortcut tooltips. */
+  isMac?: boolean;
 }
 
 type ArrowKey = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight";
@@ -96,6 +98,7 @@ export class MapCanvas {
   private readonly onNotice: (message: string) => void;
   private readonly onOpenSettings?: () => void;
   private readonly inlineResources?: InlineResourceHost;
+  private readonly isMac: boolean;
   private lightbox: HTMLElement | null = null;
   private readonly fitButton: HTMLButtonElement;
   private readonly sourceButton: HTMLButtonElement;
@@ -154,6 +157,7 @@ export class MapCanvas {
     this.onNotice = options.onNotice ?? (() => {});
     this.onOpenSettings = options.onOpenSettings;
     this.inlineResources = options.inlineResources;
+    this.isMac = options.isMac ?? false;
     this.settings = options.settings ?? DEFAULT_SETTINGS;
     this.dark = isDarkDocument(doc);
 
@@ -329,7 +333,7 @@ export class MapCanvas {
 
   /** Appends the platform modifier to an icon tooltip. */
   private shortcutLabel(label: string, keys: string): string {
-    const mod = /Mac/i.test(navigator.userAgent) ? "Cmd" : "Ctrl";
+    const mod = this.isMac ? "Cmd" : "Ctrl";
     return `${label} (${mod}+${keys})`;
   }
 
