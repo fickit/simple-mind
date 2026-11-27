@@ -50,4 +50,15 @@ describe("connectorPath", () => {
     );
     expect(connectorPath(parent, child, "down", "curve")).toBe("M 50 40 C 50 70 110 70 110 100");
   });
+  it("meets underline nodes on their bottom line", () => {
+    const parent = node("p", 0, 0, 100, 40);
+    const child = node("c", 160, 80, 100, 40);
+
+    expect(
+      connectorPath(parent, child, "right", "curve", {
+        parentUnderline: true,
+        childUnderline: true,
+      }),
+    ).toBe("M 100 40 C 130 40 130 120 160 120");
+  });
 });

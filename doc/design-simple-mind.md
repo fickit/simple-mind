@@ -394,12 +394,12 @@ resolved against the layout, so a culled node keeps its id, its state, and its p
 
 When anything is selected, one node is the primary selection and the selection may also contain more
 nodes. Selection is a class plus `aria-selected` on every selected node. The primary drives the style
-panel and single-node commands. Dragging empty canvas pans the map; holding the press starts a
-marquee that replaces the selection with every intersecting visible node, and holding
-Ctrl/Cmd/Shift starts an additive marquee immediately. Ctrl/Cmd+A selects every visible node, and
-dragging the root pans the whole map. Delete, copy, and cut operate on the top-level selected
-subtrees in one history entry. The canvas keeps keyboard focus for navigation. Node content can
-contain links; clicking one opens the note in a new tab instead of selecting the node.
+panel and single-node commands. Dragging empty canvas draws an invisible marquee, highlights every
+intersecting visible node live, and replaces the selection on release; holding Ctrl/Cmd/Shift adds to
+the existing selection. Ctrl/Cmd+A selects every visible node, and dragging the root pans the whole
+map. Delete, copy, and cut operate on the top-level selected subtrees in one history entry. The canvas
+keeps keyboard focus for navigation. Node content can contain links; clicking one opens the note in a
+new tab instead of selecting the node.
 
 ## 8. Interaction and editing
 
@@ -408,8 +408,7 @@ contain links; clicking one opens the note in a new tab instead of selecting the
 While the canvas has focus:
 
 - Arrow keys: move selection spatially.
-- Drag on empty canvas: pan the map.
-- Press and hold, then drag: marquee-select visible nodes; Ctrl/Cmd/Shift starts a marquee immediately.
+- Drag on empty canvas: box-select visible nodes; Ctrl/Cmd/Shift adds.
 - Drag the root: pan the whole map.
 - Ctrl/Cmd+A: select every visible node.
 - Tab: add child and start editing.
@@ -623,6 +622,8 @@ theme, so a file can pick any of the nine themes while the panel keeps one mater
 - Dark is the same system turned toward a forest at night: near-black green surfaces, moon-pale text, a
   lichen accent, cool mist as the secondary, and low-saturation firefly amber for attention. No pure
   black, no neon, and no gradients on controls.
+- Underline nodes use the branch line itself: the connector meets the bottom rule at the node edge,
+  and the label keeps its padding above that rule, so the line reads as one continuous stroke.
 - Every icon is an inline SVG drawn from a stroke table in `engine/render/icons.ts`: chevrons on the
   collapse controls and inside steppers, a plus on the add control, a close on dismiss, a gear for the
   settings entry, letterforms for bold, italic, and underline, pictograms for the four layout types,

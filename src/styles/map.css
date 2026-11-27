@@ -731,14 +731,16 @@
   text-decoration: line-through;
 }
 
-/* Ctrl/Cmd+Shift drag rectangle for multi-select. */
+/* The marquee itself is invisible; covered nodes show the selection ring. */
 .simple-mind-marquee {
   position: absolute;
   z-index: 5;
-  border: 1px solid var(--sm-selection-outline);
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--sm-selection-outline) 10%, transparent);
   pointer-events: none;
+}
+
+.simple-mind-node.is-marquee-hit {
+  outline: 1px solid var(--sm-selection-outline);
+  outline-offset: 0;
 }
 
 /* Autocomplete popup anchored to the inline editor inside the map world. */

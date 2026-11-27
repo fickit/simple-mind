@@ -2,8 +2,6 @@ import {
   COLOR_INPUT_FALLBACK,
   INLINE_SUGGESTION_LIMIT,
   LIMITS,
-  MARQUEE_HOLD_MS,
-  MARQUEE_MOVE_TOLERANCE,
   NEW_NODE_EDITOR_WIDTH,
   NODE_CONTROL_GAP,
   NODE_CONTROL_SIZE,
@@ -123,17 +121,13 @@ export class MapCanvas {
   private sidebarLineHeight!: SidebarStepper;
   private readonly keydownHandler: (event: KeyboardEvent) => void;
   private marquee: {
-    mode: "pending" | "pan" | "marquee";
     startX: number;
     startY: number;
-    lastX: number;
-    lastY: number;
     currentX: number;
     currentY: number;
     additive: boolean;
-    element: HTMLElement | null;
+    element: HTMLElement;
   } | null = null;
-  private marqueeHoldTimer: number | null = null;
   private controller: MapController | null = null;
   private pendingAdd: PendingAdd | null = null;
   private selectedId: string | null = null;
@@ -1034,7 +1028,7 @@ export class MapCanvas {
     this.rootEl.remove();
   }
 
-  /** Starts panning or a marquee on empty canvas. */
+  /** Starts a marquee on empty canvas. */
   private readonly onMarqueeDown = (event: PointerEvent): void => {
     if (event.button !== 0) return;
     const target = event.target as HTMLElement | null;
@@ -1043,29 +1037,16 @@ export class MapCanvas {
     event.preventDefault();
     event.stopImmediatePropagation();
     const rect = this.canvasEl.getBoundingClientRect();
+    const element = createDiv();
+    element.className = "simple-mind-marquee";
+    this.canvasEl.appendChild(element);
     const startX = event.clientX - rect.left;
     const startY = event.clientY - rect.top;
     const additive = event.ctrlKey || event.metaKey || event.shiftKey;
-    this.marquee = {
-      mode: "pending",
-      startX,
-      startY,
-      lastX: startX,
-      lastY: startY,
-      currentX: startX,
-      currentY: startY,
-      additive,
-      element: null,
-    };
-    if (additive) {
-      this.startMarquee();
-    } else {
-      this.marqueeHoldTimer =
-        this.rootEl.ownerDocument.defaultView?.setTimeout(() => {
-          this.marqueeHoldTimer = null;
-          if (this.marquee?.mode === "pending") this.startMarquee();
-        }, MARQUEE_HOLD_MS) ?? null;
-    }
+    this.marquee = { startX, startY, currentX: startX, currentY: startY, additive, element };
+    if (!additive) this.renderer.selectNode(null);
+    this.renderer.previewNodes([]);
+    this.updateMarquee();
 
     const view = this.rootEl.ownerDocument.defaultView;
     view?.addEventListener("pointermove", this.onMarqueeMove);
@@ -1073,72 +1054,36 @@ export class MapCanvas {
     view?.addEventListener("pointercancel", this.onMarqueeUp);
   };
 
-  /** Creates the marquee rectangle after a hold or a modifier press. */
-  private startMarquee(): void {
-    if (!this.marquee || this.marquee.mode === "marquee") return;
-    this.marquee.mode = "marquee";
-    const element = createDiv();
-    element.className = "simple-mind-marquee";
-    this.canvasEl.appendChild(element);
-    this.marquee.element = element;
-    this.updateMarquee();
-  }
-
-  /** Pans a quick drag or resizes a held marquee. */
+  /** Resizes the marquee and previews the nodes it covers. */
   private readonly onMarqueeMove = (event: PointerEvent): void => {
     const marquee = this.marquee;
     if (!marquee) return;
-    const rect = this.canvasEl.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-
-    if (marquee.mode === "pending") {
-      const moved = Math.hypot(x - marquee.startX, y - marquee.startY) >= MARQUEE_MOVE_TOLERANCE;
-      if (!moved) return;
-      this.clearMarqueeHold();
-      marquee.mode = "pan";
-      marquee.lastX = marquee.startX;
-      marquee.lastY = marquee.startY;
-      this.canvasEl.classList.add("is-panning");
-    }
-
-    if (marquee.mode === "pan") {
-      event.preventDefault();
-      this.renderer.panBy(x - marquee.lastX, y - marquee.lastY);
-      marquee.lastX = x;
-      marquee.lastY = y;
-      return;
-    }
-
     event.preventDefault();
-    marquee.currentX = x;
-    marquee.currentY = y;
+    const rect = this.canvasEl.getBoundingClientRect();
+    marquee.currentX = event.clientX - rect.left;
+    marquee.currentY = event.clientY - rect.top;
     this.updateMarquee();
+    this.renderer.previewNodes(this.marqueeHits(marquee));
   };
 
-  /** Applies a marquee selection or ends a pan. */
+  /** Applies a marquee selection and removes the rectangle. */
   private readonly onMarqueeUp = (): void => {
     const marquee = this.marquee;
     if (!marquee) return;
-    const view = this.rootEl.ownerDocument.defaultView;
-    view?.removeEventListener("pointermove", this.onMarqueeMove);
-    view?.removeEventListener("pointerup", this.onMarqueeUp);
-    view?.removeEventListener("pointercancel", this.onMarqueeUp);
-    this.clearMarqueeHold();
-    this.canvasEl.classList.remove("is-panning");
-    marquee.element?.remove();
-    this.marquee = null;
-
-    if (marquee.mode === "pending") return;
+    this.clearCanvasDrag();
+    this.renderer.previewNodes([]);
 
     // The click that follows pointerup would clear the fresh selection.
     const suppressClick = (event: Event): void => event.stopImmediatePropagation();
     this.canvasEl.addEventListener("click", suppressClick, true);
-    view?.setTimeout(() => {
+    this.rootEl.ownerDocument.defaultView?.setTimeout(() => {
       this.canvasEl.removeEventListener("click", suppressClick, true);
     }, 0);
 
-    if (marquee.mode === "pan") {
+    const width = Math.abs(marquee.currentX - marquee.startX);
+    const height = Math.abs(marquee.currentY - marquee.startY);
+    if (width < 3 && height < 3) {
+      if (!marquee.additive) this.renderer.selectNode(null);
       this.renderer.focus();
       return;
     }
@@ -1148,7 +1093,7 @@ export class MapCanvas {
   /** Paints the marquee rectangle from its two corners. */
   private updateMarquee(): void {
     const marquee = this.marquee;
-    if (!marquee?.element) return;
+    if (!marquee) return;
     const { startX, startY, currentX, currentY, element } = marquee;
     element.style.left = `${Math.min(startX, currentX)}px`;
     element.style.top = `${Math.min(startY, currentY)}px`;
@@ -1156,18 +1101,14 @@ export class MapCanvas {
     element.style.height = `${Math.abs(currentY - startY)}px`;
   }
 
-  /** Selects the visible nodes inside the marquee rectangle. */
-  private applyMarquee(marquee: NonNullable<MapCanvas["marquee"]>): void {
-    const width = Math.abs(marquee.currentX - marquee.startX);
-    const height = Math.abs(marquee.currentY - marquee.startY);
-    if (width < 3 && height < 3) return;
-
+  /** Returns the visible nodes intersecting the marquee rectangle. */
+  private marqueeHits(marquee: NonNullable<MapCanvas["marquee"]>): string[] {
     const transform = this.renderer.getTransform();
     const left = (Math.min(marquee.startX, marquee.currentX) - transform.x) / transform.scale;
     const top = (Math.min(marquee.startY, marquee.currentY) - transform.y) / transform.scale;
     const right = (Math.max(marquee.startX, marquee.currentX) - transform.x) / transform.scale;
     const bottom = (Math.max(marquee.startY, marquee.currentY) - transform.y) / transform.scale;
-    const hits = this.renderer
+    return this.renderer
       .getLayoutNodes()
       .filter(
         (node) =>
@@ -1177,7 +1118,11 @@ export class MapCanvas {
           node.y + node.height > top,
       )
       .map((node) => node.node.id);
+  }
 
+  /** Selects the visible nodes inside the marquee rectangle. */
+  private applyMarquee(marquee: NonNullable<MapCanvas["marquee"]>): void {
+    const hits = this.marqueeHits(marquee);
     if (hits.length === 0) {
       if (!marquee.additive) this.renderer.selectNode(null);
       return;
@@ -1190,23 +1135,20 @@ export class MapCanvas {
     this.updateToolbar();
   }
 
-  /** Clears the delayed marquee-start timer. */
-  private clearMarqueeHold(): void {
-    if (this.marqueeHoldTimer === null) return;
-    this.rootEl.ownerDocument.defaultView?.clearTimeout(this.marqueeHoldTimer);
-    this.marqueeHoldTimer = null;
-  }
-
-  /** Stops an in-flight canvas drag without applying it. */
-  private cancelCanvasDrag(): void {
-    this.clearMarqueeHold();
+  /** Removes the marquee DOM and its window listeners. */
+  private clearCanvasDrag(): void {
     const view = this.rootEl.ownerDocument.defaultView;
     view?.removeEventListener("pointermove", this.onMarqueeMove);
     view?.removeEventListener("pointerup", this.onMarqueeUp);
     view?.removeEventListener("pointercancel", this.onMarqueeUp);
-    this.canvasEl.classList.remove("is-panning");
-    this.marquee?.element?.remove();
+    this.marquee?.element.remove();
     this.marquee = null;
+  }
+
+  /** Stops an in-flight canvas drag without applying it. */
+  private cancelCanvasDrag(): void {
+    this.clearCanvasDrag();
+    this.renderer.previewNodes([]);
   }
 
   /** Adds a child to the selected node. */

@@ -76,6 +76,7 @@ export class MapRenderer {
   private document: MindMapDocument | null = null;
   private layout: LayoutResult | null = null;
   private readonly selectedIds = new Set<string>();
+  private readonly previewIds = new Set<string>();
   private selectedId: string | null = null;
   private editingNodeId: string | null = null;
   private editingRect: {
@@ -236,6 +237,7 @@ export class MapRenderer {
     this.layout = null;
     this.selectedId = null;
     this.selectedIds.clear();
+    this.previewIds.clear();
     this.nodeEls.clear();
     this.edgeEls.clear();
     this.renderedText.clear();
@@ -343,6 +345,16 @@ export class MapRenderer {
   /** Returns every selected node id. */
   getSelectedIds(): string[] {
     return [...this.selectedIds];
+  }
+
+  /** Highlights nodes covered by a marquee without committing the selection. */
+  previewNodes(nodeIds: string[]): void {
+    const next = new Set(nodeIds);
+    for (const [nodeId, element] of this.nodeEls) {
+      element.classList.toggle("is-marquee-hit", next.has(nodeId));
+    }
+    this.previewIds.clear();
+    for (const nodeId of next) this.previewIds.add(nodeId);
   }
 
   /** Returns the current positioned nodes. */
@@ -549,6 +561,9 @@ export class MapRenderer {
   private updateEdges(layout: LayoutResult, tokens: ThemeTokens, view: WorldRect | null): void {
     const positions = new Map(layout.nodes.map((node) => [node.node.id, node]));
     const mounted = new Set<string>();
+    const rootId = this.document?.root.id;
+    const isUnderline = (node: MindNode, nodeId: string): boolean =>
+      nodeVisual(tokens, node.style, nodeId === rootId).shape === "underline";
 
     for (const edge of layout.edges) {
       const parent = positions.get(edge.parentId);
@@ -560,7 +575,13 @@ export class MapRenderer {
 
       mounted.add(edge.childId);
       const path = this.ensureEdgeElement(edge.childId);
-      path.setAttribute("d", connectorPath(parent, child, edge.side, tokens.branch.style));
+      path.setAttribute(
+        "d",
+        connectorPath(parent, child, edge.side, tokens.branch.style, {
+          parentUnderline: isUnderline(parent.node, edge.parentId),
+          childUnderline: isUnderline(child.node, edge.childId),
+        }),
+      );
       path.setAttribute("stroke", this.colors.get(edge.childId) ?? tokens.selection.outline);
       path.setAttribute("stroke-width", String(tokens.branch.lineWidth));
       path.setAttribute("stroke-opacity", String(tokens.branch.opacity));
@@ -655,6 +676,7 @@ export class MapRenderer {
       isRoot ? "is-root" : "",
       isMediaOnlyLabel(node.text) ? "is-media" : "",
       selected ? "is-selected" : "",
+      this.previewIds.has(node.id) ? "is-marquee-hit" : "",
       this.editingNodeId === node.id ? "is-editing" : "",
     ]
       .filter(Boolean)

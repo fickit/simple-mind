@@ -7,6 +7,12 @@ interface Point {
   y: number;
 }
 
+/** Extra anchor information for underlined nodes. */
+export interface ConnectorOptions {
+  parentUnderline?: boolean;
+  childUnderline?: boolean;
+}
+
 /** Formats a coordinate for an SVG path. */
 function round(value: number): string {
   return String(Math.round(value * 100) / 100);
@@ -17,6 +23,7 @@ function anchors(
   parent: PositionedNode,
   child: PositionedNode,
   side: "left" | "right" | "down",
+  options: ConnectorOptions = {},
 ): { source: Point; target: Point } {
   if (side === "down") {
     return {
@@ -25,16 +32,19 @@ function anchors(
     };
   }
 
+  const parentY = parent.y + (options.parentUnderline ? parent.height : parent.height / 2);
+  const childY = child.y + (options.childUnderline ? child.height : child.height / 2);
+
   if (side === "left") {
     return {
-      source: { x: parent.x, y: parent.y + parent.height / 2 },
-      target: { x: child.x + child.width, y: child.y + child.height / 2 },
+      source: { x: parent.x, y: parentY },
+      target: { x: child.x + child.width, y: childY },
     };
   }
 
   return {
-    source: { x: parent.x + parent.width, y: parent.y + parent.height / 2 },
-    target: { x: child.x, y: child.y + child.height / 2 },
+    source: { x: parent.x + parent.width, y: parentY },
+    target: { x: child.x, y: childY },
   };
 }
 
@@ -51,8 +61,9 @@ export function connectorPath(
   child: PositionedNode,
   side: "left" | "right" | "down",
   style: ConnectorStyle,
+  options: ConnectorOptions = {},
 ): string {
-  const { source, target } = anchors(parent, child, side);
+  const { source, target } = anchors(parent, child, side, options);
 
   if (side === "down") {
     if (style === "orthogonal") {
