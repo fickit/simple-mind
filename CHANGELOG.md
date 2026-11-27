@@ -9,8 +9,9 @@
   made only of images becomes the picture itself with rounded corners.
 - Typing `[[` or `![[` while editing opens a fuzzy file search that inserts the link; arrow keys move
   through the list and the mouse can highlight an entry.
-- Multi-select nodes with Ctrl/Cmd+Shift drag or Ctrl/Cmd+A, then delete, copy, or cut the whole
-  group in one step.
+- Drag on empty canvas to marquee-select nodes (Ctrl/Cmd/Shift adds to the selection), press
+  Ctrl/Cmd+A to select all, and drag the root node to move the whole map. Delete, copy, and cut
+  operate on the whole selection in one step.
 - Nodes, links, and images no longer show redundant hover tooltips; only icon-only controls keep
   their labels. The selection outline on an image-only node follows the picture group instead of the
   old pill shape.

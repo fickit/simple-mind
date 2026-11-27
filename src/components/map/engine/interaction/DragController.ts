@@ -9,6 +9,8 @@ export interface DragCallbacks {
   isCollapsed: (nodeId: string) => boolean;
   expand: (nodeId: string) => void;
   drop: (sourceId: string, targetId: string, position: DropPosition) => void;
+  /** Pans the canvas while the root is dragged. */
+  panBy: (dx: number, dy: number) => void;
 }
 
 interface DragCandidate {
@@ -23,6 +25,14 @@ interface DropTarget {
   nodeId: string;
   element: HTMLElement;
   position: DropPosition;
+}
+
+interface PanCandidate {
+  startX: number;
+  startY: number;
+  lastX: number;
+  lastY: number;
+  pointerId: number;
 }
 
 const DRAG_THRESHOLD = 4;
@@ -50,6 +60,7 @@ export class DragController {
   private readonly canvas: HTMLElement;
   private readonly callbacks: DragCallbacks;
   private candidate: DragCandidate | null = null;
+  private panCandidate: PanCandidate | null = null;
   private source: { nodeId: string; element: HTMLElement } | null = null;
   private target: DropTarget | null = null;
   private expandTimer: number | null = null;
@@ -79,6 +90,8 @@ export class DragController {
     }
     this.clearTarget();
     this.candidate = null;
+    this.panCandidate = null;
+    this.canvas.classList.remove("is-panning");
     this.source = null;
     this.unbindWindow();
   }
@@ -98,7 +111,22 @@ export class DragController {
 
     const element = target.closest<HTMLElement>(".simple-mind-node");
     const nodeId = element?.dataset.nodeId;
-    if (!element || !nodeId || !this.callbacks.isDraggable(nodeId)) return;
+    if (!element || !nodeId) return;
+
+    if (this.callbacks.isRoot(nodeId)) {
+      event.preventDefault();
+      this.panCandidate = {
+        startX: event.clientX,
+        startY: event.clientY,
+        lastX: event.clientX,
+        lastY: event.clientY,
+        pointerId: event.pointerId,
+      };
+      this.bindWindow();
+      return;
+    }
+
+    if (!this.callbacks.isDraggable(nodeId)) return;
 
     this.candidate = {
       nodeId,
@@ -112,6 +140,24 @@ export class DragController {
 
   /** Starts the drag after the movement threshold or updates the drop target. */
   private handlePointerMove(event: PointerEvent): void {
+    if (this.panCandidate) {
+      const moved =
+        Math.hypot(
+          event.clientX - this.panCandidate.startX,
+          event.clientY - this.panCandidate.startY,
+        ) >= DRAG_THRESHOLD;
+      if (!moved) return;
+      event.preventDefault();
+      this.callbacks.panBy(
+        event.clientX - this.panCandidate.lastX,
+        event.clientY - this.panCandidate.lastY,
+      );
+      this.panCandidate.lastX = event.clientX;
+      this.panCandidate.lastY = event.clientY;
+      this.canvas.classList.add("is-panning");
+      return;
+    }
+
     if (this.candidate) {
       const dx = event.clientX - this.candidate.startX;
       const dy = event.clientY - this.candidate.startY;
@@ -134,6 +180,12 @@ export class DragController {
 
   /** Completes a drag and requests the move. */
   private handlePointerUp(event: PointerEvent): void {
+    if (this.panCandidate) {
+      this.cancel();
+      event.preventDefault();
+      return;
+    }
+
     const wasDragging = !!this.source;
     const source = this.source;
     const target = this.target;

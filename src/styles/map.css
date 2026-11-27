@@ -827,7 +827,7 @@
 }
 
 .simple-mind-node.is-selected {
-  outline: 2px solid var(--sm-selection-outline);
+  outline: 1px solid var(--sm-selection-outline);
   outline-offset: 2px;
 }
 

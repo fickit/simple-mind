@@ -1066,7 +1066,7 @@ describe("MapCanvas multi-selection", () => {
     canvas.destroy();
     host.remove();
   });
-  it("marquees visible nodes with Ctrl+Shift and adds to the selection", () => {
+  it("marquees visible nodes by dragging empty canvas", () => {
     const { host, canvas } = createCanvas("# Root\n- A\n- B\n");
     const canvasEl = host.querySelector<HTMLElement>(".simple-mind-canvas")!;
     canvasEl.getBoundingClientRect = () =>
@@ -1086,8 +1086,6 @@ describe("MapCanvas multi-selection", () => {
     canvasEl.dispatchEvent(
       new MouseEvent("pointerdown", {
         button: 0,
-        ctrlKey: true,
-        shiftKey: true,
         clientX: 0,
         clientY: 0,
         bubbles: true,
@@ -1104,6 +1102,31 @@ describe("MapCanvas multi-selection", () => {
     expect(host.querySelector(".simple-mind-marquee")).toBeNull();
     canvasEl.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     expect(canvas.getSelectedIds()).toHaveLength(3);
+
+    canvas.destroy();
+    host.remove();
+  });
+});
+
+describe("MapCanvas root dragging", () => {
+  it("pans the map when the root node is dragged", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    const root = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n1"]')!;
+    const before = canvas.getViewState();
+
+    root.dispatchEvent(
+      new MouseEvent("pointerdown", { button: 0, clientX: 100, clientY: 100, bubbles: true }),
+    );
+    window.dispatchEvent(
+      new MouseEvent("pointermove", { clientX: 140, clientY: 130, bubbles: true }),
+    );
+    window.dispatchEvent(
+      new MouseEvent("pointerup", { clientX: 140, clientY: 130, bubbles: true }),
+    );
+
+    const after = canvas.getViewState();
+    expect(after.x - before.x).toBe(40);
+    expect(after.y - before.y).toBe(30);
 
     canvas.destroy();
     host.remove();

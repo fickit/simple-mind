@@ -125,6 +125,7 @@ export class MapCanvas {
     startY: number;
     currentX: number;
     currentY: number;
+    additive: boolean;
     element: HTMLElement;
   } | null = null;
   private controller: MapController | null = null;
@@ -205,6 +206,7 @@ export class MapCanvas {
       isCollapsed: (nodeId) => this.controller?.findNode(nodeId)?.collapsed ?? false,
       expand: (nodeId) => this.expandNode(nodeId),
       drop: (sourceId, targetId, position) => this.dropNode(sourceId, targetId, position),
+      panBy: (dx, dy) => this.renderer.panBy(dx, dy),
     });
 
     const menu = createDiv();
@@ -1026,10 +1028,9 @@ export class MapCanvas {
     this.rootEl.remove();
   }
 
-  /** Starts a marquee when Ctrl/Cmd+Shift is held over empty canvas. */
+  /** Starts a marquee on empty canvas. */
   private readonly onMarqueeDown = (event: PointerEvent): void => {
-    if (event.button !== 0 || !event.shiftKey) return;
-    if (!event.ctrlKey && !event.metaKey) return;
+    if (event.button !== 0) return;
     const target = event.target as HTMLElement | null;
     if (target?.closest(".simple-mind-node, button, a, input, textarea, select")) return;
 
@@ -1041,7 +1042,8 @@ export class MapCanvas {
     this.canvasEl.appendChild(element);
     const startX = event.clientX - rect.left;
     const startY = event.clientY - rect.top;
-    this.marquee = { startX, startY, currentX: startX, currentY: startY, element };
+    const additive = event.ctrlKey || event.metaKey || event.shiftKey;
+    this.marquee = { startX, startY, currentX: startX, currentY: startY, additive, element };
     this.updateMarquee();
 
     const view = this.rootEl.ownerDocument.defaultView;
@@ -1086,6 +1088,10 @@ export class MapCanvas {
     marquee.element.remove();
     this.marquee = null;
 
+    const width = Math.abs(marquee.currentX - marquee.startX);
+    const height = Math.abs(marquee.currentY - marquee.startY);
+    if (width < 3 && height < 3) return;
+
     // The click that follows pointerup would clear the fresh marquee selection.
     const suppressClick = (event: Event): void => event.stopImmediatePropagation();
     this.canvasEl.addEventListener("click", suppressClick, true);
@@ -1094,10 +1100,6 @@ export class MapCanvas {
     }, 0);
 
     if (!select) return;
-
-    const width = Math.abs(marquee.currentX - marquee.startX);
-    const height = Math.abs(marquee.currentY - marquee.startY);
-    if (width < 3 && height < 3) return;
 
     const transform = this.renderer.getTransform();
     const left = (Math.min(marquee.startX, marquee.currentX) - transform.x) / transform.scale;
@@ -1114,9 +1116,13 @@ export class MapCanvas {
           node.y + node.height > top,
       )
       .map((node) => node.node.id);
-    if (hits.length === 0) return;
 
-    const selected = new Set(this.renderer.getSelectedIds());
+    if (hits.length === 0) {
+      if (!marquee.additive) this.renderer.selectNode(null);
+      return;
+    }
+
+    const selected = marquee.additive ? new Set(this.renderer.getSelectedIds()) : new Set<string>();
     for (const nodeId of hits) selected.add(nodeId);
     this.renderer.selectNodes([...selected], hits.at(-1) ?? null);
     this.renderer.focus();
