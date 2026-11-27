@@ -394,12 +394,12 @@ resolved against the layout, so a culled node keeps its id, its state, and its p
 
 When anything is selected, one node is the primary selection and the selection may also contain more
 nodes. Selection is a class plus `aria-selected` on every selected node. The primary drives the style
-panel and single-node commands. Dragging empty canvas draws an invisible marquee, highlights every
-intersecting visible node live, and replaces the selection on release; holding Ctrl/Cmd/Shift adds to
-the existing selection. Ctrl/Cmd+A selects every visible node, and dragging the root pans the whole
-map. Delete, copy, and cut operate on the top-level selected subtrees in one history entry. The canvas
-keeps keyboard focus for navigation. Node content can contain links; clicking one opens the note in a
-new tab instead of selecting the node.
+panel and single-node commands. Dragging empty canvas draws a marquee and highlights every
+intersecting visible node live; releasing replaces the selection, and holding Ctrl/Cmd/Shift adds to
+it. Alt+drag pans the canvas. Ctrl/Cmd+A selects every visible node, and dragging the root pans the
+whole map. Delete, copy, and cut operate on the top-level selected subtrees in one history entry. The
+canvas keeps keyboard focus for navigation. Node content can contain links; clicking one opens the
+note in a new tab instead of selecting the node.
 
 ## 8. Interaction and editing
 
@@ -409,6 +409,7 @@ While the canvas has focus:
 
 - Arrow keys: move selection spatially.
 - Drag on empty canvas: box-select visible nodes; Ctrl/Cmd/Shift adds.
+- Alt+drag: pan the canvas.
 - Drag the root: pan the whole map.
 - Ctrl/Cmd+A: select every visible node.
 - Tab: add child and start editing.

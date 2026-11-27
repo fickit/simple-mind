@@ -1195,3 +1195,84 @@ describe("MapCanvas empty-canvas box selection", () => {
     host.remove();
   });
 });
+
+describe("MapCanvas alt-drag panning", () => {
+  it("pans with Alt+left drag", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    const canvasEl = host.querySelector<HTMLElement>(".simple-mind-canvas")!;
+    canvasEl.getBoundingClientRect = () =>
+      ({
+        x: 0,
+        y: 0,
+        left: 0,
+        top: 0,
+        right: 800,
+        bottom: 600,
+        width: 800,
+        height: 600,
+        toJSON: () => ({}),
+      }) as DOMRect;
+    canvas.fit();
+    const before = canvas.getViewState();
+
+    canvasEl.dispatchEvent(
+      new MouseEvent("pointerdown", {
+        button: 0,
+        altKey: true,
+        clientX: 100,
+        clientY: 100,
+        bubbles: true,
+      }),
+    );
+    window.dispatchEvent(
+      new MouseEvent("pointermove", { clientX: 150, clientY: 120, bubbles: true }),
+    );
+    window.dispatchEvent(
+      new MouseEvent("pointerup", { clientX: 150, clientY: 120, bubbles: true }),
+    );
+
+    const after = canvas.getViewState();
+    expect(after.x - before.x).toBe(50);
+    expect(after.y - before.y).toBe(20);
+    expect(host.querySelector(".simple-mind-marquee")).toBeNull();
+
+    canvas.destroy();
+    host.remove();
+  });
+});
+
+describe("MapCanvas image node dragging", () => {
+  it("reparents an image node and does not open its lightbox", () => {
+    const resources = {
+      noteExists: () => true,
+      imageSource: (target: string) => `vault://${target}`,
+      openNote: vi.fn(),
+      previewNote: vi.fn(),
+      suggest: () => [],
+    };
+    const { host, canvas } = createCanvas("# Root\n- ![[photo.png]]\n- A\n", DEFAULT_SETTINGS, {
+      inlineResources: resources,
+    });
+    const imageNode = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n2"]')!;
+    const target = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n3"]')!;
+    const image = imageNode.querySelector<HTMLImageElement>(".simple-mind-inline-image")!;
+    document.elementsFromPoint = () => [target];
+
+    image.dispatchEvent(
+      new MouseEvent("pointerdown", { button: 0, clientX: 100, clientY: 100, bubbles: true }),
+    );
+    window.dispatchEvent(
+      new MouseEvent("pointermove", { clientX: 140, clientY: 130, bubbles: true }),
+    );
+    window.dispatchEvent(
+      new MouseEvent("pointerup", { clientX: 140, clientY: 130, bubbles: true }),
+    );
+
+    expect(canvas.getSource()).toContain("- A\n  - ![[photo.png]]");
+    image.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(host.querySelector(".simple-mind-lightbox")).toBeNull();
+
+    canvas.destroy();
+    host.remove();
+  });
+});

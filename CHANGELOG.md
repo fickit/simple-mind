@@ -9,11 +9,11 @@
   made only of images becomes the picture itself with rounded corners.
 - Typing `[[` or `![[` while editing opens a fuzzy file search that inserts the link; arrow keys move
   through the list and the mouse can highlight an entry.
-- Drag on empty canvas to marquee-select nodes with a transparent box that highlights nodes live
-  (Ctrl/Cmd/Shift adds). Press Ctrl/Cmd+A to select all, drag the root to move the whole map, and
-  drag a child onto another node to reparent it. Delete, copy, and cut operate on the whole selection
-  in one step.
-- Underline nodes now meet the connector on their bottom rule, with the label sitting above it.
+- Drag on empty canvas to marquee-select nodes; the box and covered nodes highlight live
+  (Ctrl/Cmd/Shift adds). Alt+drag pans the canvas, Ctrl/Cmd+A selects all, drag the root to move the
+  whole map, and drag any node—including image nodes—onto another node to reparent it.
+- Underline nodes now draw the connector's own color and width as their bottom rule, meeting the
+  branch line without a break.
 - Nodes, links, and images no longer show redundant hover tooltips; only icon-only controls keep
   their labels. The selection outline on an image-only node follows the picture group instead of the
   old pill shape.

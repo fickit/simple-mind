@@ -35,9 +35,9 @@ Markdown outline underneath. No account, no lock-in.
 - Inline editing, drag to reorganize, copy and paste subtrees, undo and redo.
 - Collapse a branch into a count bubble; add buttons follow the layout and remember which side a
   branch belongs to.
-- Drag on empty canvas to box-select nodes (Ctrl/Cmd/Shift adds); the box itself is invisible and the
-  covered nodes highlight live. Ctrl/Cmd+A selects all; drag the root node to move the whole map, and
-  drag a child onto another node to reparent it.
+- Drag on empty canvas to box-select nodes; the box and the covered nodes highlight live
+  (Ctrl/Cmd/Shift adds). Alt+drag pans the canvas; Ctrl/Cmd+A selects all; drag the root node to move
+  the whole map, and drag a child onto another node to reparent it.
 - Each file remembers its pan, zoom, and selected node.
 
 ### Linked to your vault
@@ -77,6 +77,7 @@ Markdown outline underneath. No account, no lock-in.
    | Arrow keys | Move the selection |
    | `Ctrl/Cmd+A` | Select all visible nodes |
    | Drag on empty canvas | Box-select nodes; Ctrl/Cmd/Shift adds |
+   | Alt + drag | Pan the canvas |
    | Drag the root node | Move the whole map |
    | Drag a child node | Reparent it onto another node |
    | `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z` | Undo / redo |

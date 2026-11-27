@@ -186,3 +186,26 @@ describe("MapRenderer multi-selection", () => {
     host.remove();
   });
 });
+
+describe("MapRenderer underline nodes", () => {
+  it("uses the branch connector color and width for the underline", () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const renderer = new MapRenderer(host, OBSIDIAN_THEME, false);
+    const mapDocument = parseSource(
+      '# Root\n- A <!-- sm:{"shape":"underline","borderColor":"#ff0000","borderWidth":8} -->\n',
+    ).document;
+    expect(mapDocument).not.toBeNull();
+    renderer.render(mapDocument!);
+
+    const node = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n2"]')!;
+    const edge = host.querySelector<SVGPathElement>(".simple-mind-edge")!;
+    expect(node.style.getPropertyValue("--sm-underline-color")).toBe(edge.getAttribute("stroke"));
+    expect(node.style.getPropertyValue("--sm-underline-width")).toBe(
+      `${edge.getAttribute("stroke-width")}px`,
+    );
+
+    renderer.destroy();
+    host.remove();
+  });
+});

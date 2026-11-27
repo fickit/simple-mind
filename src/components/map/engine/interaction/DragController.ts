@@ -112,7 +112,7 @@ export class DragController {
     if (event.button !== 0) return;
     const target = event.target as HTMLElement | null;
     if (!target) return;
-    if (target.closest(".simple-mind-inline-editor, .simple-mind-inline-image, button, a")) return;
+    if (target.closest(".simple-mind-inline-editor, button, a")) return;
 
     const element = target.closest<HTMLElement>(".simple-mind-node");
     const nodeId = element?.dataset.nodeId;
@@ -188,6 +188,7 @@ export class DragController {
   /** Completes a drag and requests the move. */
   private handlePointerUp(event: PointerEvent): void {
     if (this.panCandidate) {
+      this.suppressNextClick();
       this.cancel();
       event.preventDefault();
       return;
@@ -201,8 +202,18 @@ export class DragController {
       this.callbacks.drop(source.nodeId, target.nodeId, target.position);
     }
 
+    if (wasDragging) this.suppressNextClick();
     this.cancel();
     if (wasDragging) event.preventDefault();
+  }
+
+  /** Keeps the click that follows a drag from opening a link or image. */
+  private suppressNextClick(): void {
+    const suppress = (event: Event): void => event.stopImmediatePropagation();
+    this.canvas.addEventListener("click", suppress, true);
+    this.canvas.ownerDocument.defaultView?.setTimeout(() => {
+      this.canvas.removeEventListener("click", suppress, true);
+    }, 0);
   }
 
   /** Creates a floating copy of the node that follows the pointer. */

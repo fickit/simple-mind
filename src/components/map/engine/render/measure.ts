@@ -95,7 +95,7 @@ export class DomNodeMeasurer {
     const mediaOnly = isMediaOnlyLabel(node.text);
     const borderWidth =
       visual.shape === "underline"
-        ? (node.style?.borderWidth ?? 2)
+        ? this.tokens.branch.lineWidth
         : measurementBorderWidth(visual.shape, visual.borderWidth);
     this.inner.style.fontFamily = visual.fontFamily;
     this.inner.style.fontSize = mediaOnly ? "0" : `${visual.fontSize}px`;

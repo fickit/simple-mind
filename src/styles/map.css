@@ -731,10 +731,13 @@
   text-decoration: line-through;
 }
 
-/* The marquee itself is invisible; covered nodes show the selection ring. */
+/* Box-select rectangle; covered nodes also get the selection ring live. */
 .simple-mind-marquee {
   position: absolute;
   z-index: 5;
+  border: 1px solid var(--sm-selection-outline);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--sm-selection-outline) 10%, transparent);
   pointer-events: none;
 }
 

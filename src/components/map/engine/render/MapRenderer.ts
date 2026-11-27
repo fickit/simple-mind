@@ -932,8 +932,15 @@ export class MapRenderer {
     element.style.setProperty("--sm-line-height", String(visual.lineHeight));
     element.style.setProperty("--sm-text-align", visual.textAlign);
     element.style.setProperty("--sm-text-decoration", visual.textDecoration);
-    element.style.setProperty("--sm-underline-color", style?.borderColor ?? branchColor);
-    element.style.setProperty("--sm-underline-width", `${style?.borderWidth ?? 2}px`);
+    const underline = visual.shape === "underline";
+    element.style.setProperty(
+      "--sm-underline-color",
+      underline ? branchColor : (style?.borderColor ?? branchColor),
+    );
+    element.style.setProperty(
+      "--sm-underline-width",
+      `${underline ? this.themeTokens().branch.lineWidth : (style?.borderWidth ?? 2)}px`,
+    );
   }
 
   /** Creates an edge element for a child id. */

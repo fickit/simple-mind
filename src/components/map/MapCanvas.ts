@@ -128,6 +128,7 @@ export class MapCanvas {
     additive: boolean;
     element: HTMLElement;
   } | null = null;
+  private altPan: { lastX: number; lastY: number } | null = null;
   private controller: MapController | null = null;
   private pendingAdd: PendingAdd | null = null;
   private selectedId: string | null = null;
@@ -1024,6 +1025,7 @@ export class MapCanvas {
     this.canvasEl.removeEventListener("keydown", this.keydownHandler);
     this.canvasEl.removeEventListener("pointerdown", this.onMarqueeDown, true);
     this.cancelCanvasDrag();
+    this.cancelAltPan();
     this.renderer.destroy();
     this.rootEl.remove();
   }
@@ -1032,6 +1034,10 @@ export class MapCanvas {
   private readonly onMarqueeDown = (event: PointerEvent): void => {
     if (event.button !== 0) return;
     const target = event.target as HTMLElement | null;
+    if (event.altKey) {
+      this.startAltPan(event, target);
+      return;
+    }
     if (target?.closest(".simple-mind-node, button, a, input, textarea, select")) return;
 
     event.preventDefault();
@@ -1073,12 +1079,7 @@ export class MapCanvas {
     this.clearCanvasDrag();
     this.renderer.previewNodes([]);
 
-    // The click that follows pointerup would clear the fresh selection.
-    const suppressClick = (event: Event): void => event.stopImmediatePropagation();
-    this.canvasEl.addEventListener("click", suppressClick, true);
-    this.rootEl.ownerDocument.defaultView?.setTimeout(() => {
-      this.canvasEl.removeEventListener("click", suppressClick, true);
-    }, 0);
+    this.suppressNextClick();
 
     const width = Math.abs(marquee.currentX - marquee.startX);
     const height = Math.abs(marquee.currentY - marquee.startY);
@@ -1133,6 +1134,55 @@ export class MapCanvas {
     this.renderer.selectNodes([...selected], hits.at(-1) ?? null);
     this.renderer.focus();
     this.updateToolbar();
+  }
+
+  /** Starts an Alt+drag canvas pan. */
+  private startAltPan(event: PointerEvent, target: HTMLElement | null): void {
+    if (target?.closest("input, textarea, select, button")) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    this.altPan = { lastX: event.clientX, lastY: event.clientY };
+    this.canvasEl.classList.add("is-panning");
+    const view = this.rootEl.ownerDocument.defaultView;
+    view?.addEventListener("pointermove", this.onAltPanMove);
+    view?.addEventListener("pointerup", this.onAltPanUp);
+    view?.addEventListener("pointercancel", this.onAltPanUp);
+  }
+
+  /** Pans with an Alt+drag. */
+  private readonly onAltPanMove = (event: PointerEvent): void => {
+    if (!this.altPan) return;
+    event.preventDefault();
+    this.renderer.panBy(event.clientX - this.altPan.lastX, event.clientY - this.altPan.lastY);
+    this.altPan.lastX = event.clientX;
+    this.altPan.lastY = event.clientY;
+  };
+
+  /** Ends an Alt+drag pan and suppresses its trailing click. */
+  private readonly onAltPanUp = (): void => {
+    if (!this.altPan) return;
+    this.cancelAltPan();
+    this.suppressNextClick();
+    this.renderer.focus();
+  };
+
+  /** Removes Alt+drag listeners and state. */
+  private cancelAltPan(): void {
+    const view = this.rootEl.ownerDocument.defaultView;
+    view?.removeEventListener("pointermove", this.onAltPanMove);
+    view?.removeEventListener("pointerup", this.onAltPanUp);
+    view?.removeEventListener("pointercancel", this.onAltPanUp);
+    this.altPan = null;
+    this.canvasEl.classList.remove("is-panning");
+  }
+
+  /** Stops the click that follows a pan or marquee drag. */
+  private suppressNextClick(): void {
+    const suppress = (event: Event): void => event.stopImmediatePropagation();
+    this.canvasEl.addEventListener("click", suppress, true);
+    this.rootEl.ownerDocument.defaultView?.setTimeout(() => {
+      this.canvasEl.removeEventListener("click", suppress, true);
+    }, 0);
   }
 
   /** Removes the marquee DOM and its window listeners. */
