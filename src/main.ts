@@ -26,6 +26,7 @@ export default class SimpleMindPlugin extends Plugin implements SimpleMindSettin
   settings: SimpleMindSettings = DEFAULT_SETTINGS;
 
   private viewStates: Record<string, MapViewState> = {};
+  private readonly openAsMapMenus = new WeakSet<Menu>();
   private statusBarEl: HTMLElement | null = null;
   private newMapRibbonEl: HTMLElement | null = null;
   private readonly commandIds = [
@@ -286,6 +287,8 @@ export default class SimpleMindPlugin extends Plugin implements SimpleMindSettin
     ) {
       return;
     }
+    if (this.openAsMapMenus.has(menu)) return;
+    this.openAsMapMenus.add(menu);
     menu.addItem((item) =>
       item
         .setTitle(t("menu.openAsMap"))
