@@ -679,7 +679,7 @@ describe("MapCanvas", () => {
     expect(shapeTiles.map((tile) => tile.dataset.icon)).toEqual([
       "shape-rounded",
       "shape-pill",
-      "shape-underline",
+      "shape-line",
       "shape-plain",
     ]);
     expect(host.querySelector(".simple-mind-sidebar-segment [data-icon='reset']")).toBeNull();

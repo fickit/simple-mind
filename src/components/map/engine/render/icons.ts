@@ -24,7 +24,7 @@ export type IconName =
   | "shape-pill"
   | "shape-plain"
   | "shape-rounded"
-  | "shape-underline"
+  | "shape-line"
   | "source"
   | "style"
   | "underline";
@@ -100,7 +100,7 @@ const SHAPES: Record<IconName, IconShape[]> = {
       d: "M3.75 5h8.5A1.75 1.75 0 0 1 14 6.75v2.5A1.75 1.75 0 0 1 12.25 11h-8.5A1.75 1.75 0 0 1 2 9.25v-2.5A1.75 1.75 0 0 1 3.75 5Z",
     },
   ],
-  "shape-underline": [{ d: "M5 4.5h6" }, { d: "M2.5 11h11" }],
+  "shape-line": [{ glyph: "A" }, { d: "M2.5 13.75h11" }],
   source: [{ d: "M6 4.5 2.5 8 6 11.5" }, { d: "M10 4.5 13.5 8 10 11.5" }],
   style: [
     { d: "M3 4.5h10" },

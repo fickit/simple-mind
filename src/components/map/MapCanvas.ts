@@ -426,7 +426,7 @@ export class MapCanvas {
       [
         { value: "rounded", icon: "shape-rounded", title: t("themeEditor.shape.rounded") },
         { value: "pill", icon: "shape-pill", title: t("themeEditor.shape.pill") },
-        { value: "underline", icon: "shape-underline", title: t("themeEditor.shape.underline") },
+        { value: "underline", icon: "shape-line", title: t("themeEditor.shape.underline") },
         { value: "plain", icon: "shape-plain", title: t("themeEditor.shape.plain") },
       ],
       (value) =>

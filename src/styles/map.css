@@ -570,8 +570,8 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
-  outline: 2px solid var(--sm-selection-outline);
-  outline-offset: 2px;
+  outline: 1px solid var(--sm-selection-outline);
+  outline-offset: 0;
 }
 
 .simple-mind-inline-editor::placeholder {
