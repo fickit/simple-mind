@@ -98,7 +98,8 @@ export class DomNodeMeasurer {
         ? (node.style?.borderWidth ?? 2)
         : measurementBorderWidth(visual.shape, visual.borderWidth);
     this.inner.style.fontFamily = visual.fontFamily;
-    this.inner.style.fontSize = `${visual.fontSize}px`;
+    this.inner.style.fontSize = mediaOnly ? "0" : `${visual.fontSize}px`;
+    this.inner.style.setProperty("--sm-font-size", `${visual.fontSize}px`);
     this.inner.style.fontStyle = visual.fontStyle;
     this.inner.style.fontWeight = String(visual.fontWeight);
     this.inner.style.lineHeight = mediaOnly ? "0" : String(visual.lineHeight);

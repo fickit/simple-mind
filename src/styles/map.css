@@ -692,7 +692,14 @@
 }
 
 .simple-mind-node.is-media:not(.is-editing) .simple-mind-node-label {
+  font-size: 0;
   line-height: 0;
+}
+
+.simple-mind-node.is-media .simple-mind-inline-missing,
+.simple-mind-measure-inner.is-media .simple-mind-inline-missing {
+  font-size: var(--sm-font-size, 12px);
+  line-height: 1.3;
 }
 
 .simple-mind-node.is-media .simple-mind-inline-image,
