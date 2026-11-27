@@ -1,4 +1,4 @@
-import { Notice, TextFileView, type WorkspaceLeaf } from "obsidian";
+import { Notice, Scope, TextFileView, type WorkspaceLeaf } from "obsidian";
 import { createInlineResourceHost } from "../api/obsidian/inlineResources";
 import { MapCanvas } from "../components/map/MapCanvas";
 import { switchToSource } from "../components/source/SourceSwitch";
@@ -55,6 +55,33 @@ export class MindMapView extends TextFileView {
 
   /** Builds the map canvas and theme-change listener. */
   async onOpen(): Promise<void> {
+    if (!this.scope) {
+      this.scope = new Scope(this.app.scope);
+      this.scope.register(["Mod"], "B", () => {
+        this.canvas?.toggleBoldStyle();
+        return false;
+      });
+      this.scope.register(["Mod"], "I", () => {
+        this.canvas?.toggleItalicStyle();
+        return false;
+      });
+      this.scope.register(["Mod"], "U", () => {
+        this.canvas?.toggleUnderlineStyle();
+        return false;
+      });
+      this.scope.register(["Mod", "Shift"], "L", () => {
+        this.canvas?.setTextAlign("left");
+        return false;
+      });
+      this.scope.register(["Mod", "Shift"], "E", () => {
+        this.canvas?.setTextAlign("center");
+        return false;
+      });
+      this.scope.register(["Mod", "Shift"], "R", () => {
+        this.canvas?.setTextAlign("right");
+        return false;
+      });
+    }
     this.contentEl.empty();
     this.contentEl.addClass("simple-mind-view");
     this.canvas = new MapCanvas(this.contentEl, {
@@ -106,6 +133,7 @@ export class MindMapView extends TextFileView {
     this.saveViewState();
     this.canvas?.destroy();
     this.canvas = null;
+    this.scope = null;
     this.contentEl.empty();
   }
 

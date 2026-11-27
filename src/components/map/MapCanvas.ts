@@ -294,36 +294,37 @@ export class MapCanvas {
     return this.controller?.getSource() ?? this.sourceText;
   }
 
-  /** Applies Ctrl/Cmd+B/I/U and alignment shortcuts to the selected node. */
-  private handleTextStyleShortcut(event: KeyboardEvent): boolean {
-    if (event.altKey) return false;
-    const key = event.key.toLowerCase();
-    if (!event.shiftKey) {
-      if (key === "b") return this.toggleTextStyle("bold");
-      if (key === "i") return this.toggleTextStyle("italic");
-      if (key === "u") return this.toggleTextStyle("underline");
-      return false;
-    }
-
-    const align: TextAlign | null =
-      key === "l" ? "left" : key === "e" ? "center" : key === "r" ? "right" : null;
-    if (!align) return false;
-    this.updateSelectedNodeStyle({ textAlign: align });
-    event.preventDefault();
-    event.stopPropagation();
-    return true;
+  /** Toggles bold on the selected node. */
+  toggleBoldStyle(): void {
+    if (!this.styleShortcutAllowed()) return;
+    this.updateSelectedNodeStyle({ bold: this.selectedNodeVisual().fontWeight < 600 });
   }
 
-  /** Toggles one text style on the selected node. */
-  private toggleTextStyle(kind: "bold" | "italic" | "underline"): boolean {
-    const visual = this.selectedNodeVisual();
-    if (kind === "bold") this.updateSelectedNodeStyle({ bold: visual.fontWeight < 600 });
-    else if (kind === "italic") {
-      this.updateSelectedNodeStyle({ italic: visual.fontStyle !== "italic" });
-    } else {
-      this.updateSelectedNodeStyle({ underline: visual.textDecoration !== "underline" });
-    }
-    return true;
+  /** Toggles italic on the selected node. */
+  toggleItalicStyle(): void {
+    if (!this.styleShortcutAllowed()) return;
+    this.updateSelectedNodeStyle({ italic: this.selectedNodeVisual().fontStyle !== "italic" });
+  }
+
+  /** Toggles underline on the selected node. */
+  toggleUnderlineStyle(): void {
+    if (!this.styleShortcutAllowed()) return;
+    this.updateSelectedNodeStyle({
+      underline: this.selectedNodeVisual().textDecoration !== "underline",
+    });
+  }
+
+  /** Sets the selected node's text alignment. */
+  setTextAlign(align: TextAlign): void {
+    if (!this.styleShortcutAllowed()) return;
+    this.updateSelectedNodeStyle({ textAlign: align });
+  }
+
+  /** Returns true when a style shortcut should act on the map. */
+  private styleShortcutAllowed(): boolean {
+    const active = this.rootEl.ownerDocument.activeElement as HTMLElement | null;
+    if (active?.closest("input, textarea, select")) return false;
+    return !this.editor.isOpen() && !!this.selectedId;
   }
 
   /** Appends the platform modifier to an icon tooltip. */
@@ -986,7 +987,7 @@ export class MapCanvas {
   private updateSelectedNodeStyle(patch: Partial<NodeStyle>): void {
     const controller = this.controller;
     const nodeId = this.selectedId;
-    if (!controller || !nodeId) return;
+    if (!controller || !nodeId || this.readOnly) return;
     if (!controller.updateNodeStyle(nodeId, patch)) {
       this.syncSidebar();
       return;
@@ -1815,7 +1816,6 @@ export class MapCanvas {
     }
 
     const mod = event.metaKey || event.ctrlKey;
-    if (mod && this.handleTextStyleShortcut(event)) return;
     if (mod && event.key.toLowerCase() === "a") {
       event.preventDefault();
       const ids = this.renderer.getLayoutNodes().map((node) => node.node.id);
