@@ -742,6 +742,12 @@ export class MapCanvas {
     return buttons;
   }
 
+  /** Hides a labeled row whose control cannot affect the current shape. */
+  private setRowHidden(control: HTMLElement, hidden: boolean): void {
+    const row = control.closest<HTMLElement>(".simple-mind-sidebar-row");
+    if (row) row.hidden = hidden;
+  }
+
   /** Adds a color picker with a reset-to-theme button. */
   private createSidebarColor(
     section: HTMLElement,
@@ -803,6 +809,10 @@ export class MapCanvas {
     this.setTileActive(this.sidebarConnectorButtons, meta?.connectorStyle ?? tokens.branch.style);
 
     this.setTileActive(this.sidebarShapeButtons, visual.shape);
+    const lineNode = visual.shape === "underline";
+    this.setRowHidden(this.sidebarNodeFill.input, lineNode);
+    this.setRowHidden(this.sidebarNodeBorder.input, lineNode);
+    this.setRowHidden(this.sidebarNodeBorderWidth.input, lineNode);
     this.syncColorControl(this.sidebarNodeFill, hasSelection, style.fill, visual.background);
     this.syncColorControl(this.sidebarNodeBorder, hasSelection, style.borderColor, visual.border);
     this.syncStepper(this.sidebarNodeBorderWidth, visual.borderWidth);

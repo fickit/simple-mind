@@ -209,6 +209,10 @@
   display: none;
 }
 
+.simple-mind-sidebar-row[hidden] {
+  display: none;
+}
+
 .simple-mind-sidebar-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
