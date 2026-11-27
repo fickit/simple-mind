@@ -47,20 +47,7 @@ const MIRROR_STYLE_PROPS = [
   "paddingRight",
   "paddingBottom",
   "paddingLeft",
-  "borderTopWidth",
-  "borderTopStyle",
-  "borderTopColor",
-  "borderRightWidth",
-  "borderRightStyle",
-  "borderRightColor",
-  "borderBottomWidth",
-  "borderBottomStyle",
-  "borderBottomColor",
-  "borderLeftWidth",
-  "borderLeftStyle",
-  "borderLeftColor",
   "borderRadius",
-  "boxShadow",
   "backgroundColor",
   "color",
 ];
@@ -158,14 +145,6 @@ export class InlineEditor {
       copyComputedStyles(options.nodeElement, input);
       copyComputedStyles(options.nodeElement, mirror);
     }
-    input.setCssStyles({
-      outline: "none",
-      borderStyle: "solid",
-      borderWidth: "1px",
-      borderColor: "var(--sm-selection-outline)",
-      boxShadow: "none",
-    });
-    mirror.setCssStyles({ borderStyle: "solid", borderWidth: "1px" });
 
     input.addEventListener("compositionstart", () => {
       this.composing = true;

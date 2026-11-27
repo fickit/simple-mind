@@ -986,7 +986,7 @@ export class MapCanvas {
     overlay.setAttribute("aria-modal", "true");
     overlay.setAttribute("aria-description", alt || t("lightbox.close"));
 
-    const image = createEl("img") as HTMLImageElement;
+    const image = createEl("img");
     image.className = "simple-mind-lightbox-image";
     image.src = src;
     image.alt = alt;

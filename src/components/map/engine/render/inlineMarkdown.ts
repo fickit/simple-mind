@@ -335,7 +335,7 @@ function appendImage(
   }
 
   const box = imageDisplayBox(size, width, options.maxWidth);
-  const image = createEl("img") as HTMLImageElement;
+  const image = createEl("img");
   image.className = "simple-mind-inline-image";
   image.src = src;
   image.width = box.width;
@@ -358,7 +358,7 @@ function appendImage(
  * @param parent Element receiving the placeholder.
  */
 function appendMissing(name: string, failed: boolean, parent: Node): void {
-  const placeholder = createEl("span");
+  const placeholder = createSpan();
   placeholder.className = `simple-mind-inline-missing${failed ? " is-failed" : ""}`;
   placeholder.textContent = name;
   placeholder.setAttribute(

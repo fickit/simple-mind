@@ -1,4 +1,12 @@
-import { type App, Modal, Notice, type Plugin, PluginSettingTab, Setting } from "obsidian";
+import {
+  type App,
+  Modal,
+  Notice,
+  type Plugin,
+  PluginSettingTab,
+  Setting,
+  type SettingDefinitionItem,
+} from "obsidian";
 import { LIMITS } from "../../config/constants";
 import { DEFAULT_SETTINGS } from "../../config/defaults";
 import { setLanguage, t } from "../../config/i18n";
@@ -29,14 +37,39 @@ export class SettingsTab extends PluginSettingTab {
     this.host = host;
   }
 
-  /** Rebuilds the settings UI. */
+  /** Fallback for Obsidian versions before declarative settings. */
   display(): void {
     const { containerEl } = this;
     containerEl.empty();
+    this.renderInto(containerEl);
+  }
+
+  /** Declarative entry so the tab is indexed by settings search. */
+  getSettingDefinitions(): SettingDefinitionItem[] {
+    return [
+      {
+        name: t("settings.title"),
+        render: (setting) => {
+          setting.settingEl.empty();
+          setting.settingEl.addClass("simple-mind-settings-host");
+          this.renderInto(setting.settingEl);
+        },
+      },
+    ];
+  }
+
+  /** Renders the whole settings body into one container. */
+  private renderInto(containerEl: HTMLElement): void {
     containerEl.addClass("simple-mind-settings");
     new Setting(containerEl).setName(t("settings.title")).setHeading();
     this.renderGeneral(containerEl);
     this.renderThemes(containerEl);
+  }
+
+  /** Refreshes the active settings surface. */
+  private refresh(): void {
+    if (typeof this.update === "function") this.update();
+    else this.display();
   }
 
   /** Renders general defaults. */
@@ -57,7 +90,7 @@ export class SettingsTab extends PluginSettingTab {
             setLanguage(settings.language);
             void this.host.saveSettings().then(() => {
               this.host.refreshLanguage();
-              this.display();
+              this.refresh();
             });
           }),
       );
@@ -105,7 +138,7 @@ export class SettingsTab extends PluginSettingTab {
         button.onClick(async () => {
           settings.defaultConnectorColor = "";
           await this.persist();
-          this.display();
+          this.refresh();
         });
       });
 
@@ -192,7 +225,7 @@ export class SettingsTab extends PluginSettingTab {
           this.host.settings.defaultSpacingY = DEFAULT_SETTINGS.defaultSpacingY;
           this.host.settings.defaultMaxWidth = DEFAULT_SETTINGS.defaultMaxWidth;
           await this.persist();
-          this.display();
+          this.refresh();
         }),
       );
   }
@@ -286,7 +319,7 @@ export class SettingsTab extends PluginSettingTab {
         this.host.settings.customThemes.push(saved);
         await this.persist();
         new Notice(t("settings.themeSaved"));
-        this.display();
+        this.refresh();
       },
     }).open();
   }
@@ -304,7 +337,7 @@ export class SettingsTab extends PluginSettingTab {
         else themes.push(saved);
         await this.persist();
         new Notice(t("settings.themeSaved"));
-        this.display();
+        this.refresh();
       },
     }).open();
   }
@@ -329,7 +362,7 @@ export class SettingsTab extends PluginSettingTab {
         }
         await this.persist();
         new Notice(t("settings.themeDeleted"));
-        this.display();
+        this.refresh();
       },
     ).open();
   }
@@ -380,7 +413,7 @@ export class SettingsTab extends PluginSettingTab {
     this.host.settings.customThemes.push(imported);
     await this.persist();
     new Notice(t("settings.themeSaved"));
-    this.display();
+    this.refresh();
   }
 }
 

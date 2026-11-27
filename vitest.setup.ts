@@ -62,17 +62,18 @@ if (typeof document !== "undefined" && typeof globalThis.createEl !== "function"
   globals.createFragment = (): DocumentFragment => document.createDocumentFragment();
 }
 
-// Obsidian's setCssStyles accepts camelCase declarations; jsdom only has style APIs.
-if (typeof Element !== "undefined" && !("setCssStyles" in Element.prototype)) {
-  Object.defineProperty(Element.prototype, "setCssStyles", {
-    value(this: HTMLElement, styles: Partial<CSSStyleDeclaration>): void {
+// jsdom lacks Obsidian's CSS helper, which the drag ghost uses.
+if (typeof HTMLElement !== "undefined") {
+  const proto = HTMLElement.prototype as unknown as Record<string, unknown>;
+  if (typeof proto.setCssStyles !== "function") {
+    proto.setCssStyles = function (this: HTMLElement, styles: Partial<CSSStyleDeclaration>): void {
       for (const [name, value] of Object.entries(styles)) {
-        if (value == null) continue;
+        if (value === undefined || value === null) continue;
         this.style.setProperty(
           name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`),
           String(value),
         );
       }
-    },
-  });
+    };
+  }
 }

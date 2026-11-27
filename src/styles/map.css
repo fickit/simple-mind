@@ -570,6 +570,8 @@
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
+  outline: none;
+  box-shadow: none;
 }
 
 .simple-mind-inline-editor::placeholder {
@@ -583,6 +585,7 @@
   visibility: hidden;
   pointer-events: none;
   box-sizing: border-box;
+  border: 1px solid transparent;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
@@ -665,15 +668,13 @@
 /* Inline links, thumbnails, and their placeholders inside a label. */
 .simple-mind-inline-link {
   color: inherit;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 2px;
+  border-bottom: 1px solid currentColor;
   cursor: pointer;
 }
 
 .simple-mind-inline-link.is-unresolved {
   opacity: 0.6;
-  text-decoration-style: dashed;
+  border-bottom-style: dashed;
 }
 
 .simple-mind-inline-image {
@@ -847,9 +848,12 @@
 }
 
 .simple-mind-drag-ghost {
+  position: fixed;
   z-index: 9999;
+  margin: 0;
   opacity: 0.94;
   box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  pointer-events: none;
   cursor: grabbing;
 }
 

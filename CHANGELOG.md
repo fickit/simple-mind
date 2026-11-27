@@ -2,8 +2,10 @@
 
 ## 1.1.1 — 2026-11-28
 
-- Replace static inline style assignments with Obsidian's `setCssStyles` helper so the plugin passes
-  the community review.
+- Move the drag ghost and editor chrome to CSS classes and Obsidian CSS helpers, clearing the community review error.
+- Implement declarative settings so the tab appears in settings search on Obsidian 1.13+; the display renderer stays as the fallback for older versions.
+- Attest the release assets with GitHub build provenance.
+- Clear the remaining review warnings: unnecessary assertions, the last raw element creation, and the text-decoration CSS lint.
 
 ## 1.1.0 — 2026-11-27
 

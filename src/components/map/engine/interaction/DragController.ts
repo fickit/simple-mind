@@ -234,12 +234,9 @@ export class DragController {
       node.removeAttribute("id");
     }
     ghost.setCssStyles({
-      position: "fixed",
-      margin: "0",
       width: `${rect.width}px`,
       height: `${rect.height}px`,
       transform: "none",
-      pointerEvents: "none",
     });
     this.ghostOffsetX = event.clientX - rect.left;
     this.ghostOffsetY = event.clientY - rect.top;
