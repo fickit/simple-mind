@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { beforeAll, describe, expect, it, vi } from "vitest";
+import { MARQUEE_HOLD_MS } from "../../config/constants";
 import { DEFAULT_MINDMAP_META, DEFAULT_SETTINGS } from "../../config/defaults";
 import { MapCanvas, type MapCanvasOptions } from "./MapCanvas";
 import { PAPER_THEME } from "./themes/presets";
@@ -1066,7 +1067,7 @@ describe("MapCanvas multi-selection", () => {
     canvas.destroy();
     host.remove();
   });
-  it("marquees visible nodes by dragging empty canvas", () => {
+  it("marquees visible nodes when a modifier is held", () => {
     const { host, canvas } = createCanvas("# Root\n- A\n- B\n");
     const canvasEl = host.querySelector<HTMLElement>(".simple-mind-canvas")!;
     canvasEl.getBoundingClientRect = () =>
@@ -1086,6 +1087,7 @@ describe("MapCanvas multi-selection", () => {
     canvasEl.dispatchEvent(
       new MouseEvent("pointerdown", {
         button: 0,
+        ctrlKey: true,
         clientX: 0,
         clientY: 0,
         bubbles: true,
@@ -1130,5 +1132,108 @@ describe("MapCanvas root dragging", () => {
 
     canvas.destroy();
     host.remove();
+  });
+});
+
+describe("MapCanvas node dragging", () => {
+  it("reparents a dragged child onto another node", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n- B\n");
+    const a = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n2"]')!;
+    const b = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n3"]')!;
+    document.elementsFromPoint = () => [a];
+
+    b.dispatchEvent(
+      new MouseEvent("pointerdown", { button: 0, clientX: 100, clientY: 100, bubbles: true }),
+    );
+    window.dispatchEvent(
+      new MouseEvent("pointermove", { clientX: 140, clientY: 130, bubbles: true }),
+    );
+    window.dispatchEvent(
+      new MouseEvent("pointerup", { clientX: 140, clientY: 130, bubbles: true }),
+    );
+
+    expect(canvas.getSource()).toContain("- A\n  - B");
+
+    canvas.destroy();
+    host.remove();
+  });
+});
+
+describe("MapCanvas empty-canvas gestures", () => {
+  it("pans the map on a quick drag", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    const canvasEl = host.querySelector<HTMLElement>(".simple-mind-canvas")!;
+    canvasEl.getBoundingClientRect = () =>
+      ({
+        x: 0,
+        y: 0,
+        left: 0,
+        top: 0,
+        right: 800,
+        bottom: 600,
+        width: 800,
+        height: 600,
+        toJSON: () => ({}),
+      }) as DOMRect;
+    canvas.fit();
+    const before = canvas.getViewState();
+
+    canvasEl.dispatchEvent(
+      new MouseEvent("pointerdown", { button: 0, clientX: 100, clientY: 100, bubbles: true }),
+    );
+    window.dispatchEvent(
+      new MouseEvent("pointermove", { clientX: 130, clientY: 125, bubbles: true }),
+    );
+    window.dispatchEvent(
+      new MouseEvent("pointerup", { clientX: 130, clientY: 125, bubbles: true }),
+    );
+
+    const after = canvas.getViewState();
+    expect(after.x - before.x).toBe(30);
+    expect(after.y - before.y).toBe(25);
+
+    canvas.destroy();
+    host.remove();
+  });
+
+  it("starts a marquee after holding empty canvas", () => {
+    vi.useFakeTimers();
+    try {
+      const { host, canvas } = createCanvas("# Root\n- A\n- B\n");
+      const canvasEl = host.querySelector<HTMLElement>(".simple-mind-canvas")!;
+      canvasEl.getBoundingClientRect = () =>
+        ({
+          x: 0,
+          y: 0,
+          left: 0,
+          top: 0,
+          right: 800,
+          bottom: 600,
+          width: 800,
+          height: 600,
+          toJSON: () => ({}),
+        }) as DOMRect;
+      canvas.fit();
+
+      canvasEl.dispatchEvent(
+        new MouseEvent("pointerdown", { button: 0, clientX: 0, clientY: 0, bubbles: true }),
+      );
+      vi.advanceTimersByTime(MARQUEE_HOLD_MS + 1);
+      expect(host.querySelector(".simple-mind-marquee")).not.toBeNull();
+
+      window.dispatchEvent(
+        new MouseEvent("pointermove", { clientX: 800, clientY: 600, bubbles: true }),
+      );
+      window.dispatchEvent(
+        new MouseEvent("pointerup", { clientX: 800, clientY: 600, bubbles: true }),
+      );
+
+      expect(canvas.getSelectedIds()).toHaveLength(3);
+
+      canvas.destroy();
+      host.remove();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

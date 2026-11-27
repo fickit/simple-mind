@@ -397,8 +397,9 @@ node scripts/benchmark.mjs
   the rounded frame.
 - 1.1.0 adds inline images and note links: wikilink targets open in a new tab with hover preview,
   embeds render as sized thumbnails with a lightbox, and `[[` / `![[` autocomplete inserts them.
-  Nodes also support marquee selection by dragging empty canvas, Ctrl/Cmd+A, batch delete/copy/cut,
-  and root-drag panning; redundant hover tooltips were removed from node content.
+  Nodes also support marquee selection by holding on empty canvas (Ctrl/Cmd+Shift for an immediate
+  additive box), Ctrl/Cmd+A, batch delete/copy/cut, root-drag panning, and a drag ghost while
+  reparenting; redundant hover tooltips were removed from node content.
 - Next: submit the plugin to the Obsidian community list when ready.
 - Test vault: local only and ignored by git; the build writes the plugin into it.
 - Author metadata: `fickit`; repository `https://github.com/fickit/simple-mind`.

@@ -828,7 +828,7 @@
 
 .simple-mind-node.is-selected {
   outline: 1px solid var(--sm-selection-outline);
-  outline-offset: 2px;
+  outline-offset: 0;
 }
 
 .simple-mind-node.is-editing {
@@ -837,6 +837,13 @@
 
 .simple-mind-node.is-dragging {
   opacity: 0.55;
+}
+
+.simple-mind-drag-ghost {
+  z-index: 9999;
+  opacity: 0.94;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  cursor: grabbing;
 }
 
 .simple-mind-canvas.is-dragging-node,

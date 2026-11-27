@@ -79,3 +79,9 @@ export const INLINE_IMAGE_PLACEHOLDER_HEIGHT = 120;
 
 /** Maximum number of inline autocomplete candidates shown while editing. */
 export const INLINE_SUGGESTION_LIMIT = 8;
+
+/** Optional hold delay that turns an empty-canvas drag into a marquee. */
+export const MARQUEE_HOLD_MS = 300;
+
+/** Movement that turns a canvas press into a pan before the hold elapses. */
+export const MARQUEE_MOVE_TOLERANCE = 4;

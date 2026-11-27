@@ -63,6 +63,9 @@ export class DragController {
   private panCandidate: PanCandidate | null = null;
   private source: { nodeId: string; element: HTMLElement } | null = null;
   private target: DropTarget | null = null;
+  private ghost: HTMLElement | null = null;
+  private ghostOffsetX = 0;
+  private ghostOffsetY = 0;
   private expandTimer: number | null = null;
   private hoverTargetId: string | null = null;
   private windowBound = false;
@@ -91,6 +94,8 @@ export class DragController {
     this.clearTarget();
     this.candidate = null;
     this.panCandidate = null;
+    this.ghost?.remove();
+    this.ghost = null;
     this.canvas.classList.remove("is-panning");
     this.source = null;
     this.unbindWindow();
@@ -171,10 +176,12 @@ export class DragController {
       this.source.element.classList.add("is-dragging");
       this.canvas.classList.add("is-dragging-node");
       this.canvas.focus();
+      this.createGhost(event);
     }
 
     if (!this.source) return;
     event.preventDefault();
+    this.moveGhost(event.clientX, event.clientY);
     this.updateTarget(event.clientX, event.clientY);
   }
 
@@ -196,6 +203,43 @@ export class DragController {
 
     this.cancel();
     if (wasDragging) event.preventDefault();
+  }
+
+  /** Creates a floating copy of the node that follows the pointer. */
+  private createGhost(event: PointerEvent): void {
+    if (!this.source) return;
+    const element = this.source.element;
+    const rect = element.getBoundingClientRect();
+    const ghost = element.cloneNode(true) as HTMLElement;
+    for (const control of ghost.querySelectorAll(".simple-mind-add, .simple-mind-collapse")) {
+      control.remove();
+    }
+    ghost.classList.remove("is-selected", "is-dragging", "is-editing");
+    ghost.classList.add("simple-mind-drag-ghost");
+    ghost.removeAttribute("id");
+    ghost.removeAttribute("aria-labelledby");
+    ghost.setAttribute("aria-hidden", "true");
+    for (const node of ghost.querySelectorAll("[id]")) {
+      node.removeAttribute("id");
+    }
+    ghost.style.position = "fixed";
+    ghost.style.margin = "0";
+    ghost.style.width = `${rect.width}px`;
+    ghost.style.height = `${rect.height}px`;
+    ghost.style.transform = "none";
+    ghost.style.pointerEvents = "none";
+    this.ghostOffsetX = event.clientX - rect.left;
+    this.ghostOffsetY = event.clientY - rect.top;
+    this.canvas.ownerDocument.body.appendChild(ghost);
+    this.ghost = ghost;
+    this.moveGhost(event.clientX, event.clientY);
+  }
+
+  /** Places the drag ghost under the pointer. */
+  private moveGhost(clientX: number, clientY: number): void {
+    if (!this.ghost) return;
+    this.ghost.style.left = `${clientX - this.ghostOffsetX}px`;
+    this.ghost.style.top = `${clientY - this.ghostOffsetY}px`;
   }
 
   /** Finds the node under the pointer and updates the indicator. */
