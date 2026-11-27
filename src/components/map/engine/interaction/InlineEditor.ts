@@ -162,6 +162,7 @@ export class InlineEditor {
     input.style.borderStyle = "solid";
     input.style.borderWidth = "1px";
     input.style.borderColor = "var(--sm-selection-outline)";
+    input.style.boxShadow = "none";
     mirror.style.borderStyle = "solid";
     mirror.style.borderWidth = "1px";
 
