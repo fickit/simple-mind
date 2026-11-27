@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1 — 2026-11-28
+
+- Replace static inline style assignments with Obsidian's `setCssStyles` helper so the plugin passes
+  the community review.
+
 ## 1.1.0 — 2026-11-27
 
 - Nodes can link to notes with Obsidian wikilinks: `[[Note]]`, `[[Note|alias]]`, and
