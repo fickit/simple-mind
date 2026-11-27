@@ -61,5 +61,8 @@ Legend: `√` done, `x` rejected, `-` not done.
   note.
 - `√` Update `doc/design-simple-mind.md`, `doc/prd.md`, and the project plan ledger.
 - `√` Bump to 1.1.0, run typecheck, lint, tests, and the production build, then commit.
+- `√` Adapt image-only nodes: drop the card, round and gap the pictures, and keep the node exactly as
+  large as the image group.
+- `√` Fix autocomplete navigation so ArrowUp/ArrowDown keep the active row and hover highlights it.
 - `-` Manual test-vault pass: autocomplete, hover preview, new-tab opening, vault and external
   images, missing assets, lightbox, and culling.

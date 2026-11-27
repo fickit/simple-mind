@@ -140,6 +140,11 @@ describe("MapRenderer inline resources", () => {
     link?.dispatchEvent(new MouseEvent("pointerover", { bubbles: true }));
     expect(previewNote).toHaveBeenCalledWith(expect.anything(), link, "Plan");
 
+    const imageNode = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n3"]');
+    expect(imageNode?.classList.contains("is-media")).toBe(true);
+    const linkNode = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n2"]');
+    expect(linkNode?.classList.contains("is-media")).toBe(false);
+
     const image = host.querySelector<HTMLImageElement>(".simple-mind-inline-image");
     expect(image?.getAttribute("src")).toBe("vault://photo.png");
     image?.dispatchEvent(new MouseEvent("click", { bubbles: true }));

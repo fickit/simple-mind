@@ -3,7 +3,7 @@ import type { MindMapMeta, MindNode } from "../../../../types/mindmap";
 import type { NodeShape, ThemeTokens } from "../../../../types/theme";
 import { nodeVisual } from "../../themes/nodeVisual";
 import type { NodeMeasurer, NodeSize } from "../layout/types";
-import { renderInlineMarkdown } from "./inlineMarkdown";
+import { isMediaOnlyLabel, renderInlineMarkdown } from "./inlineMarkdown";
 
 /** Returns the border width that participates in measurement. */
 function measurementBorderWidth(shape: NodeShape, borderWidth: number): number {
@@ -92,6 +92,7 @@ export class DomNodeMeasurer {
     if (cached) return cached;
 
     const visual = nodeVisual(this.tokens, node.style, isRoot);
+    const mediaOnly = isMediaOnlyLabel(node.text);
     const borderWidth =
       visual.shape === "underline"
         ? (node.style?.borderWidth ?? 2)
@@ -100,10 +101,15 @@ export class DomNodeMeasurer {
     this.inner.style.fontSize = `${visual.fontSize}px`;
     this.inner.style.fontStyle = visual.fontStyle;
     this.inner.style.fontWeight = String(visual.fontWeight);
-    this.inner.style.lineHeight = String(visual.lineHeight);
-    this.inner.style.border = borderWidth > 0 ? `${borderWidth}px solid transparent` : "none";
+    this.inner.style.lineHeight = mediaOnly ? "0" : String(visual.lineHeight);
+    this.inner.classList.toggle("is-media", mediaOnly);
+    this.inner.style.padding = mediaOnly
+      ? "0"
+      : `${this.tokens.node.paddingY}px ${this.tokens.node.paddingX}px`;
+    this.inner.style.border =
+      mediaOnly || borderWidth <= 0 ? "none" : `${borderWidth}px solid transparent`;
     this.inner.style.borderBottom =
-      visual.shape === "underline" ? `${borderWidth}px solid transparent` : "";
+      mediaOnly || visual.shape !== "underline" ? "" : `${borderWidth}px solid transparent`;
     this.inner.replaceChildren(
       renderInlineMarkdown(node.text, this.inner.ownerDocument, {
         host: this.inlineHost,

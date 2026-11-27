@@ -41,7 +41,8 @@ Markdown outline underneath. No account, no lock-in.
 
 - Put note links and image embeds straight into a label: `[[Note]]`, `[[Note|alias]]`,
   `![[photo.png]]`, or `![[photo.png|300]]`.
-- Images render as thumbnails capped at 140 px high; add `|300` to set a width. Click one to open it
+- Images render as thumbnails capped at 140 px high; add `|300` to set a width. A node made only of
+  images drops its card and becomes the picture itself, with rounded corners. Click one to open it
   in a full-map lightbox.
 - Note links open in a new tab, keep the map open, and show Obsidian's page preview on hover.
 - Typing `[[` or `![[` while editing opens a fuzzy file search that inserts the link for you.

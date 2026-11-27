@@ -188,9 +188,13 @@ export class InlineEditor {
       }
     });
     input.addEventListener("keyup", (event) => {
-      if (event.key.startsWith("Arrow") || event.key === "Home" || event.key === "End") {
-        this.refreshSuggestions();
-      }
+      const movesCaret =
+        event.key === "ArrowLeft" ||
+        event.key === "ArrowRight" ||
+        event.key === "Home" ||
+        event.key === "End" ||
+        ((event.key === "ArrowUp" || event.key === "ArrowDown") && !this.suggestList);
+      if (movesCaret) this.refreshSuggestions();
     });
     input.addEventListener("blur", () => {
       if (!this.finished) this.commit("none");
@@ -362,6 +366,7 @@ export class InlineEditor {
         event.preventDefault();
         event.stopPropagation();
       });
+      row.addEventListener("pointerenter", () => this.setSuggestionIndex(index));
       row.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -381,14 +386,19 @@ export class InlineEditor {
 
   /** Moves the active row, wrapping at both ends. */
   private moveSuggestion(delta: number): void {
+    this.setSuggestionIndex(this.suggestionIndex + delta);
+  }
+
+  /** Marks one row active and keeps it in view. */
+  private setSuggestionIndex(index: number): void {
     const count = this.suggestions.length;
     if (count === 0) return;
-    this.suggestionIndex = (this.suggestionIndex + delta + count) % count;
+    this.suggestionIndex = ((index % count) + count) % count;
     const rows = this.suggestList?.children;
     if (!rows) return;
-    for (let index = 0; index < rows.length; index += 1) {
-      const row = rows[index] as HTMLElement;
-      const active = index === this.suggestionIndex;
+    for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+      const row = rows[rowIndex] as HTMLElement;
+      const active = rowIndex === this.suggestionIndex;
       row.classList.toggle("is-active", active);
       row.setAttribute("aria-selected", String(active));
       if (active) row.scrollIntoView?.({ block: "nearest" });

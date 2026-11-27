@@ -1,7 +1,11 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
 import type { InlineImageSizes, InlineResourceHost } from "../../../../types/inline";
-import { type InlineMarkdownOptions, renderInlineMarkdown } from "./inlineMarkdown";
+import {
+  type InlineMarkdownOptions,
+  isMediaOnlyLabel,
+  renderInlineMarkdown,
+} from "./inlineMarkdown";
 
 const host: InlineResourceHost = {
   noteExists: (target) => target === "Plan" || target.startsWith("Plan#"),
@@ -173,5 +177,15 @@ describe("renderInlineMarkdown", () => {
 
     expect(host.querySelector("a")).toBeNull();
     expect(host.textContent).toBe("[[Plan]]");
+  });
+  it("detects labels made only of images", () => {
+    expect(isMediaOnlyLabel("![[photo.png]]")).toBe(true);
+    expect(isMediaOnlyLabel("![[a.png]] ![[b.png]]")).toBe(true);
+    expect(isMediaOnlyLabel("![alt](https://example.com/a.png)")).toBe(true);
+    expect(isMediaOnlyLabel("Caption ![[photo.png]]")).toBe(false);
+    expect(isMediaOnlyLabel("[[Plan]]")).toBe(false);
+    expect(isMediaOnlyLabel("![[a.png]](javascript:alert(1))")).toBe(false);
+    expect(isMediaOnlyLabel("![bad](javascript:alert(1))")).toBe(false);
+    expect(isMediaOnlyLabel("\\![[photo.png]]")).toBe(false);
   });
 });

@@ -37,6 +37,37 @@ export function renderInlineMarkdown(
   return fragment;
 }
 
+/** Matches an embed or Markdown image, capturing its target pieces. */
+const IMAGE_TOKEN = /!\[\[([^\]]*)\]\]|!\[([^\]]*)\]\(([^)]*)\)/g;
+
+/** Returns true when a URL is an image the renderer will accept. */
+function isRenderableImageTarget(target: string): boolean {
+  return !/^[a-z][a-z0-9+.-]*:/i.test(target) || isExternalImage(target);
+}
+
+/**
+ * Returns true when a label contains only image tokens and whitespace.
+ *
+ * Such a node drops its card background and padding so the image group becomes
+ * the node itself. Escapes, code, links, and invalid image schemes keep the
+ * normal card.
+ *
+ * @param text Raw node label.
+ */
+export function isMediaOnlyLabel(text: string): boolean {
+  let images = 0;
+  const rest = text.replace(
+    IMAGE_TOKEN,
+    (match: string, embed: string | undefined, _alt: string, url: string | undefined) => {
+      const target = embed !== undefined ? embed.trim() : (url ?? "").trim();
+      if (!target || !isRenderableImageTarget(target)) return match;
+      images += 1;
+      return " ";
+    },
+  );
+  return images > 0 && rest.trim() === "";
+}
+
 /** Returns true when a URL is an external image source. */
 function isExternalImage(url: string): boolean {
   return /^https?:\/\//i.test(url.trim());

@@ -18,7 +18,11 @@ import { connectorPath } from "./connectors";
 import { intersectsWorldRect, visibleWorldRect, type WorldRect } from "./culling";
 import { type IconName, setIcon, setText } from "./icons";
 import { ImageSizeCache } from "./imageSizes";
-import { type InlineMarkdownOptions, renderInlineMarkdown } from "./inlineMarkdown";
+import {
+  type InlineMarkdownOptions,
+  isMediaOnlyLabel,
+  renderInlineMarkdown,
+} from "./inlineMarkdown";
 import { DomNodeMeasurer } from "./measure";
 
 const FIT_PADDING = 48;
@@ -614,6 +618,7 @@ export class MapRenderer {
       `side-${positioned.side}`,
       `shape-${visual.shape}`,
       isRoot ? "is-root" : "",
+      isMediaOnlyLabel(node.text) ? "is-media" : "",
       selected ? "is-selected" : "",
       this.editingNodeId === node.id ? "is-editing" : "",
     ]

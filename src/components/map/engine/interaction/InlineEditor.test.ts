@@ -162,4 +162,26 @@ describe("InlineEditor", () => {
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
+  it("keeps the active suggestion while moving with arrows", () => {
+    const { world, editor } = setup();
+    const suggest = vi.fn(() => [
+      { label: "Alpha", detail: "Alpha.md", insert: "Alpha" },
+      { label: "Beta", detail: "Beta.md", insert: "Beta" },
+    ]);
+
+    editor.open(position, "", { onCommit: vi.fn(), onCancel: vi.fn() }, { suggest });
+    const input = world.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor")!;
+    input.value = "[[";
+    input.setSelectionRange(2, 2);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    const rows = Array.from(world.querySelectorAll(".simple-mind-suggest-item"));
+
+    expect(rows[0].classList.contains("is-active")).toBe(true);
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent("keyup", { key: "ArrowDown", bubbles: true }));
+    expect(rows[1].classList.contains("is-active")).toBe(true);
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent("keyup", { key: "ArrowUp", bubbles: true }));
+    expect(rows[0].classList.contains("is-active")).toBe(true);
+  });
 });

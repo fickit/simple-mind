@@ -677,8 +677,28 @@
 .simple-mind-inline-image {
   display: inline-block;
   max-width: 100%;
+  margin: 0 1px;
   border-radius: 3px;
   vertical-align: middle;
+}
+
+/* A label made only of images drops the card and becomes the picture itself. */
+.simple-mind-node.is-media:not(.is-editing) {
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.simple-mind-node.is-media:not(.is-editing) .simple-mind-node-label {
+  line-height: 0;
+}
+
+.simple-mind-node.is-media .simple-mind-inline-image,
+.simple-mind-measure-inner.is-media .simple-mind-inline-image {
+  margin: 1px;
+  border-radius: clamp(4px, var(--sm-node-radius, 6px), 10px);
+  vertical-align: top;
 }
 
 .simple-mind-inline-missing {

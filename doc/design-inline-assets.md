@@ -108,10 +108,12 @@ cached as failures so they do not retry on every redraw.
 
 Display box:
 
-1. With `|width`: `w = min(width, maxWidth)`, `h = round(w × naturalH / naturalW)`.
-2. Without: `h = min(140, naturalH)`, `w = round(naturalW × h / naturalH)`, then scale down to
+1. A node whose label contains only images drops its card background, border, shadow, and padding;
+   the image group becomes the node, with rounded image corners and a small gap between images.
+2. With `|width`: `w = min(width, maxWidth)`, `h = round(w × naturalH / naturalW)`.
+3. Without: `h = min(140, naturalH)`, `w = round(naturalW × h / naturalH)`, then scale down to
    `maxWidth` if needed.
-3. Unknown dimensions: 200×120 until the load resolves.
+4. Unknown dimensions: 200×120 until the load resolves.
 
 ### 4.4 Autocomplete
 

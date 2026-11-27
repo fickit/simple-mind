@@ -5,8 +5,10 @@
 - Nodes can link to notes with Obsidian wikilinks: `[[Note]]`, `[[Note|alias]]`, and
   `[[Note#Heading]]`. Links open in a new tab and show Obsidian's page preview on hover.
 - Nodes can show images inline with `![[photo.png]]`, `![[photo.png|300]]`, `![alt](https://…)`, and
-  vault-relative Markdown images. Thumbnails are capped at 140 px high and open in a lightbox.
-- Typing `[[` or `![[` while editing opens a fuzzy file search that inserts the link.
+  vault-relative Markdown images. Thumbnails are capped at 140 px high and open in a lightbox; a node
+  made only of images becomes the picture itself with rounded corners.
+- Typing `[[` or `![[` while editing opens a fuzzy file search that inserts the link; arrow keys move
+  through the list and the mouse can highlight an entry.
 - Missing notes and images render as explicit placeholders instead of breaking the map.
 
 ## 1.0.4 — 2026-11-06
