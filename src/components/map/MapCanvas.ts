@@ -294,6 +294,51 @@ export class MapCanvas {
     return this.controller?.getSource() ?? this.sourceText;
   }
 
+  /** Applies Ctrl/Cmd+B/I/U and alignment shortcuts to the selected node. */
+  private handleTextStyleShortcut(event: KeyboardEvent): boolean {
+    if (event.altKey) return false;
+    const key = event.key.toLowerCase();
+    if (!event.shiftKey) {
+      if (key === "b") return this.toggleTextStyle("bold");
+      if (key === "i") return this.toggleTextStyle("italic");
+      if (key === "u") return this.toggleTextStyle("underline");
+      return false;
+    }
+
+    const align: TextAlign | null =
+      key === "l" ? "left" : key === "e" ? "center" : key === "r" ? "right" : null;
+    if (!align) return false;
+    this.updateSelectedNodeStyle({ textAlign: align });
+    event.preventDefault();
+    event.stopPropagation();
+    return true;
+  }
+
+  /** Toggles one text style on the selected node. */
+  private toggleTextStyle(kind: "bold" | "italic" | "underline"): boolean {
+    const visual = this.selectedNodeVisual();
+    if (kind === "bold") this.updateSelectedNodeStyle({ bold: visual.fontWeight < 600 });
+    else if (kind === "italic") {
+      this.updateSelectedNodeStyle({ italic: visual.fontStyle !== "italic" });
+    } else {
+      this.updateSelectedNodeStyle({ underline: visual.textDecoration !== "underline" });
+    }
+    return true;
+  }
+
+  /** Appends the platform modifier to an icon tooltip. */
+  private shortcutLabel(label: string, keys: string): string {
+    const mod = /Mac/i.test(navigator.userAgent) ? "Cmd" : "Ctrl";
+    return `${label} (${mod}+${keys})`;
+  }
+
+  /** Returns the effective visual of the selected node. */
+  private selectedNodeVisual(): NodeVisual {
+    const node = this.getSelectedNode();
+    const isRoot = node ? this.controller?.isRoot(node.id) === true : false;
+    return nodeVisual(this.activeTokens(), node?.style, isRoot);
+  }
+
   /** Returns the selected node id. */
   getSelectedId(): string | null {
     return this.selectedId;
@@ -509,9 +554,13 @@ export class MapCanvas {
       textStyleStack,
       t("sidebar.textStyle"),
       [
-        { value: "bold", icon: "bold", title: t("sidebar.bold") },
-        { value: "italic", icon: "italic", title: t("sidebar.italic") },
-        { value: "underline", icon: "underline", title: t("sidebar.underline") },
+        { value: "bold", icon: "bold", title: this.shortcutLabel(t("sidebar.bold"), "B") },
+        { value: "italic", icon: "italic", title: this.shortcutLabel(t("sidebar.italic"), "I") },
+        {
+          value: "underline",
+          icon: "underline",
+          title: this.shortcutLabel(t("sidebar.underline"), "U"),
+        },
       ],
       (value, active) => {
         if (value === "bold") this.updateSelectedNodeStyle({ bold: active });
@@ -526,9 +575,21 @@ export class MapCanvas {
       textStyleStack,
       t("sidebar.textAlign"),
       [
-        { value: "left", icon: "align-left", title: t("sidebar.textAlign.left") },
-        { value: "center", icon: "align-center", title: t("sidebar.textAlign.center") },
-        { value: "right", icon: "align-right", title: t("sidebar.textAlign.right") },
+        {
+          value: "left",
+          icon: "align-left",
+          title: this.shortcutLabel(t("sidebar.textAlign.left"), "Shift+L"),
+        },
+        {
+          value: "center",
+          icon: "align-center",
+          title: this.shortcutLabel(t("sidebar.textAlign.center"), "Shift+E"),
+        },
+        {
+          value: "right",
+          icon: "align-right",
+          title: this.shortcutLabel(t("sidebar.textAlign.right"), "Shift+R"),
+        },
       ],
       (value) =>
         this.updateSelectedNodeStyle({
@@ -1754,6 +1815,7 @@ export class MapCanvas {
     }
 
     const mod = event.metaKey || event.ctrlKey;
+    if (mod && this.handleTextStyleShortcut(event)) return;
     if (mod && event.key.toLowerCase() === "a") {
       event.preventDefault();
       const ids = this.renderer.getLayoutNodes().map((node) => node.node.id);

@@ -78,6 +78,8 @@ Markdown outline underneath. No account, no lock-in.
    | `F2` or double-click | Edit the selected node |
    | `Delete` / `Backspace` | Delete the selected node, except the root |
    | Arrow keys | Move the selection |
+   | `Ctrl/Cmd+B`, `I`, `U` | Bold, italic, underline the selected node |
+   | `Ctrl/Cmd+Shift+L/E/R` | Align the selected node left, center, right |
    | `Ctrl/Cmd+A` | Select all visible nodes |
    | Drag on empty canvas | Box-select nodes; Ctrl/Cmd/Shift adds |
    | Alt + drag | Pan the canvas |

@@ -76,6 +76,8 @@ Simple Mind 把一个 `.mindmap` 文件变成精致、可交互的导图，底�
    | `F2` 或双击 | 编辑选中节点 |
    | `Delete` / `Backspace` | 删除选中节点（根节点除外） |
    | 方向键 | 移动选择 |
+   | `Ctrl/Cmd+B`、`I`、`U` | 选中节点加粗、斜体、下划线 |
+   | `Ctrl/Cmd+Shift+L/E/R` | 选中节点左对齐、居中、右对齐 |
    | `Ctrl/Cmd+A` | 选中所有可见节点 |
    | 在空白画布上拖拽 | 框选节点；按住 Ctrl/Cmd/Shift 为追加 |
    | Alt + 拖动 | 平移画布 |

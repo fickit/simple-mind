@@ -1276,3 +1276,36 @@ describe("MapCanvas image node dragging", () => {
     host.remove();
   });
 });
+
+describe("MapCanvas text style shortcuts", () => {
+  it("toggles text styles and alignment on the selected node", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    const canvasEl = host.querySelector<HTMLElement>(".simple-mind-canvas")!;
+    selectNode(host, "n2");
+    const press = (key: string, shiftKey = false): void => {
+      canvasEl.dispatchEvent(
+        new KeyboardEvent("keydown", { key, ctrlKey: true, shiftKey, bubbles: true }),
+      );
+    };
+
+    press("b");
+    expect(canvas.getSource()).toContain('"bold":true');
+    press("b");
+    expect(canvas.getSource()).toContain('"bold":false');
+
+    press("i");
+    expect(canvas.getSource()).toContain('"italic":true');
+    press("u");
+    expect(canvas.getSource()).toContain('"underline":true');
+
+    press("e", true);
+    expect(canvas.getSource()).toContain('"textAlign":"center"');
+    press("l", true);
+    expect(canvas.getSource()).toContain('"textAlign":"left"');
+    press("r", true);
+    expect(canvas.getSource()).toContain('"textAlign":"right"');
+
+    canvas.destroy();
+    host.remove();
+  });
+});

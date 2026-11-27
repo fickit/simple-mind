@@ -6,6 +6,7 @@
 - Implement declarative settings so the tab appears in settings search on Obsidian 1.13+; the display renderer stays as the fallback for older versions.
 - Attest the release assets with GitHub build provenance.
 - Clear the remaining review warnings: unnecessary assertions, the last raw element creation, and the text-decoration CSS lint.
+- Text styles on the selected node respond to Ctrl/Cmd+B/I/U, and alignment to Ctrl/Cmd+Shift+L/E/R; the sidebar tooltips show the shortcuts.
 
 ## 1.1.0 — 2026-11-27
 

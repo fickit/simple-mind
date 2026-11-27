@@ -419,6 +419,8 @@ While the canvas has focus:
 - F2 or double-click: edit the selected node with the whole label selected.
 - Space: edit the selected node with the caret at the end, so typing appends.
 - Any other single character: edit with that character replacing the label.
+- Ctrl/Cmd+B, Ctrl/Cmd+I, Ctrl/Cmd+U: bold, italic, underline the selected node.
+- Ctrl/Cmd+Shift+L/E/R: align the selected node left, center, right.
 - Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z: undo/redo map commands.
 - Ctrl/Cmd+C/X/V: copy, cut, paste a subtree.
 - Escape: clear selection.
