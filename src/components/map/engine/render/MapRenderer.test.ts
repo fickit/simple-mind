@@ -132,6 +132,7 @@ describe("MapRenderer inline resources", () => {
     renderer.render(mapDocument!);
 
     const link = host.querySelector<HTMLElement>(".simple-mind-inline-link");
+    expect(link?.getAttribute("aria-label")).toBeNull();
     expect(link?.dataset.link).toBe("Plan");
     link?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     expect(openNote).toHaveBeenCalledWith("Plan");
@@ -147,11 +148,39 @@ describe("MapRenderer inline resources", () => {
 
     const image = host.querySelector<HTMLImageElement>(".simple-mind-inline-image");
     expect(image?.getAttribute("src")).toBe("vault://photo.png");
+    expect(image?.title).toBe("");
     image?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     expect(openImage).toHaveBeenCalledWith("vault://photo.png", "photo.png");
 
     image?.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
     expect(onEditRequest).not.toHaveBeenCalled();
+
+    renderer.destroy();
+    host.remove();
+  });
+});
+
+describe("MapRenderer multi-selection", () => {
+  it("marks every selected node and keeps one primary", () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const renderer = new MapRenderer(host, OBSIDIAN_THEME, false);
+    const mapDocument = parseSource("# Root\n- A\n- B\n").document;
+    expect(mapDocument).not.toBeNull();
+    renderer.render(mapDocument!);
+
+    const root = host.querySelector<HTMLElement>(".simple-mind-node");
+    expect(root?.getAttribute("aria-label")).toBeNull();
+    expect(root?.getAttribute("aria-labelledby")).toBe("simple-mind-label-n1");
+
+    renderer.selectNodes(["n2", "n3"], "n3");
+    expect(renderer.getSelectedIds()).toEqual(["n2", "n3"]);
+    expect(renderer.getSelectedId()).toBe("n3");
+    expect(host.querySelectorAll(".simple-mind-node.is-selected")).toHaveLength(2);
+
+    renderer.selectNode("n2");
+    expect(renderer.getSelectedIds()).toEqual(["n2"]);
+    expect(host.querySelectorAll(".simple-mind-node.is-selected")).toHaveLength(1);
 
     renderer.destroy();
     host.remove();

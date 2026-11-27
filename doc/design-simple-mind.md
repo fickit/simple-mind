@@ -392,8 +392,12 @@ resolved against the layout, so a culled node keeps its id, its state, and its p
 
 ### 7.5 Selection and focus
 
-One node is selected at a time. Selection is a class plus `aria-selected`. The canvas keeps keyboard
-focus for navigation. Node content can contain links; a modified click opens the link instead of
+When anything is selected, one node is the primary selection and the selection may also contain more
+nodes. Selection is a class plus `aria-selected` on every selected node. The primary drives the style
+panel and single-node commands. Ctrl/Cmd+Shift-drag on empty canvas draws a marquee and adds every
+intersecting visible node to the selection; Ctrl/Cmd+A selects every visible node. Delete, copy, and
+cut operate on the top-level selected subtrees in one history entry. The canvas keeps keyboard focus
+for navigation. Node content can contain links; clicking one opens the note in a new tab instead of
 selecting the node.
 
 ## 8. Interaction and editing
@@ -403,6 +407,8 @@ selecting the node.
 While the canvas has focus:
 
 - Arrow keys: move selection spatially.
+- Ctrl/Cmd+Shift+drag: marquee-select visible nodes on empty canvas.
+- Ctrl/Cmd+A: select every visible node.
 - Tab: add child and start editing.
 - Shift+Tab: move selection to the parent.
 - Enter: add a sibling after the selected node and start editing.
@@ -647,6 +653,8 @@ theme, so a file can pick any of the nine themes while the panel keeps one mater
 - The map fills the pane edge to edge: the view hides Obsidian's view padding and view header,
   the root is square, and the canvas grain reaches the window frame on every side, the way the
   Markdown view does.
+- Hover tooltips stay on icon-only controls. Nodes, links, images, text fields, and labeled rows
+  carry their text directly, so they do not duplicate it in an `aria-label` tooltip.
 - Motion stays conservative because these controls are edge affordances: hover changes color only over
   140 ms, there is no translate, scale, or ring, and `prefers-reduced-motion` zeroes every transition
   and delay. The one larger motion is the style panel folding: it is a width, padding, and opacity

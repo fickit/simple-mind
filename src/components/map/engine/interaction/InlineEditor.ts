@@ -342,7 +342,7 @@ export class InlineEditor {
     list.className = "simple-mind-suggest";
     list.setAttribute("role", "listbox");
     list.setAttribute(
-      "aria-label",
+      "aria-description",
       t(this.trigger.kind === "image" ? "suggest.images" : "suggest.notes"),
     );
     list.replaceChildren();

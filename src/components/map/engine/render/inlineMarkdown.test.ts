@@ -104,7 +104,8 @@ describe("renderInlineMarkdown", () => {
     expect(target?.dataset.link).toBe("Plan#Steps");
     expect(target?.textContent).toBe("Plan#Steps");
     expect(missing?.classList.contains("is-unresolved")).toBe(true);
-    expect(missing?.title).toContain("Ghost");
+    expect(missing?.getAttribute("aria-description")).toContain("Ghost");
+    expect(missing?.title).toBe("");
   });
 
   it("renders a vault image capped at 140 px high", () => {

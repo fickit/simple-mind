@@ -686,6 +686,7 @@
 .simple-mind-node.is-media:not(.is-editing) {
   padding: 0;
   border: none;
+  border-radius: clamp(4px, var(--sm-node-radius, 6px), 10px);
   background: transparent;
   box-shadow: none;
 }
@@ -699,6 +700,10 @@
   margin: 1px;
   border-radius: clamp(4px, var(--sm-node-radius, 6px), 10px);
   vertical-align: top;
+}
+
+.simple-mind-node.is-media.is-selected:not(.is-editing) {
+  outline-offset: 0;
 }
 
 .simple-mind-inline-missing {
@@ -717,6 +722,16 @@
 .simple-mind-inline-missing.is-failed {
   opacity: 0.5;
   text-decoration: line-through;
+}
+
+/* Ctrl/Cmd+Shift drag rectangle for multi-select. */
+.simple-mind-marquee {
+  position: absolute;
+  z-index: 5;
+  border: 1px solid var(--sm-selection-outline);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--sm-selection-outline) 10%, transparent);
+  pointer-events: none;
 }
 
 /* Autocomplete popup anchored to the inline editor inside the map world. */

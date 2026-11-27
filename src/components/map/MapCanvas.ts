@@ -101,6 +101,7 @@ export class MapCanvas {
   private readonly sourceButton: HTMLButtonElement;
   private readonly styleButton: HTMLButtonElement;
   private sidebarPane!: HTMLElement;
+  private sidebarLabelSeq = 0;
   private sidebarSelectMirror!: HTMLSpanElement;
   private sidebarThemeSelect!: HTMLSelectElement;
   private sidebarLayoutButtons!: HTMLButtonElement[];
@@ -119,6 +120,13 @@ export class MapCanvas {
   private sidebarTextAlignButtons!: HTMLButtonElement[];
   private sidebarLineHeight!: SidebarStepper;
   private readonly keydownHandler: (event: KeyboardEvent) => void;
+  private marquee: {
+    startX: number;
+    startY: number;
+    currentX: number;
+    currentY: number;
+    element: HTMLElement;
+  } | null = null;
   private controller: MapController | null = null;
   private pendingAdd: PendingAdd | null = null;
   private selectedId: string | null = null;
@@ -217,6 +225,7 @@ export class MapCanvas {
 
     this.keydownHandler = (event) => this.handleKeydown(event);
     this.canvasEl.addEventListener("keydown", this.keydownHandler);
+    this.canvasEl.addEventListener("pointerdown", this.onMarqueeDown, true);
     this.buildSidebar();
     this.syncSidebar();
     this.updateToolbar();
@@ -285,6 +294,11 @@ export class MapCanvas {
   /** Returns the selected node id. */
   getSelectedId(): string | null {
     return this.selectedId;
+  }
+
+  /** Returns every selected node id. */
+  getSelectedIds(): string[] {
+    return this.renderer.getSelectedIds();
   }
 
   /** Returns the pan, zoom, and selection to persist with the file. */
@@ -366,11 +380,12 @@ export class MapCanvas {
     const themeTitle = createSpan();
     themeTitle.className = "simple-mind-sidebar-section-title";
     themeTitle.textContent = t("sidebar.theme");
+    themeTitle.id = "simple-mind-sidebar-theme-title";
     themeRow.appendChild(themeTitle);
 
     this.sidebarThemeSelect = createEl("select");
     this.sidebarThemeSelect.className = "simple-mind-sidebar-select simple-mind-sidebar-theme";
-    this.sidebarThemeSelect.setAttribute("aria-label", t("sidebar.theme"));
+    this.sidebarThemeSelect.setAttribute("aria-labelledby", themeTitle.id);
     this.sidebarThemeSelect.addEventListener("change", () => {
       this.changeTheme(this.sidebarThemeSelect.value);
     });
@@ -543,14 +558,17 @@ export class MapCanvas {
     return hint;
   }
 
-  /** Appends a label/control row and returns the control. */
-  private createSidebarRow(section: HTMLElement, label: string, control: HTMLElement): void {
+  /** Appends a label/control row and returns the label element. */
+  private createSidebarRow(section: HTMLElement, label: string, control: HTMLElement): HTMLElement {
     const row = createDiv();
     row.className = "simple-mind-sidebar-row";
     const span = createSpan();
     span.textContent = label;
+    this.sidebarLabelSeq += 1;
+    span.id = `simple-mind-sidebar-label-${this.sidebarLabelSeq}`;
     row.append(span, control);
     section.appendChild(row);
+    return span;
   }
 
   /**
@@ -579,7 +597,6 @@ export class MapCanvas {
     input.max = String(options.max);
     input.step = String(options.step);
     input.className = "simple-mind-sidebar-number";
-    input.setAttribute("aria-label", label);
 
     const arrows = createSpan();
     arrows.className = "simple-mind-sidebar-arrows";
@@ -614,7 +631,8 @@ export class MapCanvas {
     });
 
     wrap.append(input, arrows);
-    this.createSidebarRow(section, label, wrap);
+    const labelEl = this.createSidebarRow(section, label, wrap);
+    input.setAttribute("aria-labelledby", labelEl.id);
     return stepper;
   }
 
@@ -699,7 +717,7 @@ export class MapCanvas {
     wrap.className =
       options.row === false ? "simple-mind-sidebar-segment is-bare" : "simple-mind-sidebar-segment";
     wrap.setAttribute("role", "group");
-    wrap.setAttribute("aria-label", label);
+    wrap.dataset.group = label;
 
     const buttons = items.map((item) => {
       const button = createEl("button");
@@ -714,7 +732,10 @@ export class MapCanvas {
     });
 
     if (options.row === false) parent.appendChild(wrap);
-    else this.createSidebarRow(parent, label, wrap);
+    else {
+      const labelEl = this.createSidebarRow(parent, label, wrap);
+      wrap.setAttribute("aria-labelledby", labelEl.id);
+    }
     return buttons;
   }
 
@@ -950,7 +971,7 @@ export class MapCanvas {
     overlay.tabIndex = -1;
     overlay.setAttribute("role", "dialog");
     overlay.setAttribute("aria-modal", "true");
-    overlay.setAttribute("aria-label", alt || t("lightbox.close"));
+    overlay.setAttribute("aria-description", alt || t("lightbox.close"));
 
     const image = createEl("img") as HTMLImageElement;
     image.className = "simple-mind-lightbox-image";
@@ -999,8 +1020,107 @@ export class MapCanvas {
     this.editor.close();
     this.renderer.setEditingNode(null);
     this.canvasEl.removeEventListener("keydown", this.keydownHandler);
+    this.canvasEl.removeEventListener("pointerdown", this.onMarqueeDown, true);
+    this.finishMarquee(false);
     this.renderer.destroy();
     this.rootEl.remove();
+  }
+
+  /** Starts a marquee when Ctrl/Cmd+Shift is held over empty canvas. */
+  private readonly onMarqueeDown = (event: PointerEvent): void => {
+    if (event.button !== 0 || !event.shiftKey) return;
+    if (!event.ctrlKey && !event.metaKey) return;
+    const target = event.target as HTMLElement | null;
+    if (target?.closest(".simple-mind-node, button, a, input, textarea, select")) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const rect = this.canvasEl.getBoundingClientRect();
+    const element = createDiv();
+    element.className = "simple-mind-marquee";
+    this.canvasEl.appendChild(element);
+    const startX = event.clientX - rect.left;
+    const startY = event.clientY - rect.top;
+    this.marquee = { startX, startY, currentX: startX, currentY: startY, element };
+    this.updateMarquee();
+
+    const view = this.rootEl.ownerDocument.defaultView;
+    view?.addEventListener("pointermove", this.onMarqueeMove);
+    view?.addEventListener("pointerup", this.onMarqueeUp);
+    view?.addEventListener("pointercancel", this.onMarqueeUp);
+  };
+
+  /** Resizes the marquee rectangle. */
+  private readonly onMarqueeMove = (event: PointerEvent): void => {
+    if (!this.marquee) return;
+    event.preventDefault();
+    const rect = this.canvasEl.getBoundingClientRect();
+    this.marquee.currentX = event.clientX - rect.left;
+    this.marquee.currentY = event.clientY - rect.top;
+    this.updateMarquee();
+  };
+
+  /** Applies the marquee selection and removes the rectangle. */
+  private readonly onMarqueeUp = (): void => {
+    this.finishMarquee(true);
+  };
+
+  /** Paints the marquee rectangle from its two corners. */
+  private updateMarquee(): void {
+    if (!this.marquee) return;
+    const { startX, startY, currentX, currentY, element } = this.marquee;
+    element.style.left = `${Math.min(startX, currentX)}px`;
+    element.style.top = `${Math.min(startY, currentY)}px`;
+    element.style.width = `${Math.abs(currentX - startX)}px`;
+    element.style.height = `${Math.abs(currentY - startY)}px`;
+  }
+
+  /** Removes the marquee and optionally selects the nodes it covers. */
+  private finishMarquee(select: boolean): void {
+    const marquee = this.marquee;
+    if (!marquee) return;
+    const view = this.rootEl.ownerDocument.defaultView;
+    view?.removeEventListener("pointermove", this.onMarqueeMove);
+    view?.removeEventListener("pointerup", this.onMarqueeUp);
+    view?.removeEventListener("pointercancel", this.onMarqueeUp);
+    marquee.element.remove();
+    this.marquee = null;
+
+    // The click that follows pointerup would clear the fresh marquee selection.
+    const suppressClick = (event: Event): void => event.stopImmediatePropagation();
+    this.canvasEl.addEventListener("click", suppressClick, true);
+    this.rootEl.ownerDocument.defaultView?.setTimeout(() => {
+      this.canvasEl.removeEventListener("click", suppressClick, true);
+    }, 0);
+
+    if (!select) return;
+
+    const width = Math.abs(marquee.currentX - marquee.startX);
+    const height = Math.abs(marquee.currentY - marquee.startY);
+    if (width < 3 && height < 3) return;
+
+    const transform = this.renderer.getTransform();
+    const left = (Math.min(marquee.startX, marquee.currentX) - transform.x) / transform.scale;
+    const top = (Math.min(marquee.startY, marquee.currentY) - transform.y) / transform.scale;
+    const right = (Math.max(marquee.startX, marquee.currentX) - transform.x) / transform.scale;
+    const bottom = (Math.max(marquee.startY, marquee.currentY) - transform.y) / transform.scale;
+    const hits = this.renderer
+      .getLayoutNodes()
+      .filter(
+        (node) =>
+          node.x < right &&
+          node.x + node.width > left &&
+          node.y < bottom &&
+          node.y + node.height > top,
+      )
+      .map((node) => node.node.id);
+    if (hits.length === 0) return;
+
+    const selected = new Set(this.renderer.getSelectedIds());
+    for (const nodeId of hits) selected.add(nodeId);
+    this.renderer.selectNodes([...selected], hits.at(-1) ?? null);
+    this.renderer.focus();
+    this.updateToolbar();
   }
 
   /** Adds a child to the selected node. */
@@ -1015,12 +1135,31 @@ export class MapCanvas {
 
   /** Deletes the selected node. */
   deleteSelected(): void {
-    if (!this.canEdit() || !this.controller || !this.selectedId) return;
-    if (this.controller.isRoot(this.selectedId)) {
-      this.onNotice(t("notice.rootDelete"));
+    const controller = this.controller;
+    if (!this.canEdit() || !controller) return;
+    const ids = this.renderer.getSelectedIds();
+    const deletable = ids.filter((nodeId) => !controller.isRoot(nodeId));
+    if (deletable.length === 0) {
+      if (ids.some((nodeId) => controller.isRoot(nodeId))) {
+        this.onNotice(t("notice.rootDelete"));
+      }
       return;
     }
-    this.deleteNodeById(this.selectedId);
+
+    const selected = new Set(deletable);
+    let parentId = this.selectedId
+      ? (controller.findParent(this.selectedId)?.parent.id ?? null)
+      : null;
+    while (parentId && selected.has(parentId)) {
+      parentId = controller.findParent(parentId)?.parent.id ?? null;
+    }
+
+    controller.deleteNodes(deletable);
+    this.renderer.setEditingNode(null);
+    this.rerender(false);
+    this.renderer.selectNode(parentId);
+    this.renderer.focus();
+    this.updateToolbar();
   }
 
   /** Deletes one node and selects its parent. */
@@ -1041,24 +1180,37 @@ export class MapCanvas {
     if (this.selectedId) this.startEdit(this.selectedId);
   }
 
-  /** Copies the selected subtree into the internal and system clipboards. */
+  /** Copies the selected subtrees into the internal and system clipboards. */
   private copySelected(): void {
-    if (!this.controller || !this.selectedId) return;
-    const copied = this.controller.copySubtree(this.selectedId);
-    if (!copied) return;
+    const controller = this.controller;
+    if (!controller) return;
+    const ids = this.renderer.getSelectedIds();
+    if (ids.length === 0) return;
 
-    this.clipboard = [copied];
-    const text = this.serializeCopiedText(copied);
+    let copied: CopiedNode[] = [];
+    if (ids.length === 1 && controller.isRoot(ids[0])) {
+      const root = controller.copySubtree(ids[0]);
+      copied = root ? [root] : [];
+    } else {
+      copied = controller.copySubtrees(ids);
+    }
+    if (copied.length === 0) return;
+
+    this.clipboard = copied;
+    const text = copied.map((item) => this.serializeCopiedText(item)).join("\n");
     const clipboard = this.rootEl.ownerDocument.defaultView?.navigator.clipboard;
     if (clipboard && typeof clipboard.writeText === "function") {
       void clipboard.writeText(text).catch(() => {});
     }
   }
 
-  /** Cuts the selected subtree. The root is protected. */
+  /** Cuts the selected subtrees. The root is protected. */
   private cutSelected(): void {
-    if (!this.controller || !this.selectedId) return;
-    if (this.controller.isRoot(this.selectedId)) {
+    const controller = this.controller;
+    if (!controller) return;
+    const ids = this.renderer.getSelectedIds();
+    if (ids.length === 0) return;
+    if (ids.every((nodeId) => controller.isRoot(nodeId))) {
       this.onNotice(t("notice.rootCut"));
       return;
     }
@@ -1180,9 +1332,9 @@ export class MapCanvas {
 
   /** Returns true when the current selection can be deleted. */
   canDeleteSelected(): boolean {
-    return (
-      this.canEdit() && !!this.selectedId && this.controller?.isRoot(this.selectedId) === false
-    );
+    const controller = this.controller;
+    if (!this.canEdit() || !controller) return false;
+    return this.renderer.getSelectedIds().some((nodeId) => !controller.isRoot(nodeId));
   }
 
   /** Returns true when undo is available. */
@@ -1514,6 +1666,14 @@ export class MapCanvas {
     }
 
     const mod = event.metaKey || event.ctrlKey;
+    if (mod && event.key.toLowerCase() === "a") {
+      event.preventDefault();
+      const ids = this.renderer.getLayoutNodes().map((node) => node.node.id);
+      this.renderer.selectNodes(ids);
+      this.renderer.focus();
+      this.updateToolbar();
+      return;
+    }
     if (mod && event.key.toLowerCase() === "z") {
       event.preventDefault();
       if (event.shiftKey) this.redo();

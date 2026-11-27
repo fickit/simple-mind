@@ -35,6 +35,7 @@ Markdown outline underneath. No account, no lock-in.
 - Inline editing, drag to reorganize, copy and paste subtrees, undo and redo.
 - Collapse a branch into a count bubble; add buttons follow the layout and remember which side a
   branch belongs to.
+- Multi-select with Ctrl/Cmd+Shift drag or Ctrl/Cmd+A, then delete, copy, or cut the whole group.
 - Each file remembers its pan, zoom, and selected node.
 
 ### Linked to your vault
@@ -72,6 +73,8 @@ Markdown outline underneath. No account, no lock-in.
    | `F2` or double-click | Edit the selected node |
    | `Delete` / `Backspace` | Delete the selected node, except the root |
    | Arrow keys | Move the selection |
+   | `Ctrl/Cmd+A` | Select all visible nodes |
+   | `Ctrl/Cmd+Shift` + drag | Marquee-select nodes on empty canvas |
    | `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z` | Undo / redo |
    | `Ctrl/Cmd+C`, `X`, `V` | Copy, cut, paste |
 

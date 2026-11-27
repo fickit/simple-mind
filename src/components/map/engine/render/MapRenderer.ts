@@ -75,6 +75,7 @@ export class MapRenderer {
   private dark: boolean;
   private document: MindMapDocument | null = null;
   private layout: LayoutResult | null = null;
+  private readonly selectedIds = new Set<string>();
   private selectedId: string | null = null;
   private editingNodeId: string | null = null;
   private editingRect: {
@@ -234,6 +235,7 @@ export class MapRenderer {
     this.document = null;
     this.layout = null;
     this.selectedId = null;
+    this.selectedIds.clear();
     this.nodeEls.clear();
     this.edgeEls.clear();
     this.renderedText.clear();
@@ -333,9 +335,14 @@ export class MapRenderer {
     this.renderedText.clear();
   }
 
-  /** Returns the selected node id. */
+  /** Returns the selected node id used as the primary selection. */
   getSelectedId(): string | null {
     return this.selectedId;
+  }
+
+  /** Returns every selected node id. */
+  getSelectedIds(): string[] {
+    return [...this.selectedIds];
   }
 
   /** Returns the current positioned nodes. */
@@ -365,17 +372,32 @@ export class MapRenderer {
 
   /** Selects one node or clears the selection. */
   selectNode(nodeId: string | null): void {
-    if (this.selectedId === nodeId) return;
-    if (this.selectedId) {
-      this.nodeEls.get(this.selectedId)?.classList.remove("is-selected");
-      this.nodeEls.get(this.selectedId)?.setAttribute("aria-selected", "false");
+    this.selectNodes(nodeId ? [nodeId] : [], nodeId);
+  }
+
+  /**
+   * Replaces the selection with a set of nodes.
+   *
+   * @param nodeIds Nodes to select.
+   * @param primary Node shown in the style panel and used by single-node commands.
+   */
+  selectNodes(nodeIds: string[], primary: string | null = null): void {
+    const next = new Set(nodeIds);
+    const nextPrimary = primary && next.has(primary) ? primary : ([...next].at(-1) ?? null);
+    const unchanged =
+      next.size === this.selectedIds.size &&
+      nextPrimary === this.selectedId &&
+      [...next].every((id) => this.selectedIds.has(id));
+    if (unchanged) return;
+
+    for (const [nodeId, element] of this.nodeEls) {
+      element.classList.toggle("is-selected", next.has(nodeId));
+      element.setAttribute("aria-selected", String(next.has(nodeId)));
     }
-    this.selectedId = nodeId;
-    if (nodeId) {
-      this.nodeEls.get(nodeId)?.classList.add("is-selected");
-      this.nodeEls.get(nodeId)?.setAttribute("aria-selected", "true");
-    }
-    this.onSelectionChange?.(nodeId);
+    this.selectedIds.clear();
+    for (const nodeId of next) this.selectedIds.add(nodeId);
+    this.selectedId = nextPrimary;
+    this.onSelectionChange?.(nextPrimary);
   }
 
   /**
@@ -502,9 +524,20 @@ export class MapRenderer {
       this.renderedText.delete(nodeId);
     }
 
-    if (this.selectedId && !layout.nodes.some((node) => node.node.id === this.selectedId)) {
-      this.selectedId = null;
-      this.onSelectionChange?.(null);
+    if (this.selectedIds.size > 0) {
+      const visible = new Set(layout.nodes.map((node) => node.node.id));
+      let changed = false;
+      for (const nodeId of [...this.selectedIds]) {
+        if (visible.has(nodeId)) continue;
+        this.selectedIds.delete(nodeId);
+        changed = true;
+      }
+      if (changed) {
+        if (this.selectedId && !this.selectedIds.has(this.selectedId)) {
+          this.selectedId = [...this.selectedIds].at(-1) ?? null;
+        }
+        this.onSelectionChange?.(this.selectedId);
+      }
     }
     if (this.editingNodeId && !layout.nodes.some((node) => node.node.id === this.editingNodeId)) {
       this.editingNodeId = null;
@@ -553,7 +586,9 @@ export class MapRenderer {
 
     const label = createDiv();
     label.className = "simple-mind-node-label";
+    label.id = `simple-mind-label-${nodeId}`;
     element.appendChild(label);
+    element.setAttribute("aria-labelledby", label.id);
 
     element.addEventListener("click", (event) => {
       const target = event.target as HTMLElement;
@@ -612,7 +647,7 @@ export class MapRenderer {
   ): void {
     const node = positioned.node;
     const visual = nodeVisual(this.themeTokens(), node.style, isRoot);
-    const selected = this.selectedId === node.id;
+    const selected = this.selectedIds.has(node.id);
     element.className = [
       "simple-mind-node",
       `side-${positioned.side}`,
@@ -637,7 +672,6 @@ export class MapRenderer {
     );
     this.syncAddButtons(element, node.id, addSides, collapseSides, color);
     element.setAttribute("aria-level", String(positioned.depth + 1));
-    element.setAttribute("aria-label", node.text);
     element.setAttribute("aria-selected", String(selected));
     if (node.children.length > 0) {
       element.setAttribute("aria-expanded", String(this.hasVisibleChildren(node, isRoot)));

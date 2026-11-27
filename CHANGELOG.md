@@ -9,6 +9,11 @@
   made only of images becomes the picture itself with rounded corners.
 - Typing `[[` or `![[` while editing opens a fuzzy file search that inserts the link; arrow keys move
   through the list and the mouse can highlight an entry.
+- Multi-select nodes with Ctrl/Cmd+Shift drag or Ctrl/Cmd+A, then delete, copy, or cut the whole
+  group in one step.
+- Nodes, links, and images no longer show redundant hover tooltips; only icon-only controls keep
+  their labels. The selection outline on an image-only node follows the picture group instead of the
+  old pill shape.
 - Missing notes and images render as explicit placeholders instead of breaking the map.
 
 ## 1.0.4 — 2026-11-06

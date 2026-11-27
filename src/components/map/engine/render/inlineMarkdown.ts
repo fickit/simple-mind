@@ -254,8 +254,7 @@ function appendNoteLink(inner: string, parent: Node, options: InlineMarkdownOpti
   link.setAttribute("role", "link");
   link.setAttribute("tabindex", "0");
   link.textContent = alias || noteLabel(target);
-  link.title = exists ? target : t("inline.noteMissing", { name: target });
-  link.setAttribute("aria-label", link.title);
+  if (!exists) link.setAttribute("aria-description", t("inline.noteMissing", { name: target }));
   parent.appendChild(link);
   return true;
 }
@@ -342,7 +341,6 @@ function appendImage(
   image.width = box.width;
   image.height = box.height;
   image.alt = name;
-  image.title = name;
   image.draggable = false;
   image.dataset.imageName = name;
   parent.appendChild(image);
@@ -363,10 +361,10 @@ function appendMissing(name: string, failed: boolean, parent: Node): void {
   const placeholder = createEl("span");
   placeholder.className = `simple-mind-inline-missing${failed ? " is-failed" : ""}`;
   placeholder.textContent = name;
-  placeholder.title = failed
-    ? t("inline.imageFailed", { name })
-    : t("inline.imageMissing", { name });
-  placeholder.setAttribute("aria-label", placeholder.title);
+  placeholder.setAttribute(
+    "aria-description",
+    failed ? t("inline.imageFailed", { name }) : t("inline.imageMissing", { name }),
+  );
   placeholder.dataset.missing = name;
   parent.appendChild(placeholder);
 }

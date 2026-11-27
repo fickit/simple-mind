@@ -281,14 +281,42 @@ export class MapController {
    * @returns The previous parent match, or null when rejected.
    */
   deleteNode(nodeId: string): ParentMatch | null {
-    if (this.isRoot(nodeId)) return null;
-    const match = this.findParent(nodeId);
-    if (!match) return null;
+    return this.deleteNodes([nodeId])[0] ?? null;
+  }
+
+  /**
+   * Deletes several nodes in one history entry. Descendants of another
+   * selected node are skipped because their parent already removes them.
+   *
+   * @param nodeIds Nodes to delete.
+   * @returns The removed parent matches.
+   */
+  deleteNodes(nodeIds: string[]): ParentMatch[] {
+    const targets = this.topLevelSelection(nodeIds);
+    if (targets.length === 0) return [];
 
     const previousSource = this.source;
-    match.parent.children.splice(match.index, 1);
-    this.serializeAndCommit(previousSource);
-    return match;
+    const matches: ParentMatch[] = [];
+    for (const nodeId of targets) {
+      const match = this.findParent(nodeId);
+      if (!match) continue;
+      match.parent.children.splice(match.index, 1);
+      matches.push(match);
+    }
+    if (matches.length > 0) this.serializeAndCommit(previousSource);
+    return matches;
+  }
+
+  /**
+   * Copies several subtrees, skipping nodes nested inside another selection.
+   *
+   * @param nodeIds Nodes to copy.
+   */
+  copySubtrees(nodeIds: string[]): CopiedNode[] {
+    return this.topLevelSelection(nodeIds)
+      .map((nodeId) => this.findNode(nodeId))
+      .filter((node): node is MindNode => node !== null)
+      .map((node) => this.copyNode(node));
   }
 
   /**
@@ -387,6 +415,22 @@ export class MapController {
     if (!match) return false;
     match.parent.children.splice(match.index, 1);
     return true;
+  }
+
+  /** Drops roots and nodes whose ancestor is also selected. */
+  private topLevelSelection(nodeIds: string[]): string[] {
+    const unique = [...new Set(nodeIds)].filter(
+      (nodeId) => !this.isRoot(nodeId) && this.findNode(nodeId) !== null,
+    );
+    const selected = new Set(unique);
+    return unique.filter((nodeId) => {
+      let match = this.findParent(nodeId);
+      while (match) {
+        if (selected.has(match.parent.id)) return false;
+        match = this.findParent(match.parent.id);
+      }
+      return true;
+    });
   }
 
   /** Copies a live node into clipboard data. */

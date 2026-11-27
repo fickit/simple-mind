@@ -49,7 +49,7 @@ function nextFrame(): Promise<void> {
 
 /** Returns the tiles of the named icon group. */
 function tiles(host: HTMLElement, group: string): HTMLButtonElement[] {
-  const wrap = host.querySelector<HTMLElement>(`[role="group"][aria-label="${group}"]`)!;
+  const wrap = host.querySelector<HTMLElement>(`[role="group"][data-group="${group}"]`)!;
   return Array.from(wrap.querySelectorAll<HTMLButtonElement>(".simple-mind-sidebar-segment-item"));
 }
 
@@ -1040,6 +1040,70 @@ describe("MapCanvas inline images", () => {
     const reopened = host.querySelector<HTMLElement>(".simple-mind-lightbox");
     reopened?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     expect(host.querySelector(".simple-mind-lightbox")).toBeNull();
+
+    canvas.destroy();
+    host.remove();
+  });
+});
+
+describe("MapCanvas multi-selection", () => {
+  it("selects every visible node with Ctrl+A and deletes them together", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n- B\n- C\n");
+    const canvasEl = host.querySelector<HTMLElement>(".simple-mind-canvas")!;
+
+    canvasEl.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "a", ctrlKey: true, bubbles: true }),
+    );
+    expect(canvas.getSelectedIds()).toHaveLength(4);
+    expect(host.querySelectorAll(".simple-mind-node.is-selected")).toHaveLength(4);
+    expect(canvas.canDeleteSelected()).toBe(true);
+
+    canvas.deleteSelected();
+    expect(canvas.getSource()).not.toContain("- A");
+    expect(canvas.getSource()).not.toContain("- B");
+    expect(canvas.getSource()).toContain("# Root");
+
+    canvas.destroy();
+    host.remove();
+  });
+  it("marquees visible nodes with Ctrl+Shift and adds to the selection", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n- B\n");
+    const canvasEl = host.querySelector<HTMLElement>(".simple-mind-canvas")!;
+    canvasEl.getBoundingClientRect = () =>
+      ({
+        x: 0,
+        y: 0,
+        left: 0,
+        top: 0,
+        right: 800,
+        bottom: 600,
+        width: 800,
+        height: 600,
+        toJSON: () => ({}),
+      }) as DOMRect;
+    canvas.fit();
+
+    canvasEl.dispatchEvent(
+      new MouseEvent("pointerdown", {
+        button: 0,
+        ctrlKey: true,
+        shiftKey: true,
+        clientX: 0,
+        clientY: 0,
+        bubbles: true,
+      }),
+    );
+    window.dispatchEvent(
+      new MouseEvent("pointermove", { clientX: 800, clientY: 600, bubbles: true }),
+    );
+    expect(host.querySelector(".simple-mind-marquee")).not.toBeNull();
+    window.dispatchEvent(
+      new MouseEvent("pointerup", { clientX: 800, clientY: 600, bubbles: true }),
+    );
+
+    expect(host.querySelector(".simple-mind-marquee")).toBeNull();
+    canvasEl.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(canvas.getSelectedIds()).toHaveLength(3);
 
     canvas.destroy();
     host.remove();
