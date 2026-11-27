@@ -1441,7 +1441,7 @@ export class MapCanvas {
   private serializeCopiedText(node: CopiedNode): string {
     const lines: string[] = [];
     const walk = (item: CopiedNode, depth: number): void => {
-      lines.push(`${" ".repeat(depth * 2)}- ${item.text}`);
+      lines.push(`${" ".repeat(depth * 2)}- ${item.text.replace(/\n/g, "<br>")}`);
       for (const child of item.children) walk(child, depth + 1);
     };
     walk(node, 0);

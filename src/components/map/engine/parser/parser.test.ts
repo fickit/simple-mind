@@ -252,3 +252,18 @@ mindmap:
     expect(meta.maxWidth).toBe(LIMITS.maxWidth.min);
   });
 });
+
+describe("manual line breaks", () => {
+  it("round-trips <br> as a node newline", () => {
+    const result = parseSource("# Root\n- A<br>B\n- C<br />D\n");
+    expect(result.errors).toEqual([]);
+    expect(result.document!.root.children[0].text).toBe("A\nB");
+    expect(result.document!.root.children[1].text).toBe("C\nD");
+    const source = serializeDocument(result.document!);
+    expect(source).toContain("- A<br>B");
+    expect(source).toContain("- C<br>D");
+
+    const again = parseSource(source);
+    expect(again.document!.root.children[0].text).toBe("A\nB");
+  });
+});

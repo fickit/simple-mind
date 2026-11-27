@@ -5,8 +5,8 @@ import { serializeNodeMarker } from "./nodeStyle";
 
 /** Returns one safe, single-line label. */
 function normalizeLabel(text: string): string {
-  const label = text.replace(/\r?\n/g, " ").trim();
-  return label === "" ? "Untitled" : label;
+  const label = text.replace(/\r\n?/g, "\n").trim();
+  return label === "" ? "Untitled" : label.replace(/\n/g, "<br>");
 }
 
 /** Serializes one label with its optional per-node metadata marker. */

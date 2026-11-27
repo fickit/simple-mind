@@ -7,6 +7,7 @@
 - Attest the release assets with GitHub build provenance.
 - Clear the remaining review warnings: unnecessary assertions, the last raw element creation, and the text-decoration CSS lint.
 - Text styles on the selected node respond to Ctrl/Cmd+B/I/U, and alignment to Ctrl/Cmd+Shift+L/E/R; the sidebar tooltips show the shortcuts.
+- Shift+Enter inserts a manual line break inside a node; Ctrl/Cmd+Enter commits the edit without adding a node. Line breaks are stored as `<br>` in the source.
 
 ## 1.1.0 — 2026-11-27
 

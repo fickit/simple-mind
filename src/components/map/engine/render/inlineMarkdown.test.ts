@@ -189,4 +189,9 @@ describe("renderInlineMarkdown", () => {
     expect(isMediaOnlyLabel("![bad](javascript:alert(1))")).toBe(false);
     expect(isMediaOnlyLabel("\\![[photo.png]]")).toBe(false);
   });
+  it("renders manual line breaks as br elements", () => {
+    const host = render("A\nB");
+    expect(host.querySelectorAll("br")).toHaveLength(1);
+    expect(host.textContent).toBe("AB");
+  });
 });

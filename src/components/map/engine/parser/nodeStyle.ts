@@ -7,6 +7,11 @@ const TEXT_ALIGNMENTS: TextAlign[] = ["left", "center", "right"];
 const BRANCH_SIDES: BranchSide[] = ["left", "right"];
 const STYLE_PATTERN = /\s*<!--\s*sm:(\{[\s\S]*\})\s*-->\s*$/;
 
+/** Converts the source line-break tag into an editor newline. */
+function decodeLineBreaks(text: string): string {
+  return text.replace(/<br\s*\/?>/gi, "\n");
+}
+
 /** Result of separating a node label from its inline metadata marker. */
 export interface ParsedNodeLabel {
   label: string;
@@ -178,9 +183,9 @@ export function extractNodeLabel(
   warnings: ParseWarning[],
 ): ParsedNodeLabel {
   const match = STYLE_PATTERN.exec(text);
-  if (!match) return { label: text.trim() };
+  if (!match) return { label: decodeLineBreaks(text.trim()) };
 
-  const label = text.slice(0, match.index).trim();
+  const label = decodeLineBreaks(text.slice(0, match.index).trim());
   return { label, ...parseNodeMarker(match[1], line, warnings) };
 }
 

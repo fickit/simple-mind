@@ -49,7 +49,7 @@ describe("InlineEditor", () => {
     expect(onCommit).toHaveBeenCalledWith("Child", "child");
   });
 
-  it("commits without a follow-up action on Shift+Enter", () => {
+  it("commits without a follow-up action on Ctrl/Cmd+Enter", () => {
     const { world, editor } = setup();
     const onCommit = vi.fn();
 
@@ -57,7 +57,7 @@ describe("InlineEditor", () => {
     const input = world.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor")!;
     input.value = "Only";
     input.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "Enter", shiftKey: true, bubbles: true }),
+      new KeyboardEvent("keydown", { key: "Enter", ctrlKey: true, bubbles: true }),
     );
 
     expect(onCommit).toHaveBeenCalledWith("Only", "none");
@@ -183,5 +183,28 @@ describe("InlineEditor", () => {
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true }));
     input.dispatchEvent(new KeyboardEvent("keyup", { key: "ArrowUp", bubbles: true }));
     expect(rows[0].classList.contains("is-active")).toBe(true);
+  });
+});
+
+describe("InlineEditor line breaks", () => {
+  it("inserts a line break with Shift+Enter and commits with Ctrl+Enter", () => {
+    const { world, editor } = setup();
+    const onCommit = vi.fn();
+
+    editor.open(position, "AB", { onCommit, onCancel: vi.fn() });
+    const input = world.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor")!;
+    input.setSelectionRange(1, 1);
+    input.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", shiftKey: true, bubbles: true }),
+    );
+
+    expect(input.value).toBe("A\nB");
+    expect(onCommit).not.toHaveBeenCalled();
+    expect(editor.isOpen()).toBe(true);
+
+    input.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Enter", ctrlKey: true, bubbles: true }),
+    );
+    expect(onCommit).toHaveBeenCalledWith("A\nB", "none");
   });
 });

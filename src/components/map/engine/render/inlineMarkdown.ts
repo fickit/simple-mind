@@ -121,6 +121,12 @@ function appendInline(
   while (index < text.length) {
     const char = text[index];
 
+    if (char === "\n") {
+      parent.appendChild(createEl("br"));
+      index += 1;
+      continue;
+    }
+
     if (char === "\\" && index + 1 < text.length) {
       parent.appendChild(doc.createTextNode(text[index + 1]));
       index += 2;

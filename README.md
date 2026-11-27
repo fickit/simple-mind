@@ -70,12 +70,16 @@ Markdown outline underneath. No account, no lock-in.
    - **Space** appends to the current label.
    - **Any other character** replaces the label with what you typed.
    - **Clear the whole label** and commit to delete the node (the root keeps at least one character).
+   - **Shift+Enter** inserts a line break at the caret; **Ctrl/Cmd+Enter** commits the edit without
+     adding another node.
 3. **Keys.**
 
    | Key | Action |
    | --- | --- |
    | `Tab` / `Enter` | Add a child / add a sibling |
    | `F2` or double-click | Edit the selected node |
+   | `Shift+Enter` | Insert a line break while editing |
+   | `Ctrl/Cmd+Enter` | Commit the edit without adding a node |
    | `Delete` / `Backspace` | Delete the selected node, except the root |
    | Arrow keys | Move the selection |
    | `Ctrl/Cmd+B`, `I`, `U` | Bold, italic, underline the selected node |

@@ -113,7 +113,8 @@ A node's style is stored in a trailing HTML comment on its own line:
   sibling. A decrease must return to a previously seen indentation level; otherwise it is a parse
   error.
 - A list item label must be non-empty after trimming.
-- Labels are single-line. Block content is not supported.
+- Labels occupy one source line. Manual line breaks are encoded as `<br>` and block content is not
+  supported.
 - Blank lines are ignored and are not preserved by the serializer.
 - The first non-blank line after frontmatter must be the H1 root. A second H1, an H2-H6, an ordered
   list, a paragraph, a table, a code fence, an image-only block, or any other unsupported line is a
@@ -429,7 +430,8 @@ While the inline editor is focused:
 
 - Enter: commit and start a sibling editor.
 - Tab: commit and start a child editor.
-- Shift+Enter or Shift+Tab: commit without starting another node.
+- Shift+Enter: insert a line break at the caret and keep editing.
+- Ctrl/Cmd+Enter or Shift+Tab: commit without starting another node.
 - Escape: cancel the edit.
 - Blur: commit without starting another node.
 
@@ -446,13 +448,14 @@ is inside the world layer, it inherits the current zoom transform.
   wraps. The editor's live rectangle temporarily replaces the node's measured size, so the tree
   reflows and connectors stay attached while typing.
 - A new node opens as an empty single-line editor with a default width of 120px and no placeholder.
-- Enter commits and starts a sibling editor; Tab commits and starts a child editor. Shift+Enter and
-  Shift+Tab commit only. Escape cancels; blur commits without a follow-up.
+- Enter commits and starts a sibling editor; Tab commits and starts a child editor. Shift+Enter
+  inserts a manual `<br>` line break; Ctrl/Cmd+Enter and Shift+Tab commit only. Escape cancels; blur
+  commits without a follow-up.
 - Composition events protect Chinese and other IME input.
 - A new empty node is removed if editing is cancelled without committing text.
 - Committing an empty label on an existing node keeps the old label and shows a notice.
-- Source labels remain single-line. The editor provides soft wrapping; hard newline characters are not
-  persisted in v1.
+- Source labels stay on one line. Shift+Enter stores `<br>`, the parser restores it as a newline for
+  editing, and the renderer draws it as a line break.
 
 ### 8.3 Drag and drop
 

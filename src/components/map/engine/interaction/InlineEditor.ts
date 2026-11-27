@@ -163,7 +163,13 @@ export class InlineEditor {
       if (event.key === "Enter") {
         event.preventDefault();
         event.stopPropagation();
-        this.commit(event.shiftKey ? "none" : "sibling");
+        if (event.shiftKey && !event.metaKey && !event.ctrlKey) {
+          this.insertLineBreak();
+        } else if (event.metaKey || event.ctrlKey) {
+          this.commit("none");
+        } else {
+          this.commit("sibling");
+        }
       } else if (event.key === "Tab") {
         event.preventDefault();
         event.stopPropagation();
@@ -227,6 +233,16 @@ export class InlineEditor {
   close(): void {
     this.finished = true;
     this.remove();
+  }
+
+  /** Inserts a line break at the caret without leaving the editor. */
+  private insertLineBreak(): void {
+    if (!this.input) return;
+    const start = this.input.selectionStart ?? this.input.value.length;
+    const end = this.input.selectionEnd ?? start;
+    this.input.setRangeText("\n", start, end, "end");
+    this.resize();
+    this.refreshSuggestions();
   }
 
   /** Resizes the input to the longest line, capped by maxWidth. */
