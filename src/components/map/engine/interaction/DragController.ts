@@ -94,7 +94,7 @@ export class DragController {
     if (event.button !== 0) return;
     const target = event.target as HTMLElement | null;
     if (!target) return;
-    if (target.closest(".simple-mind-inline-editor, button, a")) return;
+    if (target.closest(".simple-mind-inline-editor, .simple-mind-inline-image, button, a")) return;
 
     const element = target.closest<HTMLElement>(".simple-mind-node");
     const nodeId = element?.dataset.nodeId;

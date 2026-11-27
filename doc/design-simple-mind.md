@@ -641,6 +641,9 @@ theme, so a file can pick any of the nine themes while the panel keeps one mater
 - The canvas atmosphere is the one signature: a faint speckle in light, and three staggered star fields
   plus a mist band along the bottom in dark. It is static, sits behind the world layer, and does not
   move with pan or zoom.
+- Inline assets follow the same source-first rule: `[[Note]]` and `![[image]]` are rendered by the
+  shared inline Markdown renderer through a small resource host, so note links and thumbnails appear
+  in both the live map and the hidden measurer. See `doc/design-inline-assets.md`.
 - The map fills the pane edge to edge: the view hides Obsidian's view padding and view header,
   the root is square, and the canvas grain reaches the window frame on every side, the way the
   Markdown view does.

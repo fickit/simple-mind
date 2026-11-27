@@ -31,7 +31,8 @@ does not copy their source code and does not depend on them at runtime.
 
 - Mobile support. The manifest is desktop-only until the interaction model is tested on touch devices.
 - Per-node styling. Themes are global and may be overridden per file.
-- Block-level Markdown inside nodes: images, tables, code blocks, and multi-line content.
+- Block-level Markdown inside nodes: tables, code blocks, and multi-line content. Inline image
+  thumbnails and note links are supported as single-line labels.
 - Node summaries, arbitrary cross-node links, and multi-selection.
 - Export to PNG, SVG, or standalone HTML.
 - Search across maps or integration with Obsidian's backlink graph.
@@ -50,8 +51,9 @@ does not copy their source code and does not depend on them at runtime.
 - The plugin registers the `.mindmap` extension and opens those files in the map view by default.
 - A file contains optional YAML frontmatter followed by exactly one H1 root and a nested unordered
   list.
-- Node labels are single-line basic inline Markdown: bold, italic, strikethrough, inline code, and
-  standard links.
+- Node labels are single-line basic inline Markdown: bold, italic, strikethrough, inline code,
+  standard links, Obsidian wikilinks, and image embeds. Images render as thumbnails sized by the
+  label or a `|width` suffix; note links open in a new tab and show Obsidian's hover preview.
 - Unknown frontmatter keys are preserved. The plugin owns only the `mindmap` key.
 - Invalid source produces a line-numbered error. Map editing is disabled until the source is valid, so
   a map edit cannot silently destroy unsupported Markdown.

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import type { InlineResourceHost } from "../../../../types/inline";
 import { OBSIDIAN_THEME } from "../../themes/presets";
 import { parseSource } from "../parser/parser";
 import { MapRenderer } from "./MapRenderer";
@@ -100,6 +101,52 @@ describe("MapRenderer culling", () => {
     renderer.render(parseSource("# Root\n- A\n- B\n").document!);
 
     expect(host.querySelectorAll<HTMLElement>(".simple-mind-node")).toHaveLength(3);
+
+    renderer.destroy();
+    host.remove();
+  });
+});
+
+describe("MapRenderer inline resources", () => {
+  it("opens notes, previews links, and opens images", () => {
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const openNote = vi.fn();
+    const previewNote = vi.fn();
+    const openImage = vi.fn();
+    const onEditRequest = vi.fn();
+    const resources: InlineResourceHost = {
+      noteExists: () => true,
+      imageSource: (target) => `vault://${target}`,
+      openNote,
+      previewNote,
+      suggest: () => [],
+    };
+    const renderer = new MapRenderer(host, OBSIDIAN_THEME, false, {
+      inlineResources: resources,
+      onImageOpen: openImage,
+      onEditRequest,
+    });
+    const mapDocument = parseSource("# Root\n- [[Plan]]\n- ![[photo.png]]\n").document;
+    expect(mapDocument).not.toBeNull();
+    renderer.render(mapDocument!);
+
+    const link = host.querySelector<HTMLElement>(".simple-mind-inline-link");
+    expect(link?.dataset.link).toBe("Plan");
+    link?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(openNote).toHaveBeenCalledWith("Plan");
+    expect(renderer.getSelectedId()).toBe("n2");
+
+    link?.dispatchEvent(new MouseEvent("pointerover", { bubbles: true }));
+    expect(previewNote).toHaveBeenCalledWith(expect.anything(), link, "Plan");
+
+    const image = host.querySelector<HTMLImageElement>(".simple-mind-inline-image");
+    expect(image?.getAttribute("src")).toBe("vault://photo.png");
+    image?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(openImage).toHaveBeenCalledWith("vault://photo.png", "photo.png");
+
+    image?.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+    expect(onEditRequest).not.toHaveBeenCalled();
 
     renderer.destroy();
     host.remove();

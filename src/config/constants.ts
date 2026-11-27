@@ -69,3 +69,13 @@ export const LIMITS = {
 
 /** Display value for color inputs when the active token is not a hex color. */
 export const COLOR_INPUT_FALLBACK = "#888888";
+
+/** Default height cap for an image rendered inside a node. */
+export const INLINE_IMAGE_MAX_HEIGHT = 140;
+
+/** Placeholder box used until an inline image reports its natural size. */
+export const INLINE_IMAGE_PLACEHOLDER_WIDTH = 200;
+export const INLINE_IMAGE_PLACEHOLDER_HEIGHT = 120;
+
+/** Maximum number of inline autocomplete candidates shown while editing. */
+export const INLINE_SUGGESTION_LIMIT = 8;

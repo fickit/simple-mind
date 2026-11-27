@@ -14,8 +14,12 @@ this boundary makes the engine deterministic and keeps Obsidian-specific behavio
 ## Files
 
 - `obsidian/settings.ts`: load and save plugin settings through the host plugin.
+- `obsidian/inlineResources.ts`: resolve note links and vault images, open notes in a new tab, trigger
+  page preview, and rank files for the inline editor.
+- `obsidian/inlineTargets.ts`: pure link-target and image-extension helpers shared by the adapter.
 
 ## Call flow
 
-`main.ts` loads settings through this module. Later phases add vault file access, view switching, and
-theme-change adapters here.
+`main.ts` loads settings through this module. `pages/MindMapView` creates the inline resource host with
+its app and current file path, then passes it to `MapCanvas`, so the map engine stays independent of
+Obsidian.

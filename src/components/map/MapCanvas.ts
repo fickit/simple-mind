@@ -1,5 +1,6 @@
 import {
   COLOR_INPUT_FALLBACK,
+  INLINE_SUGGESTION_LIMIT,
   LIMITS,
   NEW_NODE_EDITOR_WIDTH,
   NODE_CONTROL_GAP,
@@ -8,6 +9,7 @@ import {
 } from "../../config/constants";
 import { DEFAULT_MINDMAP_META, DEFAULT_SETTINGS, metaFromSettings } from "../../config/defaults";
 import { t } from "../../config/i18n";
+import type { InlineResourceHost } from "../../types/inline";
 import type { BranchSide, LayoutKind, MindMapMeta, MindNode, NodeStyle } from "../../types/mindmap";
 import type { SimpleMindSettings } from "../../types/settings";
 import type {
@@ -42,6 +44,8 @@ export interface MapCanvasOptions {
   onNotice?: (message: string) => void;
   onOpenSettings?: () => void;
   settings?: SimpleMindSettings;
+  /** Resolves note links and vault images inside node labels. */
+  inlineResources?: InlineResourceHost;
 }
 
 type ArrowKey = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight";
@@ -91,6 +95,8 @@ export class MapCanvas {
   private readonly onChangeSource: (source: string) => void;
   private readonly onNotice: (message: string) => void;
   private readonly onOpenSettings?: () => void;
+  private readonly inlineResources?: InlineResourceHost;
+  private lightbox: HTMLElement | null = null;
   private readonly fitButton: HTMLButtonElement;
   private readonly sourceButton: HTMLButtonElement;
   private readonly styleButton: HTMLButtonElement;
@@ -137,6 +143,7 @@ export class MapCanvas {
     this.onChangeSource = options.onChange ?? (() => {});
     this.onNotice = options.onNotice ?? (() => {});
     this.onOpenSettings = options.onOpenSettings;
+    this.inlineResources = options.inlineResources;
     this.settings = options.settings ?? DEFAULT_SETTINGS;
     this.dark = isDarkDocument(doc);
 
@@ -179,6 +186,8 @@ export class MapCanvas {
         this.syncSidebar();
         this.updateToolbar();
       },
+      inlineResources: options.inlineResources,
+      onImageOpen: (src, alt) => this.openImage(src, alt),
     });
     this.editor = new InlineEditor(this.renderer.getWorldElement());
     this.drag = new DragController(this.canvasEl, {
@@ -933,10 +942,59 @@ export class MapCanvas {
     this.updateToolbar();
   }
 
+  /** Opens an inline image in the view's lightbox. */
+  private openImage(src: string, alt: string): void {
+    this.closeImage();
+    const overlay = createDiv();
+    overlay.className = "simple-mind-lightbox";
+    overlay.tabIndex = -1;
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-label", alt || t("lightbox.close"));
+
+    const image = createEl("img") as HTMLImageElement;
+    image.className = "simple-mind-lightbox-image";
+    image.src = src;
+    image.alt = alt;
+
+    const close = createEl("button");
+    close.type = "button";
+    close.className = "simple-mind-lightbox-close";
+    close.setAttribute("aria-label", t("lightbox.close"));
+    setIcon(close, "close");
+    close.addEventListener("click", (event) => {
+      event.stopPropagation();
+      this.closeImage();
+    });
+
+    overlay.append(image, close);
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) this.closeImage();
+    });
+    overlay.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      this.closeImage();
+    });
+    this.rootEl.appendChild(overlay);
+    this.lightbox = overlay;
+    overlay.focus();
+  }
+
+  /** Closes the image lightbox. */
+  private closeImage(): void {
+    if (!this.lightbox) return;
+    this.lightbox.remove();
+    this.lightbox = null;
+    this.canvasEl.focus();
+  }
+
   /** Removes the renderer and map DOM. */
   destroy(): void {
     this.cancelEditorLayout();
     this.cancelRender();
+    this.closeImage();
     this.drag.destroy();
     this.editor.close();
     this.renderer.setEditingNode(null);
@@ -1236,6 +1294,8 @@ export class MapCanvas {
         nodeElement: this.renderer.getNodeElement(nodeId),
         onResize: (rect) => this.scheduleEditorLayout(nodeId, rect),
         selectAll,
+        suggest: (kind, query) =>
+          this.inlineResources?.suggest(kind, query, INLINE_SUGGESTION_LIMIT) ?? [],
       },
     );
     this.updateToolbar();
@@ -1443,6 +1503,15 @@ export class MapCanvas {
   /** Handles map keyboard shortcuts. */
   private handleKeydown(event: KeyboardEvent): void {
     if (this.editor.isOpen()) return;
+
+    const focused = event.target as HTMLElement | null;
+    const inlineLink = focused?.closest?.<HTMLElement>(".simple-mind-inline-link[data-link]");
+    if (inlineLink?.dataset.link && event.key === "Enter") {
+      event.preventDefault();
+      event.stopPropagation();
+      this.inlineResources?.openNote(inlineLink.dataset.link);
+      return;
+    }
 
     const mod = event.metaKey || event.ctrlKey;
     if (mod && event.key.toLowerCase() === "z") {

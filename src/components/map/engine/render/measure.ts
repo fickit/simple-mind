@@ -1,3 +1,4 @@
+import type { InlineImageSizes, InlineResourceHost } from "../../../../types/inline";
 import type { MindMapMeta, MindNode } from "../../../../types/mindmap";
 import type { NodeShape, ThemeTokens } from "../../../../types/theme";
 import { nodeVisual } from "../../themes/nodeVisual";
@@ -15,22 +16,40 @@ export class DomNodeMeasurer {
   private readonly host: HTMLElement;
   private readonly inner: HTMLElement;
   private readonly cache = new Map<string, NodeSize>();
+  private readonly inlineHost?: InlineResourceHost;
+  private readonly images?: InlineImageSizes;
+  private readonly onImageReady?: () => void;
   private tokens: ThemeTokens;
+  private meta: MindMapMeta;
   private signature = "";
 
   /**
    * @param container Map canvas that owns the hidden measurement element.
    * @param meta Current per-file settings.
    * @param tokens Active theme tokens.
+   * @param inlineHost Resolves note links and vault images in labels.
+   * @param images Natural image sizes shared with the live renderer.
+   * @param onImageReady Called when an inline image finishes loading.
    */
-  constructor(container: HTMLElement, meta: MindMapMeta, tokens: ThemeTokens) {
+  constructor(
+    container: HTMLElement,
+    meta: MindMapMeta,
+    tokens: ThemeTokens,
+    inlineHost?: InlineResourceHost,
+    images?: InlineImageSizes,
+    onImageReady?: () => void,
+  ) {
     this.host = createDiv();
     this.host.className = "simple-mind-measure";
     this.inner = createDiv();
     this.inner.className = "simple-mind-measure-inner";
     this.host.appendChild(this.inner);
     container.appendChild(this.host);
+    this.inlineHost = inlineHost;
+    this.images = images;
+    this.onImageReady = onImageReady;
     this.tokens = tokens;
+    this.meta = meta;
     this.update(meta, tokens);
   }
 
@@ -55,6 +74,7 @@ export class DomNodeMeasurer {
 
     this.signature = nextSignature;
     this.tokens = tokens;
+    this.meta = meta;
     this.cache.clear();
     this.inner.style.maxWidth = `${meta.maxWidth}px`;
     this.inner.style.padding = `${tokens.node.paddingY}px ${tokens.node.paddingX}px`;
@@ -84,7 +104,14 @@ export class DomNodeMeasurer {
     this.inner.style.border = borderWidth > 0 ? `${borderWidth}px solid transparent` : "none";
     this.inner.style.borderBottom =
       visual.shape === "underline" ? `${borderWidth}px solid transparent` : "";
-    this.inner.replaceChildren(renderInlineMarkdown(node.text, this.inner.ownerDocument));
+    this.inner.replaceChildren(
+      renderInlineMarkdown(node.text, this.inner.ownerDocument, {
+        host: this.inlineHost,
+        images: this.images,
+        maxWidth: this.meta.maxWidth,
+        onImageReady: this.onImageReady,
+      }),
+    );
 
     const width = this.inner.offsetWidth;
     const height = this.inner.offsetHeight;
@@ -107,6 +134,11 @@ export class DomNodeMeasurer {
    */
   createMeasurer(rootId: string): NodeMeasurer {
     return (node) => this.measure(node, node.id === rootId);
+  }
+
+  /** Drops cached sizes after inline resources change. */
+  clear(): void {
+    this.cache.clear();
   }
 
   /** Removes the hidden measurement element. */

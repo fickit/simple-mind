@@ -1,4 +1,8 @@
+import { INLINE_SUGGESTION_LIMIT } from "../../../../config/constants";
+import { t } from "../../../../config/i18n";
+import type { InlineSuggestion, InlineSuggestionKind } from "../../../../types/inline";
 import type { PositionedNode } from "../layout/types";
+import { type InlineTrigger, insertSuggestion, matchInlineTrigger } from "./inlineSuggest";
 
 /** Action to run after a committed edit. */
 export type CommitAction = "none" | "child" | "sibling";
@@ -26,6 +30,8 @@ export interface InlineEditorOptions {
   onResize?: (rect: EditorRect) => void;
   /** Selects the whole label on open; false puts the caret at the end. */
   selectAll?: boolean;
+  /** Returns autocomplete candidates for an open link or embed trigger. */
+  suggest?: (kind: InlineSuggestionKind, query: string) => InlineSuggestion[];
 }
 
 const MIRROR_STYLE_PROPS = [
@@ -89,6 +95,12 @@ export class InlineEditor {
   private finished = false;
   private firstResize = true;
   private onResize: ((rect: EditorRect) => void) | null = null;
+  private suggest: ((kind: InlineSuggestionKind, query: string) => InlineSuggestion[]) | null =
+    null;
+  private suggestList: HTMLElement | null = null;
+  private suggestions: InlineSuggestion[] = [];
+  private suggestionIndex = 0;
+  private trigger: InlineTrigger | null = null;
 
   /**
    * @param world Transformed map world that hosts the input.
@@ -129,6 +141,7 @@ export class InlineEditor {
     this.firstResize = true;
     this.callbacks = callbacks;
     this.onResize = options.onResize ?? null;
+    this.suggest = options.suggest ?? null;
 
     const input = createEl("textarea");
     input.className = "simple-mind-inline-editor";
@@ -153,9 +166,13 @@ export class InlineEditor {
       this.composing = false;
       this.resize();
     });
-    input.addEventListener("input", () => this.resize());
+    input.addEventListener("input", () => {
+      this.resize();
+      this.refreshSuggestions();
+    });
     input.addEventListener("keydown", (event) => {
       if (event.isComposing || this.composing) return;
+      if (this.handleSuggestionKey(event)) return;
       if (event.key === "Enter") {
         event.preventDefault();
         event.stopPropagation();
@@ -170,11 +187,19 @@ export class InlineEditor {
         this.cancel();
       }
     });
+    input.addEventListener("keyup", (event) => {
+      if (event.key.startsWith("Arrow") || event.key === "Home" || event.key === "End") {
+        this.refreshSuggestions();
+      }
+    });
     input.addEventListener("blur", () => {
       if (!this.finished) this.commit("none");
     });
     input.addEventListener("pointerdown", (event) => event.stopPropagation());
-    input.addEventListener("click", (event) => event.stopPropagation());
+    input.addEventListener("click", (event) => {
+      event.stopPropagation();
+      this.refreshSuggestions();
+    });
 
     this.input = input;
     this.mirror = mirror;
@@ -258,8 +283,144 @@ export class InlineEditor {
     this.onResize?.({ x, y, width, height });
   }
 
+  /** Handles navigation keys while the suggestion list is open. */
+  private handleSuggestionKey(event: KeyboardEvent): boolean {
+    if (!this.suggestList || this.suggestions.length === 0) return false;
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      event.stopPropagation();
+      this.moveSuggestion(event.key === "ArrowDown" ? 1 : -1);
+      return true;
+    }
+    if ((event.key === "Enter" || event.key === "Tab") && !event.shiftKey) {
+      event.preventDefault();
+      event.stopPropagation();
+      this.applySuggestion(this.suggestionIndex);
+      return true;
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopPropagation();
+      this.closeSuggestions();
+      return true;
+    }
+    return false;
+  }
+
+  /** Recomputes the suggestion list from the text before the caret. */
+  private refreshSuggestions(): void {
+    if (!this.input || !this.suggest) {
+      this.closeSuggestions();
+      return;
+    }
+    const caret = this.input.selectionStart ?? this.input.value.length;
+    const trigger = matchInlineTrigger(this.input.value, caret);
+    if (!trigger) {
+      this.closeSuggestions();
+      return;
+    }
+    const items = this.suggest(trigger.kind, trigger.query).slice(0, INLINE_SUGGESTION_LIMIT);
+    if (items.length === 0) {
+      this.closeSuggestions();
+      return;
+    }
+    this.trigger = trigger;
+    this.suggestions = items;
+    this.suggestionIndex = 0;
+    this.renderSuggestions();
+  }
+
+  /** Draws the popup below the input and marks the active row. */
+  private renderSuggestions(): void {
+    if (!this.input || !this.trigger) return;
+
+    const list = this.suggestList ?? createDiv();
+    list.className = "simple-mind-suggest";
+    list.setAttribute("role", "listbox");
+    list.setAttribute(
+      "aria-label",
+      t(this.trigger.kind === "image" ? "suggest.images" : "suggest.notes"),
+    );
+    list.replaceChildren();
+
+    this.suggestions.forEach((item, index) => {
+      const row = createDiv();
+      row.className = "simple-mind-suggest-item";
+      row.setAttribute("role", "option");
+      row.setAttribute("aria-selected", String(index === this.suggestionIndex));
+      if (index === this.suggestionIndex) row.classList.add("is-active");
+
+      const label = createSpan();
+      label.className = "simple-mind-suggest-label";
+      label.textContent = item.label;
+      const detail = createSpan();
+      detail.className = "simple-mind-suggest-detail";
+      detail.textContent = item.detail;
+      row.append(label, detail);
+
+      row.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+      row.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        this.applySuggestion(index);
+      });
+      list.appendChild(row);
+    });
+
+    if (!this.suggestList) {
+      this.world.appendChild(list);
+      this.suggestList = list;
+    }
+    list.style.left = `${this.input.offsetLeft}px`;
+    list.style.top = `${this.input.offsetTop + this.input.offsetHeight + 4}px`;
+    list.style.width = `${Math.min(Math.max(this.input.offsetWidth, 220), 340)}px`;
+  }
+
+  /** Moves the active row, wrapping at both ends. */
+  private moveSuggestion(delta: number): void {
+    const count = this.suggestions.length;
+    if (count === 0) return;
+    this.suggestionIndex = (this.suggestionIndex + delta + count) % count;
+    const rows = this.suggestList?.children;
+    if (!rows) return;
+    for (let index = 0; index < rows.length; index += 1) {
+      const row = rows[index] as HTMLElement;
+      const active = index === this.suggestionIndex;
+      row.classList.toggle("is-active", active);
+      row.setAttribute("aria-selected", String(active));
+      if (active) row.scrollIntoView?.({ block: "nearest" });
+    }
+  }
+
+  /** Replaces the open trigger with the chosen candidate. */
+  private applySuggestion(index: number): void {
+    const item = this.suggestions[index];
+    if (!item || !this.input || !this.trigger) return;
+    const caret = this.input.selectionStart ?? this.input.value.length;
+    const result = insertSuggestion(this.input.value, caret, this.trigger, item.insert);
+    this.input.value = result.value;
+    this.input.setSelectionRange(result.caret, result.caret);
+    this.closeSuggestions();
+    this.resize();
+    this.input.focus();
+  }
+
+  /** Removes the suggestion popup and its state. */
+  private closeSuggestions(): void {
+    this.suggestList?.remove();
+    this.suggestList = null;
+    this.suggestions = [];
+    this.suggestionIndex = 0;
+    this.trigger = null;
+  }
+
   /** Removes the input and mirror elements. */
   private remove(): void {
+    this.closeSuggestions();
+    this.suggest = null;
     this.input?.remove();
     this.mirror?.remove();
     this.input = null;

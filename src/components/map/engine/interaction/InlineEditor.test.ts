@@ -104,4 +104,62 @@ describe("InlineEditor", () => {
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
     expect(onCommit).toHaveBeenCalledWith("中文", "sibling");
   });
+
+  it("shows note suggestions and inserts the chosen link", () => {
+    const { world, editor } = setup();
+    const onCommit = vi.fn();
+    const suggest = vi.fn(() => [{ label: "Plan", detail: "Plan.md", insert: "Plan" }]);
+
+    editor.open(position, "", { onCommit, onCancel: vi.fn() }, { suggest });
+    const input = world.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor")!;
+    input.value = "[[Pl";
+    input.setSelectionRange(4, 4);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+
+    expect(suggest).toHaveBeenCalledWith("link", "Pl");
+    expect(world.querySelectorAll(".simple-mind-suggest-item")).toHaveLength(1);
+
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    expect(input.value).toBe("[[Plan]]");
+    expect(onCommit).not.toHaveBeenCalled();
+    expect(world.querySelector(".simple-mind-suggest")).toBeNull();
+
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    expect(onCommit).toHaveBeenCalledWith("[[Plan]]", "sibling");
+  });
+
+  it("searches images for an embed trigger", () => {
+    const { world, editor } = setup();
+    const suggest = vi.fn(() => [{ label: "photo", detail: "photo.png", insert: "photo.png" }]);
+
+    editor.open(position, "", { onCommit: vi.fn(), onCancel: vi.fn() }, { suggest });
+    const input = world.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor")!;
+    input.value = "![[ph";
+    input.setSelectionRange(5, 5);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+
+    expect(suggest).toHaveBeenCalledWith("image", "ph");
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true }));
+    expect(input.value).toBe("![[photo.png]]");
+  });
+
+  it("closes suggestions with Escape before cancelling", () => {
+    const { world, editor } = setup();
+    const onCancel = vi.fn();
+    const suggest = vi.fn(() => [{ label: "Plan", detail: "Plan.md", insert: "Plan" }]);
+
+    editor.open(position, "", { onCommit: vi.fn(), onCancel }, { suggest });
+    const input = world.querySelector<HTMLTextAreaElement>(".simple-mind-inline-editor")!;
+    input.value = "[[Pl";
+    input.setSelectionRange(4, 4);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    expect(world.querySelector(".simple-mind-suggest")).toBeNull();
+    expect(onCancel).not.toHaveBeenCalled();
+    expect(editor.isOpen()).toBe(true);
+
+    input.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
 });

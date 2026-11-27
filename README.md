@@ -4,10 +4,10 @@ A Markdown-outline mind map editor for Obsidian.
 
 [github.com/fickit/simple-mind](https://github.com/fickit/simple-mind)
 
-> Status: 1.0.4
+> Status: 1.1.0
 
 Simple Mind turns a plain `.mindmap` file into a polished, interactive map — and keeps it a plain
-Markdown outline underneath. No account, no network calls, no lock-in.
+Markdown outline underneath. No account, no lock-in.
 
 ![Simple Mind map view in the Meadow theme](doc/images/map-light.png)
 
@@ -19,9 +19,11 @@ Markdown outline underneath. No account, no network calls, no lock-in.
 - **Beautiful by default.** Nine hand-tuned themes, from a warm Natural Organic light mode to a
   moonlit-forest dark mode, and the map follows Obsidian's light/dark switch on its own.
 - **Complete, not a toy.** Four layouts, inline editing, drag to reorganize, collapse, undo/redo,
-  clipboard, per-node styling, a custom theme editor, and per-file view state.
-- **Fast and quiet.** No network requests and no telemetry. Redraws are frame-batched and off-screen
-  nodes are culled, so maps with hundreds of nodes stay responsive.
+  clipboard, per-node styling, inline images and note links, a custom theme editor, and per-file view
+  state.
+- **Fast and quiet.** No telemetry, and the plugin itself makes no requests. Redraws are frame-batched
+  and off-screen nodes are culled, so maps with hundreds of nodes stay responsive. External images
+  you embed are loaded by Obsidian's image renderer.
 - **Your data stays yours.** A `.mindmap` file is Markdown plus a small frontmatter block; it opens
   in the source editor at any time and syncs like any other note.
 
@@ -34,6 +36,15 @@ Markdown outline underneath. No account, no network calls, no lock-in.
 - Collapse a branch into a count bubble; add buttons follow the layout and remember which side a
   branch belongs to.
 - Each file remembers its pan, zoom, and selected node.
+
+### Linked to your vault
+
+- Put note links and image embeds straight into a label: `[[Note]]`, `[[Note|alias]]`,
+  `![[photo.png]]`, or `![[photo.png|300]]`.
+- Images render as thumbnails capped at 140 px high; add `|300` to set a width. Click one to open it
+  in a full-map lightbox.
+- Note links open in a new tab, keep the map open, and show Obsidian's page preview on hover.
+- Typing `[[` or `![[` while editing opens a fuzzy file search that inserts the link for you.
 
 ### Styling without a design degree
 
@@ -63,9 +74,12 @@ Markdown outline underneath. No account, no network calls, no lock-in.
    | `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z` | Undo / redo |
    | `Ctrl/Cmd+C`, `X`, `V` | Copy, cut, paste |
 
-4. **Style it.** Open the style panel from the floating menu and pick a theme, layout, and connector
+4. **Link notes and images.** While editing, type `[[` to search notes or `![[` to search images.
+   Click a note link to open it in a new tab; click an image to enlarge it. External images also work
+   with `![alt](https://…)`.
+5. **Style it.** Open the style panel from the floating menu and pick a theme, layout, and connector
    shape for the file, or restyle the selected node.
-5. **Edit the source.** The source button switches the same tab to Obsidian's Markdown editor, and
+6. **Edit the source.** The source button switches the same tab to Obsidian's Markdown editor, and
    back to the map when you are done.
 
 ## Installation
@@ -93,14 +107,17 @@ mindmap:
 - Discovery
   - Interviews
   - Survey
+  - ![[field-notes.png|240]]
 - Launch <!-- sm:{"shape":"pill","bold":true} -->
+- [[Research notes]]
 ```
 
 ## Compatibility
 
 - Obsidian 1.7.2 or newer, desktop only.
 - Light and dark follow Obsidian; every setting is stored in the vault's plugin data, never sent
-  anywhere.
+  anywhere. The plugin makes no network requests. Note links and vault images stay local; external
+  images you embed are loaded by Obsidian's image renderer.
 
 ## License
 

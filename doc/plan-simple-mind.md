@@ -395,6 +395,8 @@ node scripts/benchmark.mjs
   label deletes the node) and rewrites the README around features and usage.
 - 1.0.4 makes the map fill the pane edge to edge, without Obsidian's view padding, view header, or
   the rounded frame.
+- 1.1.0 adds inline images and note links: wikilink targets open in a new tab with hover preview,
+  embeds render as sized thumbnails with a lightbox, and `[[` / `![[` autocomplete inserts them.
 - Next: submit the plugin to the Obsidian community list when ready.
 - Test vault: local only and ignored by git; the build writes the plugin into it.
 - Author metadata: `fickit`; repository `https://github.com/fickit/simple-mind`.

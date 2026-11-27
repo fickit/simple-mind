@@ -16,9 +16,11 @@ module keeps those contracts consistent and prevents circular imports between im
 - `theme.ts`: node shapes, connector styles, text alignment, theme tokens, and theme definitions.
 - `settings.ts`: language and persistent plugin settings.
 - `view.ts`: the per-file pan, zoom, and selection snapshot.
+- `inline.ts`: inline resource host, autocomplete suggestion, and natural image size contracts.
 
 ## Call flow
 
 The parser produces `MindMapDocument`; the layout engine consumes it and produces positioned nodes;
 the renderer consumes positions; the settings module persists `SimpleMindSettings`; themes resolve to
-`ThemeDefinition`.
+`ThemeDefinition`. Inline labels use `InlineResourceHost` from the view and an image size cache from
+the renderer.

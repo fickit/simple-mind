@@ -1012,3 +1012,36 @@ describe("MapCanvas", () => {
     host.remove();
   });
 });
+
+describe("MapCanvas inline images", () => {
+  it("opens a lightbox and closes it with Escape or a backdrop click", () => {
+    const resources = {
+      noteExists: () => true,
+      imageSource: (target: string) => `vault://${target}`,
+      openNote: vi.fn(),
+      previewNote: vi.fn(),
+      suggest: () => [],
+    };
+    const { host, canvas } = createCanvas("# Root\n- ![[photo.png]]\n", DEFAULT_SETTINGS, {
+      inlineResources: resources,
+    });
+    const image = host.querySelector<HTMLImageElement>(".simple-mind-inline-image");
+    expect(image).not.toBeNull();
+
+    image?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    const overlay = host.querySelector<HTMLElement>(".simple-mind-lightbox");
+    expect(overlay).not.toBeNull();
+    expect(overlay?.querySelector("img")?.getAttribute("src")).toBe("vault://photo.png");
+
+    overlay?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    expect(host.querySelector(".simple-mind-lightbox")).toBeNull();
+
+    image?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    const reopened = host.querySelector<HTMLElement>(".simple-mind-lightbox");
+    reopened?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(host.querySelector(".simple-mind-lightbox")).toBeNull();
+
+    canvas.destroy();
+    host.remove();
+  });
+});

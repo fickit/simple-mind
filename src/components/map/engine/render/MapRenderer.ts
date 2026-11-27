@@ -6,6 +6,7 @@ import {
 } from "../../../../config/constants";
 import { DEFAULT_MINDMAP_META } from "../../../../config/defaults";
 import { t } from "../../../../config/i18n";
+import type { InlineResourceHost } from "../../../../types/inline";
 import type { MindMapDocument, MindNode, NodeStyle } from "../../../../types/mindmap";
 import type { ThemeDefinition, ThemeTokens } from "../../../../types/theme";
 import { tokensForMode } from "../../themes/applyTheme";
@@ -16,7 +17,8 @@ import type { LayoutBounds, LayoutResult, NodeMeasurer, PositionedNode } from ".
 import { connectorPath } from "./connectors";
 import { intersectsWorldRect, visibleWorldRect, type WorldRect } from "./culling";
 import { type IconName, setIcon, setText } from "./icons";
-import { renderInlineMarkdown } from "./inlineMarkdown";
+import { ImageSizeCache } from "./imageSizes";
+import { type InlineMarkdownOptions, renderInlineMarkdown } from "./inlineMarkdown";
 import { DomNodeMeasurer } from "./measure";
 
 const FIT_PADDING = 48;
@@ -31,6 +33,10 @@ export interface MapRendererOptions {
   onAddRequest?: (nodeId: string, side: AddSide) => void;
   onEditRequest?: (nodeId: string) => void;
   onSelectionChange?: (nodeId: string | null) => void;
+  /** Resolves note links and vault images inside labels. */
+  inlineResources?: InlineResourceHost;
+  /** Opens an image from a node in the view's lightbox. */
+  onImageOpen?: (src: string, alt: string) => void;
   /** Node count above which only the viewport and its margin stay mounted. */
   cullingThreshold?: number;
 }
@@ -54,6 +60,11 @@ export class MapRenderer {
   private readonly onAddRequest?: (nodeId: string, side: AddSide) => void;
   private readonly onEditRequest?: (nodeId: string) => void;
   private readonly onSelectionChange?: (nodeId: string | null) => void;
+  private readonly inlineResources?: InlineResourceHost;
+  private readonly onImageOpen?: (src: string, alt: string) => void;
+  private readonly imageSizes = new ImageSizeCache();
+  private inlineRefreshFrame: number | null = null;
+  private destroyed = false;
   private readonly cullingThreshold: number;
   private measurer: DomNodeMeasurer;
   private theme: ThemeDefinition;
@@ -93,6 +104,8 @@ export class MapRenderer {
     this.onAddRequest = options.onAddRequest;
     this.onEditRequest = options.onEditRequest;
     this.onSelectionChange = options.onSelectionChange;
+    this.inlineResources = options.inlineResources;
+    this.onImageOpen = options.onImageOpen;
     this.cullingThreshold = options.cullingThreshold ?? CULLING_THRESHOLD;
 
     this.canvas.classList.add("simple-mind-canvas");
@@ -113,6 +126,9 @@ export class MapRenderer {
       this.canvas,
       DEFAULT_MINDMAP_META,
       tokensForMode(theme, dark),
+      options.inlineResources,
+      this.imageSizes,
+      () => this.scheduleInlineRefresh(),
     );
     this.bindPanZoom();
     this.resizeObserver = new ResizeObserver(() => {
@@ -134,6 +150,34 @@ export class MapRenderer {
     }
     this.theme = theme;
     this.dark = dark;
+  }
+
+  /** Returns the inline resource context shared by labels and measurement. */
+  private inlineOptions(): InlineMarkdownOptions {
+    return {
+      host: this.inlineResources,
+      images: this.imageSizes,
+      maxWidth: this.document?.meta.maxWidth,
+      onImageReady: () => this.scheduleInlineRefresh(),
+    };
+  }
+
+  /** Drops size caches after an image loads and redraws once per frame. */
+  private scheduleInlineRefresh(): void {
+    if (this.destroyed || this.inlineRefreshFrame !== null) return;
+    const run = (): void => {
+      this.inlineRefreshFrame = null;
+      if (this.destroyed || !this.document) return;
+      this.measurer.clear();
+      this.renderedText.clear();
+      this.render(this.document, { fit: false });
+    };
+    const view = this.canvas.ownerDocument.defaultView;
+    if (view && typeof view.requestAnimationFrame === "function") {
+      this.inlineRefreshFrame = view.requestAnimationFrame(run);
+    } else {
+      queueMicrotask(run);
+    }
   }
 
   /**
@@ -271,6 +315,11 @@ export class MapRenderer {
 
   /** Removes listeners and rendered DOM. */
   destroy(): void {
+    this.destroyed = true;
+    if (this.inlineRefreshFrame !== null) {
+      this.canvas.ownerDocument.defaultView?.cancelAnimationFrame?.(this.inlineRefreshFrame);
+      this.inlineRefreshFrame = null;
+    }
     this.resizeObserver.disconnect();
     for (const dispose of this.disposers) dispose();
     this.measurer.destroy();
@@ -504,13 +553,41 @@ export class MapRenderer {
 
     element.addEventListener("click", (event) => {
       const target = event.target as HTMLElement;
+      const link = target.closest<HTMLElement>(".simple-mind-inline-link[data-link]");
+      if (link?.dataset.link) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.canvas.focus();
+        this.selectNode(nodeId);
+        this.inlineResources?.openNote(link.dataset.link);
+        return;
+      }
+      const image = target.closest<HTMLImageElement>(".simple-mind-inline-image");
+      if (image) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.canvas.focus();
+        this.selectNode(nodeId);
+        this.onImageOpen?.(image.currentSrc || image.src, image.alt);
+        return;
+      }
       if (target.closest("a")) return;
       this.canvas.focus();
       this.selectNode(nodeId);
     });
 
+    element.addEventListener("pointerover", (event) => {
+      const link = (event.target as HTMLElement).closest<HTMLElement>(
+        ".simple-mind-inline-link[data-link]",
+      );
+      if (!link?.dataset.link || !this.inlineResources) return;
+      const related = event.relatedTarget as Node | null;
+      if (related && link.contains(related)) return;
+      this.inlineResources.previewNote(event, link, link.dataset.link);
+    });
+
     element.addEventListener("dblclick", (event) => {
-      if ((event.target as HTMLElement).closest("button, a")) return;
+      if ((event.target as HTMLElement).closest("button, a, img")) return;
       event.stopPropagation();
       this.canvas.focus();
       this.selectNode(nodeId);
@@ -565,7 +642,9 @@ export class MapRenderer {
 
     const label = element.querySelector<HTMLElement>(".simple-mind-node-label");
     if (label && this.renderedText.get(node.id) !== node.text) {
-      label.replaceChildren(renderInlineMarkdown(node.text, this.canvas.ownerDocument));
+      label.replaceChildren(
+        renderInlineMarkdown(node.text, this.canvas.ownerDocument, this.inlineOptions()),
+      );
       this.renderedText.set(node.id, node.text);
     }
   }
