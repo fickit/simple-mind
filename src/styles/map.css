@@ -887,8 +887,6 @@
 
 .simple-mind-node.shape-underline {
   border: none;
-  border-bottom: var(--sm-underline-width, 2px) solid
-    var(--sm-underline-color, var(--sm-branch-color));
   border-radius: 0;
   background: transparent;
   box-shadow: none;

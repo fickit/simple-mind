@@ -12,8 +12,9 @@
 - Drag on empty canvas to marquee-select nodes; the box and covered nodes highlight live
   (Ctrl/Cmd/Shift adds). Alt+drag pans the canvas, Ctrl/Cmd+A selects all, drag the root to move the
   whole map, and drag any node—including image nodes—onto another node to reparent it.
-- Underline nodes now draw the connector's own color and width as their bottom rule, meeting the
-  branch line without a break.
+- Line nodes replace the old underline look: the label sits above a branch-colored rule that is the
+  node body, uses the connector's color and width, and continues into child branches. Existing
+  `underline` markers keep working.
 - Nodes, links, and images no longer show redundant hover tooltips; only icon-only controls keep
   their labels. The selection outline on an image-only node follows the picture group instead of the
   old pill shape.

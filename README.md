@@ -57,6 +57,8 @@ Markdown outline underneath. No account, no lock-in.
 - Nine built-in themes: Meadow, Obsidian Native, Paper, Graphite, Nord, Solarized, Forest, Ocean, and
   Sakura.
 - A custom theme editor with a live preview, and theme import/export.
+- A line node puts its label above the branch line itself: the line is the node body, shares the
+  connector's color and width, and carries into its child branches.
 - Font family, connector color, and connector thickness are global defaults in the settings tab.
 
 ## Usage

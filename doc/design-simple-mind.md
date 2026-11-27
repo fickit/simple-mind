@@ -623,8 +623,9 @@ theme, so a file can pick any of the nine themes while the panel keeps one mater
 - Dark is the same system turned toward a forest at night: near-black green surfaces, moon-pale text, a
   lichen accent, cool mist as the secondary, and low-saturation firefly amber for attention. No pure
   black, no neon, and no gradients on controls.
-- Underline nodes use the branch line itself: the connector meets the bottom rule at the node edge,
-  and the label keeps its padding above that rule, so the line reads as one continuous stroke.
+- A line node has no card. Its label sits above a branch-colored SVG rule that is the node body, and
+  the same connector color and width continue from the parent into the child branches. Files written
+  with the older `underline` shape value keep rendering as line nodes.
 - Every icon is an inline SVG drawn from a stroke table in `engine/render/icons.ts`: chevrons on the
   collapse controls and inside steppers, a plus on the add control, a close on dismiss, a gear for the
   settings entry, letterforms for bold, italic, and underline, pictograms for the four layout types,

@@ -53,6 +53,7 @@ export class MapRenderer {
   private readonly nodesLayer: HTMLElement;
   private readonly nodeEls = new Map<string, HTMLElement>();
   private readonly edgeEls = new Map<string, SVGPathElement>();
+  private readonly lineEls = new Map<string, SVGLineElement>();
   private readonly renderedText = new Map<string, string>();
   private readonly colors = new Map<string, string>();
   private readonly sideColors = new Map<string, string>();
@@ -201,6 +202,7 @@ export class MapRenderer {
     const view = this.cullingView();
     this.updateNodes(document, this.layout, tokens, view);
     this.updateEdges(this.layout, tokens, view);
+    this.updateLineNodes(this.layout, tokens, view);
     if (options.fit ?? this.pendingFit) {
       this.fit();
     }
@@ -229,6 +231,7 @@ export class MapRenderer {
     const view = this.cullingView();
     this.updateNodes(this.document, this.layout, tokens, view);
     this.updateEdges(this.layout, tokens, view);
+    this.updateLineNodes(this.layout, tokens, view);
   }
 
   /** Removes all rendered content. */
@@ -240,6 +243,7 @@ export class MapRenderer {
     this.previewIds.clear();
     this.nodeEls.clear();
     this.edgeEls.clear();
+    this.lineEls.clear();
     this.renderedText.clear();
     this.colors.clear();
     this.sideColors.clear();
@@ -334,6 +338,7 @@ export class MapRenderer {
     this.world.remove();
     this.nodeEls.clear();
     this.edgeEls.clear();
+    this.lineEls.clear();
     this.renderedText.clear();
   }
 
@@ -591,6 +596,44 @@ export class MapRenderer {
       if (mounted.has(childId)) continue;
       path.remove();
       this.edgeEls.delete(childId);
+    }
+  }
+
+  /** Draws line nodes as a stroke that is the node's own body. */
+  private updateLineNodes(layout: LayoutResult, tokens: ThemeTokens, view: WorldRect | null): void {
+    const mounted = new Set<string>();
+    const rootId = this.document?.root.id;
+    for (const positioned of layout.nodes) {
+      const isLine =
+        nodeVisual(tokens, positioned.node.style, positioned.node.id === rootId).shape ===
+        "underline";
+      if (!isLine) continue;
+      if (view && !intersectsWorldRect(positioned, view)) continue;
+
+      const nodeId = positioned.node.id;
+      mounted.add(nodeId);
+      let line = this.lineEls.get(nodeId);
+      if (!line) {
+        line = createSvg("line");
+        line.classList.add("simple-mind-line-node");
+        line.setAttribute("stroke-linecap", "round");
+        this.svg.appendChild(line);
+        this.lineEls.set(nodeId, line);
+      }
+      const y = positioned.y + positioned.height;
+      line.setAttribute("x1", String(positioned.x));
+      line.setAttribute("y1", String(y));
+      line.setAttribute("x2", String(positioned.x + positioned.width));
+      line.setAttribute("y2", String(y));
+      line.setAttribute("stroke", this.colors.get(nodeId) ?? tokens.selection.outline);
+      line.setAttribute("stroke-width", String(tokens.branch.lineWidth));
+      line.setAttribute("stroke-opacity", String(tokens.branch.opacity));
+    }
+
+    for (const [nodeId, line] of this.lineEls) {
+      if (mounted.has(nodeId)) continue;
+      line.remove();
+      this.lineEls.delete(nodeId);
     }
   }
 
@@ -932,15 +975,6 @@ export class MapRenderer {
     element.style.setProperty("--sm-line-height", String(visual.lineHeight));
     element.style.setProperty("--sm-text-align", visual.textAlign);
     element.style.setProperty("--sm-text-decoration", visual.textDecoration);
-    const underline = visual.shape === "underline";
-    element.style.setProperty(
-      "--sm-underline-color",
-      underline ? branchColor : (style?.borderColor ?? branchColor),
-    );
-    element.style.setProperty(
-      "--sm-underline-width",
-      `${underline ? this.themeTokens().branch.lineWidth : (style?.borderWidth ?? 2)}px`,
-    );
   }
 
   /** Creates an edge element for a child id. */

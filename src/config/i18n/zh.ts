@@ -130,7 +130,7 @@ export const zh: Record<MessageKey, string> = {
   "themeEditor.shape": "节点形状",
   "themeEditor.shape.rounded": "圆角矩形",
   "themeEditor.shape.pill": "胶囊",
-  "themeEditor.shape.underline": "下划线",
+  "themeEditor.shape.underline": "线型",
   "themeEditor.shape.plain": "无底色",
   "themeEditor.connector": "连线",
   "themeEditor.connector.curve": "曲线",

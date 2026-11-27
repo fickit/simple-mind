@@ -130,7 +130,7 @@ export const en = {
   "themeEditor.shape": "Node shape",
   "themeEditor.shape.rounded": "Rounded",
   "themeEditor.shape.pill": "Pill",
-  "themeEditor.shape.underline": "Underline",
+  "themeEditor.shape.underline": "Line",
   "themeEditor.shape.plain": "Plain",
   "themeEditor.connector": "Connector",
   "themeEditor.connector.curve": "Curve",

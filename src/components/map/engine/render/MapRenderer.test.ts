@@ -187,8 +187,8 @@ describe("MapRenderer multi-selection", () => {
   });
 });
 
-describe("MapRenderer underline nodes", () => {
-  it("uses the branch connector color and width for the underline", () => {
+describe("MapRenderer line nodes", () => {
+  it("draws the node body with the branch connector color and width", () => {
     const host = document.createElement("div");
     document.body.appendChild(host);
     const renderer = new MapRenderer(host, OBSIDIAN_THEME, false);
@@ -198,12 +198,11 @@ describe("MapRenderer underline nodes", () => {
     expect(mapDocument).not.toBeNull();
     renderer.render(mapDocument!);
 
-    const node = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n2"]')!;
+    const line = host.querySelector<SVGLineElement>(".simple-mind-line-node")!;
     const edge = host.querySelector<SVGPathElement>(".simple-mind-edge")!;
-    expect(node.style.getPropertyValue("--sm-underline-color")).toBe(edge.getAttribute("stroke"));
-    expect(node.style.getPropertyValue("--sm-underline-width")).toBe(
-      `${edge.getAttribute("stroke-width")}px`,
-    );
+    expect(line.getAttribute("stroke")).toBe(edge.getAttribute("stroke"));
+    expect(line.getAttribute("stroke-width")).toBe(edge.getAttribute("stroke-width"));
+    expect(line.getAttribute("y1")).toBe(line.getAttribute("y2"));
 
     renderer.destroy();
     host.remove();

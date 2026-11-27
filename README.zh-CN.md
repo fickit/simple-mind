@@ -55,6 +55,7 @@ Simple Mind 把一个 `.mindmap` 文件变成精致、可交互的导图，底�
   （字号、颜色、加粗、斜体、下划线、对齐、行高）。
 - 九套内置主题：Meadow、Obsidian Native、Paper、Graphite、Nord、Solarized、Forest、Ocean、Sakura。
 - 自定义主题编辑器带实时预览，支持主题导入导出。
+- 线型节点把文字放在分支线上方：这条线就是节点本体，颜色和粗细与连线一致，并继续延伸成子分支。
 - 字体族、连线颜色与粗细在设置页作为全局默认值。
 
 
