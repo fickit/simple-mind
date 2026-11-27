@@ -158,13 +158,14 @@ export class InlineEditor {
       copyComputedStyles(options.nodeElement, input);
       copyComputedStyles(options.nodeElement, mirror);
     }
-    input.style.outline = "none";
-    input.style.borderStyle = "solid";
-    input.style.borderWidth = "1px";
-    input.style.borderColor = "var(--sm-selection-outline)";
-    input.style.boxShadow = "none";
-    mirror.style.borderStyle = "solid";
-    mirror.style.borderWidth = "1px";
+    input.setCssStyles({
+      outline: "none",
+      borderStyle: "solid",
+      borderWidth: "1px",
+      borderColor: "var(--sm-selection-outline)",
+      boxShadow: "none",
+    });
+    mirror.setCssStyles({ borderStyle: "solid", borderWidth: "1px" });
 
     input.addEventListener("compositionstart", () => {
       this.composing = true;

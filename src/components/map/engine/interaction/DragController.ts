@@ -233,12 +233,14 @@ export class DragController {
     for (const node of ghost.querySelectorAll("[id]")) {
       node.removeAttribute("id");
     }
-    ghost.style.position = "fixed";
-    ghost.style.margin = "0";
-    ghost.style.width = `${rect.width}px`;
-    ghost.style.height = `${rect.height}px`;
-    ghost.style.transform = "none";
-    ghost.style.pointerEvents = "none";
+    ghost.setCssStyles({
+      position: "fixed",
+      margin: "0",
+      width: `${rect.width}px`,
+      height: `${rect.height}px`,
+      transform: "none",
+      pointerEvents: "none",
+    });
     this.ghostOffsetX = event.clientX - rect.left;
     this.ghostOffsetY = event.clientY - rect.top;
     this.canvas.ownerDocument.body.appendChild(ghost);
@@ -249,8 +251,10 @@ export class DragController {
   /** Places the drag ghost under the pointer. */
   private moveGhost(clientX: number, clientY: number): void {
     if (!this.ghost) return;
-    this.ghost.style.left = `${clientX - this.ghostOffsetX}px`;
-    this.ghost.style.top = `${clientY - this.ghostOffsetY}px`;
+    this.ghost.setCssStyles({
+      left: `${clientX - this.ghostOffsetX}px`,
+      top: `${clientY - this.ghostOffsetY}px`,
+    });
   }
 
   /** Finds the node under the pointer and updates the indicator. */

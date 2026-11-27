@@ -61,3 +61,18 @@ if (typeof document !== "undefined" && typeof globalThis.createEl !== "function"
   globals.createSvg = makeSvgElement;
   globals.createFragment = (): DocumentFragment => document.createDocumentFragment();
 }
+
+// Obsidian's setCssStyles accepts camelCase declarations; jsdom only has style APIs.
+if (typeof Element !== "undefined" && !("setCssStyles" in Element.prototype)) {
+  Object.defineProperty(Element.prototype, "setCssStyles", {
+    value(this: HTMLElement, styles: Partial<CSSStyleDeclaration>): void {
+      for (const [name, value] of Object.entries(styles)) {
+        if (value == null) continue;
+        this.style.setProperty(
+          name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`),
+          String(value),
+        );
+      }
+    },
+  });
+}
