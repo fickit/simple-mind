@@ -64,7 +64,8 @@ Markdown outline underneath. No account, no lock-in.
 ## Usage
 
 1. **Create a map.** Click the ribbon icon or run the **New mind map** command. An existing Markdown
-   outline also works — just rename it to `.mindmap`.
+   outline also works — just rename it to `.mindmap`, or open any note as a map from the tab's
+   three-dot menu.
 2. **Type directly.** With a node selected:
    - **Space** appends to the current label.
    - **Any other character** replaces the label with what you typed.

@@ -12,6 +12,8 @@
 - Drag on empty canvas to marquee-select nodes; the box and covered nodes highlight live
   (Ctrl/Cmd/Shift adds). Alt+drag pans the canvas, Ctrl/Cmd+A selects all, drag the root to move the
   whole map, and drag any node—including image nodes—onto another node to reparent it.
+- Open any Markdown note as a mind map from the tab's three-dot menu, and open a `.mindmap` in
+  source mode the same way. The separate "open as mind map" ribbon icon is gone.
 - Line nodes replace the old underline look: the label sits above a branch-colored rule that is the
   node body, uses the connector's color and width, and continues into child branches. Existing
   `underline` markers keep working.

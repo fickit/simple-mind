@@ -1,4 +1,14 @@
-import { MarkdownView, Notice, Plugin, type TFile, View } from "obsidian";
+import {
+  type EventRef,
+  MarkdownView,
+  type Menu,
+  Notice,
+  Plugin,
+  type TAbstractFile,
+  TFile,
+  View,
+  type WorkspaceLeaf,
+} from "obsidian";
 import { loadPluginData, savePluginData } from "./api/obsidian/settings";
 import { SettingsTab } from "./components/settings/SettingsTab";
 import { isSourceMode } from "./components/source/SourceModeGuard";
@@ -17,7 +27,6 @@ export default class SimpleMindPlugin extends Plugin implements SimpleMindSettin
 
   private viewStates: Record<string, MapViewState> = {};
   private statusBarEl: HTMLElement | null = null;
-  private ribbonEl: HTMLElement | null = null;
   private newMapRibbonEl: HTMLElement | null = null;
   private readonly commandIds = [
     "toggle-map-source",
@@ -54,6 +63,7 @@ export default class SimpleMindPlugin extends Plugin implements SimpleMindSettin
     this.registerCommands();
     this.registerStatusBar();
     this.registerRibbon();
+    this.registerOpenAsMapMenu();
     this.addSettingTab(new SettingsTab(this.app, this));
     this.registerFileHandlers();
     this.registerFileExtension();
@@ -101,7 +111,6 @@ export default class SimpleMindPlugin extends Plugin implements SimpleMindSettin
   refreshLanguage(): void {
     setLanguage(this.settings.language);
     this.statusBarEl?.setText(t("status.openMap"));
-    this.ribbonEl?.setAttribute("aria-label", t("ribbon.openMap"));
     this.newMapRibbonEl?.setAttribute("aria-label", t("ribbon.newMap"));
     this.reRegisterCommands();
     this.refreshMapViews();
@@ -231,14 +240,67 @@ export default class SimpleMindPlugin extends Plugin implements SimpleMindSettin
     });
   }
 
-  /** Registers visible ribbon actions. */
+  /** Registers the new-map ribbon action. */
   private registerRibbon(): void {
-    this.ribbonEl = this.addRibbonIcon("network", t("ribbon.openMap"), () => {
-      void this.toggleActiveLeaf(true);
-    });
     this.newMapRibbonEl = this.addRibbonIcon("file-plus", t("ribbon.newMap"), () => {
       void this.createMindMap();
     });
+  }
+
+  /** Adds "Open as mind map" to file and leaf menus. */
+  private registerOpenAsMapMenu(): void {
+    this.registerEvent(
+      this.app.workspace.on("file-menu", (menu, file, _source, leaf) => {
+        this.addOpenAsMapItem(menu, file, leaf);
+      }),
+    );
+
+    // Obsidian's view "more options" (three-dot) menu emits an untyped event.
+    type LeafMenuHost = {
+      on(name: "leaf-menu", callback: (menu: Menu, leaf: WorkspaceLeaf) => void): EventRef;
+    };
+    this.registerEvent(
+      (this.app.workspace as unknown as LeafMenuHost).on("leaf-menu", (menu, leaf) => {
+        if (leaf.view instanceof MarkdownView) {
+          this.addOpenAsMapItem(menu, leaf.view.file, leaf);
+        }
+      }),
+    );
+  }
+
+  /**
+   * Adds the open-as-map entry to one menu for a Markdown file.
+   *
+   * @param menu Menu receiving the item.
+   * @param file File the menu targets.
+   * @param leaf Leaf the action should replace, when known.
+   */
+  private addOpenAsMapItem(
+    menu: Menu,
+    file: TAbstractFile | null | undefined,
+    leaf?: WorkspaceLeaf,
+  ): void {
+    if (
+      !(file instanceof TFile) ||
+      (file.extension !== "md" && file.extension !== FILE_EXTENSION)
+    ) {
+      return;
+    }
+    menu.addItem((item) =>
+      item
+        .setTitle(t("menu.openAsMap"))
+        .setIcon("network")
+        .onClick(() => {
+          const target = leaf ?? this.app.workspace.getLeaf("tab");
+          void this.openAsMap(target, file);
+        }),
+    );
+  }
+
+  /** Switches one leaf from Markdown to the map view for an existing note. */
+  private async openAsMap(leaf: WorkspaceLeaf, file: TFile): Promise<void> {
+    await switchToMap(leaf, file);
+    this.updateStatusBar();
   }
 
   /** Re-opens `.mindmap` files in the map view when Obsidian uses Markdown. */
