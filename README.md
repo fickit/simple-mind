@@ -61,6 +61,24 @@ Markdown outline underneath. No account, no lock-in.
   connector's color and width, and carries into its child branches.
 - Font family, connector color, and connector thickness are global defaults in the settings tab.
 
+## Handwriting fonts
+
+Simple Mind uses the fonts installed on your system. Nothing is bundled, so the font files stay
+yours and the plugin stays small.
+
+- **Kalam** — a handwritten Latin and numeric face from Google Fonts, free under the SIL Open Font
+  License 1.1. Download it from [Google Fonts](https://fonts.google.com/specimen/Kalam), install it,
+  then use the family name `Kalam`. It has no Chinese glyphs.
+- **杨任东竹石体 (Yang Rendong Zhushi)** — a free-for-commercial-use handwritten Chinese family with
+  seven weights. Get it from [猫啃网](https://www.maoken.com/freefonts/760.html) or the
+  [free-font index](https://wordshub.github.io/free-font/font.html?YangRenDongZhuShiTi_Regular).
+  After installation, use the family name shown in your system font list (usually `杨任东竹石体`).
+
+Install the font in the operating system first (on Windows, right-click the TTF and choose
+**Install**; on macOS, open it in Font Book), then set it under **Settings → Simple Mind → Default
+font**. Restart Obsidian if a newly installed family does not appear. Both fonts are free to use, but
+check their licenses before redistributing the files; the plugin does not ship them.
+
 ## Usage
 
 1. **Create a map.** Click the ribbon icon or run the **New mind map** command. An existing Markdown

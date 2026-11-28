@@ -4,6 +4,8 @@
 
 - A single click selects the root node; dragging the root still pans the map.
 - The README now invites users to star the repository and file issues with feedback.
+- The README also introduces two free handwriting fonts, Kalam and 杨任东竹石体, with download and
+  installation steps.
 
 ## 1.1.2 — 2026-11-28
 

@@ -59,6 +59,22 @@ Simple Mind 把一个 `.mindmap` 文件变成精致、可交互的导图，底�
 - 字体族、连线颜色与粗细在设置页作为全局默认值。
 
 
+## 手写字体
+
+Simple Mind 直接使用系统里已安装的字体，不捆绑、不分发字体文件，插件体积和授权都保持干净。
+
+- **Kalam**：Google Fonts 收录的手写英文字体，适合拉丁字母和数字，采用 SIL Open Font License
+  1.1，免费可商用。到 [Google Fonts](https://fonts.google.com/specimen/Kalam) 下载安装后，在字体
+  族里填 `Kalam`。它不含中文字形。
+- **杨任东竹石体**：免费可商用的手写中文字体，共 7 个字重。可从
+  [猫啃网](https://www.maoken.com/freefonts/760.html) 或
+  [free-font 索引](https://wordshub.github.io/free-font/font.html?YangRenDongZhuShiTi_Regular)
+  获取。安装后在字体族里填系统字体列表显示的家族名（通常是 `杨任东竹石体`）。
+
+先在操作系统里安装字体（Windows 右键 TTF 选“安装”；macOS 用“字体册”打开），再到
+**设置 → Simple Mind → 默认字体** 中填写。新安装的字体没有出现时重启一次 Obsidian。两套字体都
+免费可用，但转发字体文件前请确认各自的授权条款；插件本身不附带字体。
+
 ## 使用
 
 1. **新建导图。** 点左侧图标或运行 **新建导图** 命令；已有的 Markdown 大纲把扩展名改成 `.mindmap`
