@@ -33,6 +33,7 @@ interface PanCandidate {
   lastX: number;
   lastY: number;
   pointerId: number;
+  moved: boolean;
 }
 
 const DRAG_THRESHOLD = 4;
@@ -119,13 +120,13 @@ export class DragController {
     if (!element || !nodeId) return;
 
     if (this.callbacks.isRoot(nodeId)) {
-      event.preventDefault();
       this.panCandidate = {
         startX: event.clientX,
         startY: event.clientY,
         lastX: event.clientX,
         lastY: event.clientY,
         pointerId: event.pointerId,
+        moved: false,
       };
       this.bindWindow();
       return;
@@ -153,6 +154,7 @@ export class DragController {
         ) >= DRAG_THRESHOLD;
       if (!moved) return;
       event.preventDefault();
+      this.panCandidate.moved = true;
       this.callbacks.panBy(
         event.clientX - this.panCandidate.lastX,
         event.clientY - this.panCandidate.lastY,
@@ -188,9 +190,11 @@ export class DragController {
   /** Completes a drag and requests the move. */
   private handlePointerUp(event: PointerEvent): void {
     if (this.panCandidate) {
-      this.suppressNextClick();
+      if (this.panCandidate.moved) {
+        this.suppressNextClick();
+        event.preventDefault();
+      }
       this.cancel();
-      event.preventDefault();
       return;
     }
 

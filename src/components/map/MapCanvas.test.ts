@@ -1303,3 +1303,50 @@ describe("MapCanvas text style actions", () => {
     host.remove();
   });
 });
+
+describe("MapCanvas root selection", () => {
+  it("selects the root on a click and still pans when dragged", () => {
+    const { host, canvas } = createCanvas("# Root\n- A\n");
+    const root = host.querySelector<HTMLElement>('.simple-mind-node[data-node-id="n1"]')!;
+    const canvasEl = host.querySelector<HTMLElement>(".simple-mind-canvas")!;
+    canvasEl.getBoundingClientRect = () =>
+      ({
+        x: 0,
+        y: 0,
+        left: 0,
+        top: 0,
+        right: 800,
+        bottom: 600,
+        width: 800,
+        height: 600,
+        toJSON: () => ({}),
+      }) as DOMRect;
+    canvas.fit();
+
+    root.dispatchEvent(
+      new MouseEvent("pointerdown", { button: 0, clientX: 100, clientY: 100, bubbles: true }),
+    );
+    window.dispatchEvent(
+      new MouseEvent("pointerup", { clientX: 100, clientY: 100, bubbles: true }),
+    );
+    root.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(canvas.getSelectedId()).toBe("n1");
+
+    const before = canvas.getViewState();
+    root.dispatchEvent(
+      new MouseEvent("pointerdown", { button: 0, clientX: 100, clientY: 100, bubbles: true }),
+    );
+    window.dispatchEvent(
+      new MouseEvent("pointermove", { clientX: 140, clientY: 130, bubbles: true }),
+    );
+    window.dispatchEvent(
+      new MouseEvent("pointerup", { clientX: 140, clientY: 130, bubbles: true }),
+    );
+    const after = canvas.getViewState();
+    expect(after.x - before.x).toBe(40);
+    expect(after.y - before.y).toBe(30);
+
+    canvas.destroy();
+    host.remove();
+  });
+});

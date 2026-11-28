@@ -4,7 +4,7 @@
 
 [github.com/fickit/simple-mind](https://github.com/fickit/simple-mind)
 
-> 状态：1.1.2
+> 状态：1.1.3
 
 Simple Mind 把一个 `.mindmap` 文件变成精致、可交互的导图，底层仍然是一份普通 Markdown 大纲。
 不需要账号，也没有格式锁定。
@@ -121,6 +121,15 @@ mindmap:
 - 发布 <!-- sm:{"shape":"pill","bold":true} -->
 - [[研究笔记]]
 ```
+
+## 反馈
+
+Simple Mind 完全免费开源，也靠真实使用它的导图成长。如果它对你的思考有帮助，给
+[仓库](https://github.com/fickit/simple-mind) 点个 Star，让更多人找到它。
+
+遇到问题或有想法，欢迎在 [Issues](https://github.com/fickit/simple-mind/issues) 提出来，附上
+Obsidian 版本、复现步骤；能附一份最小的 `.mindmap` 文件或导图截图更好。功能建议、导图截图和
+使用场景同样欢迎。
 
 ## 兼容性
 

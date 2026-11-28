@@ -4,7 +4,7 @@ A Markdown-outline mind map editor for Obsidian.
 
 [github.com/fickit/simple-mind](https://github.com/fickit/simple-mind)
 
-> Status: 1.1.2
+> Status: 1.1.3
 
 Simple Mind turns a plain `.mindmap` file into a polished, interactive map — and keeps it a plain
 Markdown outline underneath. No account, no lock-in.
@@ -129,6 +129,16 @@ mindmap:
 - Launch <!-- sm:{"shape":"pill","bold":true} -->
 - [[Research notes]]
 ```
+
+## Feedback
+
+Simple Mind is free and open source, and it grows through the maps people actually use. If it helps
+you think, give the [repository](https://github.com/fickit/simple-mind) a star so more people can
+find it.
+
+Found a bug or have an idea? Open an [issue](https://github.com/fickit/simple-mind/issues) with your
+Obsidian version, the steps to reproduce it, and a small `.mindmap` file or screenshot when possible.
+Feature requests, map screenshots, and workflow stories are just as welcome.
 
 ## Compatibility
 

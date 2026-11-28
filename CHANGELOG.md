@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.3 — 2026-11-28
+
+- A single click selects the root node; dragging the root still pans the map.
+- The README now invites users to star the repository and file issues with feedback.
+
 ## 1.1.2 — 2026-11-28
 
 - Read the platform modifier from Obsidian's Platform API instead of the browser navigator.
